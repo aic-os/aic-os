@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 19:34:54
+> Generated: 2026-11-09 19:37:28
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -17,6 +17,7 @@ aic-os/
 |   |-- contracts
 |   |-- core
 |   |   |-- examples
+|   |   |   |-- broadcast_test.rs
 |   |   |   \-- get_balance.rs
 |   |   |-- src
 |   |   |   |-- providers

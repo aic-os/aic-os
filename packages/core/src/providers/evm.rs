@@ -93,6 +93,10 @@ fn is_evm_address(s: &str) -> bool {
     s.len() == 42 && s.starts_with("0x") && s[2..].chars().all(|c| c.is_ascii_hexdigit())
 }
 
+fn is_hex_string(s: &str) -> bool {
+    s.len() > 2 && s.starts_with("0x") && s[2..].chars().all(|c| c.is_ascii_hexdigit())
+}
+
 fn parse_hex_u128(hex: &str) -> Result<u128> {
     let s = hex.trim_start_matches("0x");
     if s.is_empty() { return Ok(0); }
@@ -139,12 +143,55 @@ impl ChainTraits for EvmProvider {
             .ok_or_else(|| CoreError::Rpc("fee overflow (u128)".into()))
     }
 
-    async fn broadcast(&self, _raw_tx_hex: &str) -> Result<String> {
-        Err(CoreError::NotImplemented("EvmProvider::broadcast (Phase 1.3)"))
+    async fn broadcast(&self, raw_tx_hex: &str) -> Result<String> {
+        let raw = raw_tx_hex.trim();
+        if !is_hex_string(raw) {
+            return Err(CoreError::Rpc(format!(
+                "invalid raw tx hex (expected 0x-prefixed even-length hex, got {} chars)",
+                raw.len()
+            )));
+        }
+        if (raw.len() - 2) % 2 != 0 {
+            return Err(CoreError::Rpc(
+                "invalid raw tx hex: odd number of hex chars".into(),
+            ));
+        }
+
+        let res = self.rpc_call("eth_sendRawTransaction", serde_json::json!([raw])).await?;
+        let hash = res.as_str()
+            .ok_or_else(|| CoreError::Rpc("eth_sendRawTransaction: result is not a string".into()))?;
+        Ok(hash.to_string())
     }
 
     async fn health(&self) -> Result<bool> {
         let res = self.rpc_call("eth_blockNumber", serde_json::json!([])).await?;
         Ok(res.as_str().is_some())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hex_validation_accepts_valid() {
+        assert!(is_hex_string("0xdeadbeef"));
+        assert!(is_hex_string("0x00"));
+        assert!(is_hex_string("0x12345")); // hex chars, even if odd length; length check is separate
+    }
+
+    #[test]
+    fn hex_validation_rejects_invalid() {
+        assert!(!is_hex_string(""));
+        assert!(!is_hex_string("0x"));
+        assert!(!is_hex_string("deadbeef"));
+        assert!(!is_hex_string("0xzz"));
+    }
+
+    #[test]
+    fn address_validation() {
+        assert!(is_evm_address("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"));
+        assert!(!is_evm_address("0x123"));
+        assert!(!is_evm_address("not_an_address"));
     }
 }

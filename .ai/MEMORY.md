@@ -97,3 +97,11 @@ text
   - `tests/factory.rs` (5): создание EVM-провайдера с 1/несколькими RPC, отказ на unknown и на not-implemented.
 - Для тестов, читающих `config/settings.yaml`, используем `env!("CARGO_MANIFEST_DIR")` + `../..` -- работает и локально, и в CI на любой ОС.
 - **Следующее:** `broadcast` (eth_sendRawTransaction) -- принимает подписанный raw-hex, возвращает tx hash. Плюс тест на невалидный hex.
+
+### 2026-11-09 -- Сессия #6 (broadcast)
+- `EvmProvider::broadcast` реализован через `eth_sendRawTransaction`.
+- Валидация raw-hex: префикс `0x`, только hex-символы, чётная длина (иначе ошибка до похода в RPC).
+- Ошибки от RPC прокидываются с превью от каждого endpoint'а (фолбэк по всем).
+- **14 тестов зелёные** (3 unit в evm.rs + 5 factory + 6 settings).
+- Проверка на реальной сети: `broadcast("0xdeadbeef")` -- оба RPC корректно отвергли, газ не потрачен.
+- **Следующее:** Wallet-модуль. Block A: BIP-39 (генерация сид-фразы, валидация, восстановление). Block B: secp256k1 + Ethereum-адрес. Block C: подпись ETH-транзакции (RLP + EIP-155).
