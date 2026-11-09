@@ -150,3 +150,16 @@ text
   - A) EIP-1559 (Type 2 tx) -- MetaMask default, современный формат.
   - B) ERC-20 (balanceOf, transfer) -- база для aCOIN и USDT/USDC.
   - C) AIC-ID контракт (Solidity + Foundry) -- уникальная фишка.
+
+### 2026-11-09 -- Сессия #11 (Block B-1: ERC-20 balanceOf)
+- `providers/evm_abi.rs` -- минимальный ABI-кодек:
+  - `selector(sig)` -- keccak256(sig)[0..4]
+  - `encode_address(0x...)` -- 32-байтный left-pad
+  - `encode_u256(u128)` -- 32-байтный big-endian
+  - `decode_u128(0x...)` -- с проверкой на overflow
+- `EvmProvider::eth_call(contract, data)` -- raw eth_call.
+- `ChainTraits::get_erc20_balance(contract, holder)` -- default NotImplemented, EVM -- реальный.
+- **ВЕХА: живой USDC mainnet:** 52363119552 raw = 52 363.12 USDC у Binance hot wallet.
+- Селекторы сверены с известными: balanceOf=0x70a08231, transfer=0xa9059cbb, decimals=0x313ce567, symbol=0x95d89b41.
+- Всего тестов: **45**.
+- **Следующее (Session #12, Block B-2):** ERC-20 metadata (`decimals`, `symbol`, `name`) + построение `transfer(address,uint256)` calldata. Потом Block A (EIP-1559) и Block C (AIC-ID).

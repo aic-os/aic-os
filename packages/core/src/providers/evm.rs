@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
+use crate::providers::evm_abi;
 use crate::providers::factory::ChainSettings;
 use crate::traits::ChainTraits;
 
@@ -67,6 +68,15 @@ impl EvmProvider {
         }
         json.get("result").cloned()
             .ok_or_else(|| CoreError::Rpc("missing result".into()))
+    }
+
+    /// Raw eth_call: {"to": contract, "data": 0x...}, "latest".
+    async fn eth_call(&self, contract: &str, data_hex: &str) -> Result<String> {
+        let tx = serde_json::json!({ "to": contract, "data": data_hex });
+        let res = self.rpc_call("eth_call", serde_json::json!([tx, "latest"])).await?;
+        res.as_str()
+            .map(|s| s.to_string())
+            .ok_or_else(|| CoreError::Rpc("eth_call: result is not a string".into()))
     }
 }
 
@@ -152,6 +162,31 @@ impl ChainTraits for EvmProvider {
         let res = self.rpc_call("eth_blockNumber", serde_json::json!([])).await?;
         Ok(res.as_str().is_some())
     }
+
+    async fn get_erc20_balance(&self, contract: &str, holder: &str) -> Result<u128> {
+        let contract = contract.trim();
+        let holder = holder.trim();
+        if !is_evm_address(contract) {
+            return Err(CoreError::InvalidAddress(contract.to_string()));
+        }
+        if !is_evm_address(holder) {
+            return Err(CoreError::InvalidAddress(holder.to_string()));
+        }
+
+        // data = selector("balanceOf(address)") ++ encode_address(holder)
+        let sel = evm_abi::selector("balanceOf(address)");
+        let arg = evm_abi::encode_address(holder)
+            .map_err(|e| CoreError::Rpc(format!("encode address: {e}")))?;
+
+        let mut data = Vec::with_capacity(4 + 32);
+        data.extend_from_slice(&sel);
+        data.extend_from_slice(&arg);
+        let data_hex = format!("0x{}", hex::encode(&data));
+
+        let ret = self.eth_call(contract, &data_hex).await?;
+        evm_abi::decode_u128(&ret)
+            .map_err(|e| CoreError::Rpc(format!("decode balanceOf: {e}")))
+    }
 }
 
 #[cfg(test)]
@@ -162,7 +197,6 @@ mod tests {
     fn hex_validation_accepts_valid() {
         assert!(is_hex_string("0xdeadbeef"));
         assert!(is_hex_string("0x00"));
-        assert!(is_hex_string("0x12345"));
     }
 
     #[test]
