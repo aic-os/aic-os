@@ -697,3 +697,40 @@ text
 1. **Своя криптовалюта** (AIC Chain, 71 млрд AIC, блоки, транзакции, persistence).
 2. **Монетизация** (10 AIC с каждой регистрации @name в казну).
 3. **Квантовая защита + P2P децентрализация** (Schnorr + Dilithium, 2+ ноды синхронизируются).
+
+### 2026-11-10 -- Сессия #35 (SYNC ИСТОРИИ РАБОТАЕТ -- полная P2P децентрализация)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Chain -- полностью децентрализованная сеть с синхронизацией истории.**
+- **Sync через Request-Response (CBOR):**
+  - При подключении нода шлёт SyncRequest{from_block: head+1, max_blocks: 100}.
+  - Пир отвечает SyncResponse{blocks} (свой chain, начиная с from_block).
+  - Получатель применяет блоки через `add_block_from_peer` + save.
+- **Проверено на живом тесте:**
+  - Нода A майнит 6 блоков одиночно.
+  - Нода B (--no-mine, пустой data/) подключается.
+  - SyncRequest -> SyncResponse -> B получает блоки #1..#6.
+  - Параллельно gossipsub: блоки #7, #8 прилетают от A в реальном времени.
+  - Результат: **A и B обе на блоке #8**. Полная синхронизация.
+- **Архитектура (финальная):**
+  - `packages/node/src/main.rs`: создаёт chain один раз (init_or_genesis), передаёт в p2p и rpc.
+  - `packages/node/src/chain.rs`: `init_or_genesis()`, `add_block_from_peer()` (проверка number + parent_hash).
+  - `packages/node/src/p2p.rs`:
+    - AicBehaviour: Kademlia + Gossipsub + Request-Response + Identify + Ping.
+    - SyncRequest: читает chain, отвечает блоками.
+    - SyncResponse: применяет блоки к chain, save.
+    - ConnectionEstablished: авто-запрос sync с нашего head+1.
+  - `packages/node/src/rpc.rs`:
+    - AppState.chain = Arc<RwLock<Chain>>.
+    - P2P event loop: NewBlock -> chain.add_block_from_peer, NewTransaction -> mempool.
+    - Block producer broadcast'ит блоки через gossipsub.
+    - aic_sendRawTransaction broadcast'ит транзакции.
+- **P2P полностью функциональна:**
+  - Discovery (Kademlia).
+  - Real-time broadcast блоков (Gossipsub).
+  - Real-time broadcast транзакций (Gossipsub).
+  - Sync истории (Request-Response).
+- **Следующее (следующая сессия):**
+  - DPoS консенсус (сейчас любой может майнить -- форки возможны).
+  - Mempool dedup (re-broadcast чужих tx с флагом "уже видел").
+  - Мост aCOIN (DKG 7/10).
+  - DEX-агрегатор.
+  - UI (Flutter/RN).

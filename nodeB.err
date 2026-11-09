@@ -1,12 +1,15 @@
-[P2P] Kademlia: routing updated, peer=12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
-[P2P] Connected to 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
-[P2P] Kademlia: routing updated, peer=12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
-[P2P] peer connected: 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
-[P2P] Gossip: new block #2
-[chain] peer block #2 accepted (txs=0)
-[P2P] Gossip: new block #3
-[chain] peer block #3 accepted (txs=0)
-[P2P] Gossip: new block #4
-[chain] peer block #4 accepted (txs=0)
-[P2P] Disconnected from 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
-[P2P] peer disconnected: 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] Kademlia: routing updated, peer=12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6
+[P2P] Connected to 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6
+[P2P] Requesting sync from 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6: from_block=7
+[P2P] peer connected: 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6
+[P2P] Sync request from 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6: from_block=7, max=100
+[P2P] Sync response sent to 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6: 0 blocks
+[P2P] Sync response from 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6: 0 blocks
+[P2P] Gossip: new block #7
+[chain] peer block #7 accepted (txs=0)
+[P2P] Gossip: new block #8
+[chain] peer block #8 accepted (txs=0)
+[P2P] Gossip: new block #9
+[chain] peer block #9 accepted (txs=0)
+[P2P] Disconnected from 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6
+[P2P] peer disconnected: 12D3KooWEHYL4KFV21LfJ2sWF8iBvXfemYPgEBEjFTdqLroQdth6

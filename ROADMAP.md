@@ -51,9 +51,9 @@
 ### 🔵 Не начато
 - [x] **P2P (несколько нод, gossip блоков) -- РАБОТАЕТ** (2 ноды синхронизируются, блоки #2..#4 приняты)
 - [x] **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium) -- РАБОТАЕТ** (проверено: 5000 AIC без PQ отклоняется, с PQ -- принимается)
-- [ ] Мастер-ноды, DPoS консенсус (сейчас любой может майнить)
-- [ ] Sync истории блоков при подключении (Request-Response готов, не активирован)
-- [ ] Mempool gossip (broadcast чужих tx)
+- [ ] **Мастер-ноды, DPoS консенсус** (сейчас любой может майнить -- форки возможны) -- СЛЕДУЮЩАЯ ВЕХА
+- [x] **Sync истории (Request-Response) -- РАБОТАЕТ** (B догнал A до блока #8 через sync+gossip)
+- [x] Mempool gossip: broadcast tx через gossipsub работает; приём чужих tx в mempool работает. (Re-broadcast с dedup -- Phase 2)
 - [ ] RandomX PoW (анти-51%)
 - [ ] Мост aCOIN (DKG 7/10, карантин)
 - [ ] DEX-агрегатор (1inch/Jupiter/0x) в кошельке
@@ -104,5 +104,6 @@
 - PQ: Schnorr (все tx) + Dilithium (критичные операции)
 - Мессенджер: Matrix, VPN: WireGuard (sandboxed)
 - DEX: агрегатор (1inch/Jupiter/0x)
+
 
 

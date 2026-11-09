@@ -13,7 +13,11 @@ use libp2p::{
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
+use std::sync::Arc;
+use std::sync::RwLock;
+
 use crate::block::Block;
+use crate::chain::Chain;
 use crate::transaction::Transaction;
 
 /// Поведение ноды в P2P сети.
@@ -67,6 +71,7 @@ pub enum P2PCommand {
 pub async fn start_p2p(
     listen_port: u16,
     bootnodes: Vec<String>,
+    chain: Arc<RwLock<Chain>>,
 ) -> Result<P2PHandles, Box<dyn std::error::Error>> {
     let mut swarm = SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -181,16 +186,40 @@ pub async fn start_p2p(
                         )) => {
                             match message {
                                 request_response::Message::Request { request, channel, .. } => {
-                                    // Кто-то просит блоки -- отвечаем
-                                    eprintln!("[P2P] Sync request from {peer}: from_block={}",
-                                        request.from_block);
-                                    // Ответ отправим в основной цикл через event
-                                    let _ = event_tx.send(P2PEvent::PeerConnected(peer)); // placeholder
+                                    eprintln!("[P2P] Sync request from {peer}: from_block={}, max={}",
+                                        request.from_block, request.max_blocks);
+                                    // Читаем chain и отвечаем блоками
+                                    let chain_guard = chain.read().unwrap();
+                                    let from = request.from_block as usize;
+                                    let max = request.max_blocks as usize;
+                                    let blocks: Vec<Block> = chain_guard.blocks.iter()
+                                        .skip(from)
+                                        .take(max)
+                                        .cloned()
+                                        .collect();
+                                    let n = blocks.len();
+                                    drop(chain_guard);
+                                    let response = SyncResponse { blocks };
+                                    if swarm.behaviour_mut().sync.send_response(channel, response).is_ok() {
+                                        eprintln!("[P2P] Sync response sent to {peer}: {} blocks", n);
+                                    }
                                 }
                                 request_response::Message::Response { response, .. } => {
                                     eprintln!("[P2P] Sync response from {peer}: {} blocks", response.blocks.len());
+                                    let mut chain_guard = chain.write().unwrap();
+                                    let mut applied = 0;
                                     for block in response.blocks {
-                                        let _ = event_tx.send(P2PEvent::NewBlock(block));
+                                        if chain_guard.add_block_from_peer(block) {
+                                            applied += 1;
+                                        }
+                                    }
+                                    if applied > 0 {
+                                        let chain_file = std::path::PathBuf::from("data").join("chain.json");
+                                        if let Err(e) = chain_guard.save(&chain_file) {
+                                            eprintln!("⚠ Save failed: {e}");
+                                        }
+                                        eprintln!("[P2P] Sync applied {} blocks, new head #{}",
+                                            applied, chain_guard.block_number());
                                     }
                                 }
                             }
@@ -203,7 +232,11 @@ pub async fn start_p2p(
                         SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                             eprintln!("[P2P] Connected to {peer_id}");
                             let _ = event_tx.send(P2PEvent::PeerConnected(peer_id));
-                            swarm.behaviour_mut().kademlia.add_address(&peer_id, Multiaddr::empty()); // placeholder
+                            // Запрашиваем sync с нашего head+1
+                            let our_head = chain.read().unwrap().block_number();
+                            let req = SyncRequest { from_block: our_head + 1, max_blocks: 100 };
+                            eprintln!("[P2P] Requesting sync from {peer_id}: from_block={}", our_head + 1);
+                            swarm.behaviour_mut().sync.send_request(&peer_id, req);
                         }
                         SwarmEvent::ConnectionClosed { peer_id, .. } => {
                             eprintln!("[P2P] Disconnected from {peer_id}");
@@ -241,4 +274,5 @@ pub async fn start_p2p(
         command_tx,
     })
 }
+
 

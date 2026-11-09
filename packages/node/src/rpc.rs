@@ -20,7 +20,7 @@ use revm::{
 
 pub struct AppState {
     pub mempool: Mempool,
-    pub chain: RwLock<Chain>,
+    pub chain: Arc<RwLock<Chain>>,
     pub chain_id: u64,
     pub p2p_tx: tokio::sync::mpsc::UnboundedSender<P2PCommand>,
 }
@@ -51,63 +51,13 @@ pub async fn run_rpc(
     chain_id: u64,
     mut p2p_handles: P2PHandles,
     no_mine: bool,
+    chain: Arc<RwLock<Chain>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    const AIC: u128 = 1_000_000_000_000_000_000;
-    let total: u128 = 71_000_000_000u128 * AIC;
-
-    let treasury: [u8; 20] = TREASURY;
-    let airdrop: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0A];
-    let staking: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x05];
-    let team: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x01];
-    let dev: [u8; 20] = [
-        0xf3, 0x9F, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xF6,
-        0xF4, 0xce, 0x6a, 0xB8, 0x82, 0x72, 0x79, 0xcf,
-        0xff, 0xb9, 0x22, 0x66,
-    ];
-    let dev_balance: u128 = 1_000_000u128 * AIC;
-
-    let alloc: Vec<([u8; 20], u128)> = vec![
-        (treasury, total / 100 * 40),
-        (airdrop,  total / 100 * 30),
-        (staking,  total / 100 * 20),
-        (team,     total / 100 * 10),
-        (dev,      dev_balance),
-    ];
-
-    let data_dir = std::path::PathBuf::from("data");
-    let chain_file = data_dir.join("chain.json");
-
-    let chain = if chain_file.exists() {
-        match Chain::load(&chain_file) {
-            Ok(c) => {
-                println!("\n========= AIC CHAIN LOADED =========");
-                println!("Loaded: {}, Blocks: {}, Head: #{}", chain_file.display(), c.blocks.len(), c.block_number());
-                println!("====================================\n");
-                c
-            }
-            Err(e) => {
-                eprintln!("⚠ Load failed: {e}. Recreating genesis.");
-                std::fs::remove_file(&chain_file).ok();
-                let c = Chain::genesis(chain_id, &alloc);
-                c.save(&chain_file).ok();
-                c
-            }
-        }
-    } else {
-        let c = Chain::genesis(chain_id, &alloc);
-        c.save(&chain_file)?;
-        println!("\n========= AIC CHAIN GENESIS =========");
-        println!("Chain ID: {chain_id}, State root: 0x{}", hex::encode(c.head().header.state_root));
-        for (a, bal) in &alloc { println!("  {}  =>  {} AIC", hex::encode(a), bal / AIC); }
-        println!("====================================\n");
-        c
-    };
-
-    let p2p_tx = p2p_handles.command_tx.clone();
+let p2p_tx = p2p_handles.command_tx.clone();
 
     let state = Arc::new(AppState {
         mempool: Mempool::new(),
-        chain: RwLock::new(chain),
+        chain: chain.clone(),
         chain_id,
         p2p_tx: p2p_tx.clone(),
     });
@@ -349,4 +299,6 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
+
 

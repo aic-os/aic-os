@@ -326,11 +326,30 @@ impl Chain {
         Ok(chain)
     }
 }
-
-
-
-
-
-
-
-
+/// Загрузить цепочку из файла или создать genesis (если файла нет).
+pub fn init_or_genesis(
+    chain_id: u64,
+    alloc: &[([u8; 20], u128)],
+    path: &std::path::Path,
+) -> std::io::Result<Chain> {
+    if path.exists() {
+        match Chain::load(path) {
+            Ok(c) => {
+                println!("\n========= AIC CHAIN LOADED =========");
+                println!("Loaded: {}, Blocks: {}, Head: #{}", path.display(), c.blocks.len(), c.block_number());
+                println!("====================================\n");
+                return Ok(c);
+            }
+            Err(e) => {
+                eprintln!("⚠ Load failed: {e}. Recreating genesis.");
+                std::fs::remove_file(path).ok();
+            }
+        }
+    }
+    let c = Chain::genesis(chain_id, alloc);
+    c.save(path)?;
+    println!("\n========= AIC CHAIN GENESIS =========");
+    println!("Chain ID: {chain_id}, State root: 0x{}", hex::encode(c.head().header.state_root));
+    println!("====================================\n");
+    Ok(c)
+}
