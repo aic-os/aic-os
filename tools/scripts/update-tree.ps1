@@ -1,7 +1,4 @@
-# tools/scripts/update-tree.ps1
-# Генерирует .ai/PROJECT_TREE.md из реальной структуры папок.
-# Запуск: pwsh tools/scripts/update-tree.ps1  (или: powershell -File tools/scripts/update-tree.ps1)
-
+# tools/scripts/update-tree.ps1 -- ASCII-safe
 $ErrorActionPreference = 'Stop'
 $root    = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $outFile = Join-Path $root '.ai/PROJECT_TREE.md'
@@ -9,11 +6,11 @@ $outFile = Join-Path $root '.ai/PROJECT_TREE.md'
 $excludeDirs = @('.git','node_modules','target','dist','build','.next','.dart_tool','__pycache__','.venv','.idea','.vscode')
 
 $script:lines = New-Object System.Collections.Generic.List[string]
-$script:lines.Add("# PROJECT_TREE (auto-generated)")
-$script:lines.Add("")
-$script:lines.Add("> Generated: " + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
-$script:lines.Add("> Regenerate: ``pwsh tools/scripts/update-tree.ps1``")
-$script:lines.Add("")
+$script:lines.Add('# PROJECT_TREE (auto-generated)')
+$script:lines.Add('')
+$script:lines.Add('> Generated: ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
+$script:lines.Add('> Regenerate: powershell -File tools/scripts/update-tree.ps1')
+$script:lines.Add('')
 $script:lines.Add('```')
 
 function Add-Tree {
@@ -25,19 +22,19 @@ function Add-Tree {
     for ($i = 0; $i -lt $items.Count; $i++) {
         $item = $items[$i]
         $isLast = ($i -eq $items.Count - 1)
-        $connector = if ($isLast) { "└── " } else { "├── " }
+        if ($isLast) { $connector = '\-- ' } else { $connector = '|-- ' }
         $script:lines.Add("$Prefix$connector$($item.Name)")
         if ($item.PSIsContainer) {
-            $newPrefix = $Prefix + $(if ($isLast) { "    " } else { "│   " })
+            if ($isLast) { $newPrefix = $Prefix + '    ' } else { $newPrefix = $Prefix + '|   ' }
             Add-Tree -Path $item.FullName -Prefix $newPrefix -MaxDepth $MaxDepth -Depth ($Depth + 1)
         }
     }
 }
 
-$script:lines.Add("aic-os/")
-Add-Tree -Path $root -Prefix "" -MaxDepth 5
+$script:lines.Add('aic-os/')
+Add-Tree -Path $root -Prefix '' -MaxDepth 5
 $script:lines.Add('```')
-$script:lines.Add("")
+$script:lines.Add('')
 
-$script:lines | Set-Content -Path $outFile -Encoding UTF8
-Write-Host "✔ PROJECT_TREE.md обновлён: $outFile"
+Set-Content -Path $outFile -Value $script:lines -Encoding UTF8
+Write-Host ('OK: PROJECT_TREE.md updated -> ' + $outFile)
