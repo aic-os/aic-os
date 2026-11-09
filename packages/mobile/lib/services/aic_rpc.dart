@@ -98,6 +98,13 @@ class AicRpc {
   }
 
   /// Форматировать wei -> AIC (18 decimals).
+  Future<String> sendRawTransaction(String rawHex, [String? pqPk, String? pqSig]) async {
+    final params = <dynamic>[rawHex];
+    if (pqPk != null) params.add(pqPk); else params.add(null);
+    if (pqSig != null) params.add(pqSig); else params.add(null);
+    return await _call('aic_sendRawTransaction', params) as String;
+  }
+
   static String weiToAic(BigInt wei, {int decimals = 18, int precision = 4}) {
     final divisor = BigInt.from(10).pow(decimals);
     final whole = wei ~/ divisor;
@@ -109,3 +116,4 @@ class AicRpc {
     return '$whole.$trimmed';
   }
 }
+

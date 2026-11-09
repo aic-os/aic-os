@@ -68,11 +68,9 @@
 
 - Flutter 3.47.7, web + windows + android
 - **Работает:** главный экран (баланс AIC, block height, адрес) -- читает из AIC Chain
-- **WASM собран:** 7 функций (mnemonic, address, ABI-encode, sign_legacy_tx)
-- **Запуск:** `cd packages/mobile && flutter run -d web-server --web-port=8080`
-- **Нода:** `.\target\debug\aic-node.exe --validators 0xf39F...,0x7099... --my-address 0xf39F...`
-- Открыть: `http://localhost:8080`
-
+- **WASM собран:** 7 функций
+- **Send AIC работает end-to-end:** UI -> WASM (подпись) -> aic_sendRawTransaction -> блок
+- **Первая UI-транзакция:** 100 AIC, tx hash `0x885ca78422bd20cee8b267bea0e59922158f13cc6e722777554327a7631edd5a`
 ## 🛠️ Стек## 🛠️ Стек
 
 - **Ядро:** Rust (tokio, k256, bip39, bip32)
@@ -102,6 +100,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 

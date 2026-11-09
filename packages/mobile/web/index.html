@@ -3,20 +3,12 @@
 <head>
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="AIC Wallet -- 150 chains, AIC Chain, PQ crypto">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="AIC Wallet">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <meta name="description" content="AIC Wallet">
   <title>AIC Wallet</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
-
-  <!-- AIC WASM bridge: загружаем и инициализируем до Flutter -->
   <script type="module">
     import init, * as aic from './wasm/aic_wasm.js';
     window._aicWasm = null;
@@ -24,7 +16,6 @@
       await init();
       window._aicWasm = aic;
       console.log('[AIC] WASM ready, version:', aic.version());
-      // Сообщаем Flutter, что WASM загружен (полезно для splash-экрана)
       window.dispatchEvent(new CustomEvent('aic-wasm-ready'));
       return aic;
     })();

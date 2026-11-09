@@ -966,3 +966,33 @@ text
   3. Экран Отправить (подпись через WASM + aic_sendRawTransaction)
   4. Экран Получить (QR)
   5. AIC-ID регистрация через UI
+
+### 2026-11-10 -- Сессия #41 (ПЕРВАЯ UI-ТРАНЗАКЦИЯ РАБОТАЕТ)
+- **ИСТОРИЧЕСКАЯ ВЕХА: Alice отправил 100 AIC Бобу через браузер.**
+- **Что работает end-to-end:**
+  - Flutter UI: экран Send AIC (Recipient, Amount, кнопка)
+  - WASM (Rust): подпись EIP-155 (secp256k1) в браузере
+  - RPC: aic_sendRawTransaction
+  - Chain: транзакция в блоке #1184
+  - Bob получил 100 AIC + 15 AIC наград за блоки (3 блока x 5) = 115 AIC
+- **TX hash:** 0x885ca78422bd20cee8b267bea0e59922158f13cc6e722777554327a7631edd5a
+- **Архитектура UI:**
+  - packages/mobile/lib/screens/home_screen.dart -- главный экран (баланс, block height, адрес, кнопка Send)
+  - packages/mobile/lib/screens/send_screen.dart -- экран отправки
+  - packages/mobile/lib/services/aic_rpc.dart -- sendRawTransaction
+  - packages/mobile/lib/services/wasm_bridge.dart -- signLegacyTx (через callMethodVarArgs)
+  - packages/wasm/src/lib.rs -- sign_legacy_tx (f64 params для nonce/gas/chain_id)
+- **Уроки (для будущих сессий):**
+  - wasm-bindgen u64 в Dart: использовать f64 (BigInt не конвертируется через dart:js_interop)
+  - ElevatedButton в Material 3 -- текст невидим без foregroundColor. Использовать GestureDetector + Container + Text
+  - PowerShell: НЕ использовать $home (системная переменная)
+  - Длинные heredoc с $ и кириллицей ломаются при вставке. Разбивать.
+  - flutter analyze иногда падает с Dart LSP exception -- это баг, запускать flutter run отдельно
+  - flutter run -d chrome на Windows часто не работает -> -d web-server + открыть URL
+- **Что дальше (nice-to-have):**
+  1. Красивый UI (курсы USD/RUB, авто-poll каждые 3 сек, история tx)
+  2. Экран Получить (QR-код)
+  3. AIC-ID регистрация через UI (encode_aicid_register готов в WASM)
+  4. Портфель 150 сетей
+  5. Мобильная сборка (APK)
+  6. Мост aCOIN

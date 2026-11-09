@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 02:13:51
+> Generated: 2026-11-10 02:41:54
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -277,7 +277,8 @@ aic-os/
 |   |   |-- lib
 |   |   |   |-- models
 |   |   |   |-- screens
-|   |   |   |   \-- home_screen.dart
+|   |   |   |   |-- home_screen.dart
+|   |   |   |   \-- send_screen.dart
 |   |   |   |-- services
 |   |   |   |   |-- aic_rpc.dart
 |   |   |   |   |-- wallet_service.dart

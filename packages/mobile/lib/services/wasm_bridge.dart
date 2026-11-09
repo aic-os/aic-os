@@ -121,16 +121,18 @@ class WasmBridge {
     required int chainId,
   }) async {
     await ensureReady();
-    final result = _aic.callMethod(
+    final result = _aic.callMethodVarArgs(
       'sign_legacy_tx'.toJS,
-      privkeyHex.toJS,
-      toHex.toJS,
-      valueHex.toJS,
-      nonce.toJS,
-      gasPriceHex.toJS,
-      gasLimit.toJS,
-      dataHex.toJS,
-      chainId.toJS,
+      [
+        privkeyHex.toJS,
+        toHex.toJS,
+        valueHex.toJS,
+        nonce.toJS,
+        gasPriceHex.toJS,
+        gasLimit.toJS,
+        dataHex.toJS,
+        chainId.toJS,
+      ],
     );
     final json = result.dartify();
     if (json is Map) {
@@ -149,3 +151,7 @@ class WasmBridge {
     return (result as JSString).toDart;
   }
 }
+
+
+
+

@@ -188,11 +188,11 @@ pub fn sign_legacy_tx(
     privkey_hex: &str,
     to_hex: &str,
     value_hex: &str,
-    nonce: u64,
+    nonce: f64,
     gas_price_hex: &str,
-    gas_limit: u64,
+    gas_limit: f64,
     data_hex: &str,
-    chain_id: u64,
+    chain_id: f64,
 ) -> Result<JsValue, JsError> {
     let pk = parse_privkey(privkey_hex)?;
     let sk = SigningKey::from_bytes((&pk).into())
@@ -202,6 +202,10 @@ pub fn sign_legacy_tx(
     let mut pubkey_arr = [0u8; 33];
     pubkey_arr.copy_from_slice(compressed.as_bytes());
     let from_address = pubkey_to_eip55(&pubkey_arr)?;
+
+    let nonce_u64 = nonce as u64;
+    let gas_limit_u64 = gas_limit as u64;
+    let chain_id_u64 = chain_id as u64;
 
     let to_clean = to_hex.trim_start_matches("0x");
     let to_bytes = hex::decode(to_clean).map_err(|e| JsError::new(&format!("to: {e}")))?;
@@ -228,20 +232,18 @@ pub fn sign_legacy_tx(
     let value_u256 = U256::from(value);
     let gp_u256 = U256::from(gas_price);
 
-    // EIP-155 signing hash
     let mut s = RlpStream::new_list(9);
-    s.append(&nonce);
+    s.append(&nonce_u64);
     s.append(&gp_u256);
-    s.append(&gas_limit);
+    s.append(&gas_limit_u64);
     s.append(&to_h160);
     s.append(&value_u256);
     s.append(&data);
-    s.append(&chain_id);
+    s.append(&chain_id_u64);
     s.append(&0u8);
     s.append(&0u8);
     let signing_hash: [u8; 32] = Keccak256::digest(&s.out()).into();
 
-    // Подпись
     let (sig, rec_id) = sk.sign_prehash_recoverable(&signing_hash)
         .map_err(|e| JsError::new(&format!("sign: {e}")))?;
 
@@ -249,13 +251,12 @@ pub fn sign_legacy_tx(
     let s_bytes = sig.s().to_bytes();
     let r = U256::from_big_endian(&r_bytes);
     let s_val = U256::from_big_endian(&s_bytes);
-    let v = u64::from(rec_id.to_byte()) + chain_id * 2 + 35;
+    let v = u64::from(rec_id.to_byte()) + chain_id_u64 * 2 + 35;
 
-    // RLP signed
     let mut st = RlpStream::new_list(9);
-    st.append(&nonce);
+    st.append(&nonce_u64);
     st.append(&gp_u256);
-    st.append(&gas_limit);
+    st.append(&gas_limit_u64);
     st.append(&to_h160);
     st.append(&value_u256);
     st.append(&data);
@@ -273,8 +274,9 @@ pub fn sign_legacy_tx(
     };
     serde_wasm_bindgen::to_value(&info).map_err(|e| JsError::new(&e.to_string()))
 }
-
 #[wasm_bindgen]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
+
+
