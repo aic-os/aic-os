@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 23:45:25
+> Generated: 2026-11-10 00:03:30
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -114,6 +114,8 @@ aic-os/
 |   |   |   |   |-- ScriptBase.json
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
+|   |   |   |   |-- 4e651b878b38dc6a.json
+|   |   |   |   |-- 8997d775ab47c05e.json
 |   |   |   |   \-- b046b1c023c18b4d.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
@@ -182,6 +184,8 @@ aic-os/
 |   |   |-- .env.example
 |   |   |-- DEPLOY.md
 |   |   |-- foundry.toml
+|   |   |-- node-fee2.err
+|   |   |-- node-fee2.log
 |   |   \-- README.md
 |   |-- core
 |   |   |-- examples
@@ -286,10 +290,16 @@ aic-os/
 |-- node-evm2.log
 |-- node-evm-final.err
 |-- node-evm-final.log
+|-- node-fee.err
+|-- node-fee.log
+|-- node-fee2.err
+|-- node-fee2.log
 |-- node-final.err
 |-- node-final.log
 |-- node-final2.err
 |-- node-final2.log
+|-- node-fix.err
+|-- node-fix.log
 |-- node-genesis.err
 |-- node-genesis.log
 |-- node-persist1.err
@@ -304,6 +314,8 @@ aic-os/
 |-- node-trace.log
 |-- node-v03.err
 |-- node-v03.log
+|-- node-win.err
+|-- node-win.log
 |-- node-write.err
 |-- node-write.log
 |-- PRINCIPLES.md

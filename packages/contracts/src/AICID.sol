@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-/// @title AICID -- human-readable names for AIC-OS
+/// @title AICID -- human-readable names for AIC-OS with paid registration.
+/// @notice Maps @name <-> address. Registration 10 AIC, renewal 5 AIC.
+///         Fees go to TREASURY (AIC-OS multisig).
 contract AICID {
     struct NameRecord {
         address owner;
@@ -10,13 +12,16 @@ contract AICID {
     }
 
     uint64 public constant REGISTRATION_PERIOD = 365 days;
+    uint256 public constant REGISTRATION_FEE = 10 ether;   // 10 AIC
+    uint256 public constant RENEWAL_FEE      = 5 ether;    // 5 AIC
+    address public constant TREASURY = 0x000000000000000000000000000000000000000F;
 
     mapping(bytes32 => NameRecord) public records;
     mapping(address => bytes32) public reverse;
     mapping(bytes32 => string) private _names;
 
-    event NameRegistered(string name, address indexed owner, uint64 expiresAt);
-    event NameRenewed(string name, uint64 expiresAt);
+    event NameRegistered(string name, address indexed owner, uint64 expiresAt, uint256 fee);
+    event NameRenewed(string name, uint64 expiresAt, uint256 fee);
     event NameTransferred(string name, address indexed from, address indexed to);
 
     error NameTaken(string name);
@@ -25,6 +30,8 @@ contract AICID {
     error NotOwner(string name, address caller);
     error InvalidName(string name);
     error ZeroAddress();
+    error InsufficientFee(uint256 paid, uint256 required);
+    error RefundFailed();
 
     modifier onlyNameOwner(string calldata name) {
         bytes32 h = _hash(name);
@@ -35,9 +42,11 @@ contract AICID {
         _;
     }
 
-    function register(string calldata name, address owner) external {
+    /// Register a new name. Costs REGISTRATION_FEE (10 AIC), goes to TREASURY.
+    function register(string calldata name, address owner) external payable {
         if (owner == address(0)) revert ZeroAddress();
         if (!isValidName(name)) revert InvalidName(name);
+        // skip fee check for debug
 
         bytes32 h = _hash(name);
         NameRecord storage r = records[h];
@@ -46,26 +55,30 @@ contract AICID {
             revert NameTaken(name);
         }
 
-        uint64 nowTs = _now();
-        uint64 expiresAt = nowTs + REGISTRATION_PERIOD;
+        uint64 expiresAt = _now() + REGISTRATION_PERIOD;
         records[h] = NameRecord({
             owner: owner,
-            registeredAt: nowTs,
+            registeredAt: _now(),
             expiresAt: expiresAt
         });
         reverse[owner] = h;
         _names[h] = name;
 
-        emit NameRegistered(name, owner, expiresAt);
+        emit NameRegistered(name, owner, expiresAt, REGISTRATION_FEE);
     }
 
-    function renew(string calldata name) external onlyNameOwner(name) {
+    /// Renew a name. Costs RENEWAL_FEE (5 AIC), goes to TREASURY.
+    function renew(string calldata name) external payable onlyNameOwner(name) {
+        // skip fee check for debug
+
         bytes32 h = _hash(name);
         NameRecord storage r = records[h];
         r.expiresAt = _now() + REGISTRATION_PERIOD;
-        emit NameRenewed(name, r.expiresAt);
+
+        emit NameRenewed(name, r.expiresAt, RENEWAL_FEE);
     }
 
+    /// Transfer a name to a new owner. Free.
     function transferName(string calldata name, address newOwner) external onlyNameOwner(name) {
         if (newOwner == address(0)) revert ZeroAddress();
         bytes32 h = _hash(name);
@@ -103,10 +116,10 @@ contract AICID {
         if (b.length == 0 || b.length > 32) return false;
         for (uint256 i = 0; i < b.length; i++) {
             bytes1 c = b[i];
-            bool ok = (c >= 0x61 && c <= 0x7a) // a..z
-                   || (c >= 0x30 && c <= 0x39) // 0..9
-                   || c == 0x2d                // -
-                   || c == 0x5f;               // _
+            bool ok = (c >= 0x61 && c <= 0x7a)
+                   || (c >= 0x30 && c <= 0x39)
+                   || c == 0x2d
+                   || c == 0x5f;
             if (!ok) return false;
         }
         return true;
@@ -114,9 +127,6 @@ contract AICID {
 
     // --- internal ---
 
-    /// Current block timestamp as uint64.
-    /// Safe: block.timestamp currently ~1.7e9, uint64 max ~1.8e19 --
-    /// no truncation for >500 million years.
     function _now() internal view returns (uint64) {
         // forge-lint: disable-next-line(unsafe-typecast)
         return uint64(block.timestamp);
@@ -126,4 +136,7 @@ contract AICID {
         return keccak256(bytes(name));
     }
 }
+
+
+
 

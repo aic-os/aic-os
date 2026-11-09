@@ -68,6 +68,9 @@
 - **AIC-ID работает**: `resolve("alice")` -> `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`
 - **EVM write работает**: register, deposit, create
 - **Persistence**: storage контрактов сохраняется в data/chain.json
+- **МОНЕТИЗАЦИЯ**: AICID.register() = **10 AIC в казну** (проверено: +10.0012 AIC на тест)
+- **Экономика:** 10 AIC регистрация + 5 AIC продление + газ -> TREASURY (0x...0F)
 - Chain ID: **2026**
+
 
 

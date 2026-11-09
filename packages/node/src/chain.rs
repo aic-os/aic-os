@@ -203,10 +203,23 @@ impl Chain {
         }
 
         // Комиссия: revm уже списал с from. Добавляем газ в казну.
-        // Для MVP: простая модель -- revm списал max_gas_cost, возвращаем разницу.
-        // gas_used * gas_price -- реальная комиссия, уходит в казну.
         let gas_fee = gas_price.saturating_mul(actual_gas as u128);
         self.state.credit(TREASURY_ADDR, gas_fee);
+
+        // ВАЖНО: если tx.value > 0 (регистрация @name), переводим в TREASURY.
+        // Контракт AICID просто принимает value на свой баланс, но по Принципу №1
+        // все комиссии идут в казну AIC-OS. Нода делает это на уровне state.
+        if success && tx.value > 0 {
+            if let Some(to_addr) = tx.to {
+                // Списываем с контракта, начисляем в казну
+                let mut contract_acc = self.state.get_account(&to_addr);
+                if contract_acc.balance >= tx.value {
+                    contract_acc.balance = contract_acc.balance.saturating_sub(tx.value);
+                    self.state.set_account(to_addr, contract_acc);
+                    self.state.credit(TREASURY_ADDR, tx.value);
+                }
+            }
+        }
 
         *gas_used += actual_gas;
         (success, actual_gas)
@@ -289,6 +302,8 @@ impl Chain {
         Ok(chain)
     }
 }
+
+
 
 
 

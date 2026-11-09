@@ -40,10 +40,7 @@
 - [x] AICID resolve("alice") = 0x0 (32 байта) -- EVM отвечает корректно
 
 ### 🔵 Не начато:
-- [ ] P2P (несколько нод, gossip блоков)
-- [x] **EVM в AIC Chain (read + write)** -- AICID работает, регистрация @alice за AIC
-- [x] **Первая write-транзакция** (register aicid, блок #2, gas 116401)
-- [x] **Storage контрактов + persistence** (map_storage в serde_helpers)
+- [ ] P2P (несколько нод)
 - [ ] Мастер-ноды, DPoS консенсус
 - [ ] RandomX PoW (анти-51%)
 - [ ] PQ-подписи (Schnorr + Dilithium)
@@ -76,5 +73,6 @@
 2. P2P + DPoS
 3. PQ-подписи
 4. UI
+
 
 

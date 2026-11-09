@@ -46,6 +46,11 @@ async fn main() {
 
     println!("calldata len: {} байт", data.len());
 
+    // Проверяем баланс казны ДО
+    let treasury_addr = "0x000000000000000000000000000000000000000f";
+    let treasury_before = get_balance(&client, treasury_addr).await;
+    println!("\nКазна ДО: {} wei ({:.4} AIC)", treasury_before, treasury_before as f64 / 1e18);
+
     // 3) Получаем nonce, баланс
     let nonce = get_nonce(&client, &alice.address).await;
     let balance = get_balance(&client, &alice.address).await;
@@ -53,12 +58,14 @@ async fn main() {
 
     // 4) Строим Legacy EIP-155 транзакцию (type 0)
     // gas_price = 10 gwei, gas_limit = 200_000
+    // value = 10 AIC -- оплата регистрации в казну
+    let registration_fee = U256::from(10_000_000_000_000_000_000u128); // 10 AIC // 10 AIC = 10 * 1e18
     let tx = LegacyTransaction {
         nonce,
         gas_price: U256::from(10_000_000_000u64),
-        gas_limit: 200_000,
+        gas_limit: 500_000,
         to: H160::from_slice(&hex::decode(&AICID[2..]).unwrap()),
-        value: U256::zero(),
+        value: registration_fee,
         data,
         chain_id: AIC_CHAIN_ID,
     };
@@ -86,6 +93,11 @@ async fn main() {
     // 6) Ждём блок (3 сек) + запас
     println!("\nЖдём 5 секунд...");
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+
+    // Проверяем баланс казны ПОСЛЕ
+    let treasury_after = get_balance(&client, treasury_addr).await;
+    println!("\nКазна ПОСЛЕ: {} wei ({:.4} AIC)", treasury_after, treasury_after as f64 / 1e18);
+    println!("Прирост: {:.4} AIC", (treasury_after.saturating_sub(treasury_before)) as f64 / 1e18);
 
     // 7) Проверяем resolve('alice') ПОСЛЕ
     println!("\n=== resolve('alice') ПОСЛЕ регистрации ===");
@@ -143,6 +155,10 @@ async fn get_balance(client: &reqwest::Client, addr: &str) -> u128 {
     let h = hex_str.trim_start_matches("0x");
     if h.is_empty() { 0 } else { u128::from_str_radix(h, 16).unwrap_or(0) }
 }
+
+
+
+
 
 
 
