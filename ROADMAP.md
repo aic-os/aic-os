@@ -36,8 +36,8 @@
 - [x] revm 43 в dependencies
 - [x] AICID, InheritanceVault, TimeCapsule деплой в genesis
 - [x] `aic_call` принимает данные, code находится
-- [ ] **ПРОБЛЕМА:** `evm.transact(tx)` в revm 43 возвращает CREATE-output вместо CALL-output
-- [ ] Ищем правильный API-вызов (transact_commit, Evm::builder, ...)
+- [x] **ИСПРАВЛЕНО:** баг был в `bytecode.object` (creation) vs `deployedBytecode.object` (runtime). Теперь `aic_call` работает.
+- [x] AICID resolve("alice") = 0x0 (32 байта) -- EVM отвечает корректно
 
 ### 🔵 Не начато:
 - [ ] P2P (несколько нод, gossip блоков)
@@ -73,3 +73,4 @@
 2. P2P + DPoS
 3. PQ-подписи
 4. UI
+

@@ -39,7 +39,7 @@
 - **Работающая транзакция:** Alice→Bob 1000 AIC, блок #21
 - Persistence (chain.json save/load)
 - RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, sendRawTransaction
-- revm 43 интеграция (в процессе — CREATE вместо CALL, ищем фикс)
+- **EVM через revm 43 работает:** AICID, InheritanceVault, TimeCapsule задеплоены в genesis, вызываются через `aic_call` за 0 AIC
 
 ## 🚧 В работе
 - EVM в AIC Chain (aic_call выполняет CREATE вместо CALL)
@@ -66,3 +66,4 @@
 - Solidity-тестов: **53**
 - Контрактов в AIC Chain genesis: **3**
 - Chain ID: **2026**
+

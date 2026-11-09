@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 23:25:00
+> Generated: 2026-11-09 23:30:14
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -283,6 +283,8 @@ aic-os/
 |-- node-evm.log
 |-- node-evm2.err
 |-- node-evm2.log
+|-- node-evm-final.err
+|-- node-evm-final.log
 |-- node-final.err
 |-- node-final.log
 |-- node-genesis.err

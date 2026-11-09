@@ -544,3 +544,30 @@ text
   1. Попробовать `evm.transact_commit(tx)` вместо `transact`.
   2. Попробовать `Evm::builder()` напрямую, без `Context::mainnet()`.
   3. Если не сработает -- откатиться на `evm` crate (rust-ethereum/evm) или отложить EVM, перейти к P2P.
+
+### 2026-11-09 -- Сессия #30 (EVM В AIC CHAIN РАБОТАЕТ)
+- **ВЕХА: EVM работает в AIC Chain. AICID, InheritanceVault, TimeCapsule задеплоены и вызываются за 0 AIC.**
+- **Причина 6-часового бага найдена:** в `genesis_contracts.rs` читали `bytecode.object` (creation code = init + runtime), а надо `deployedBytecode.object` (runtime code). EVM выполнял init при каждом `aic_call` и возвращал runtime вместо результата функции.
+- **Фикс:** `load_runtime_bytecode()` читает `deployedBytecode.object`.
+- **Размеры в genesis:**
+  - AICID: 3776 байт runtime (было 3805 creation)
+  - InheritanceVault: 2284 байт
+  - TimeCapsule: 2680 байт
+- **aic_call resolve('alice'):**
+  - Запрос: selector 0x461a4478 + ABI(string) "alice"
+  - Ответ: `0x0000000000000000000000000000000000000000000000000000000000000000` (32 байта, alice свободен)
+  - Gas: 26861 (не списывается, read-only)
+- **Стек:** revm 43, Context::mainnet().with_db(InMemoryDB), TxEnv с caller=TREASURY, kind=TxKind::Call.
+- **Принцип №1 соблюдается:** 0 AIC за вызов, 0 ETH, 0 любой другой монеты. Всё в нашей сети.
+
+### Что дальше (по приоритету):
+1. **EVM write transactions** (aic_sendRawTransaction с data != empty): регистрация @alice за AIC, вызов InheritanceVault.deposit(), TimeCapsule.create(). Требует: execute tx через revm, применить state diff к нашему State, записать в блок.
+2. **P2P** (несколько нод, gossip блоков).
+3. **PQ-подписи** (Schnorr + Dilithium).
+4. **Мост aCOIN** (DKG 7/10).
+5. **UI** (Flutter/RN).
+
+### Технические заметки:
+- `TxEnv` в revm 43: поле `data` (не `input`), `kind` работает через `TxEnv::default()` + мутации.
+- `ExecutionResult::Success { output: Output::Call(bytes) }` -- правильный результат вызова.
+- `to_inmemory()` конвертирует наш State (accounts + contracts + storage) в revm::InMemoryDB.
