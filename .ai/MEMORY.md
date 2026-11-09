@@ -937,3 +937,32 @@ text
   - AIC-ID регистрация через UI
   - **Подпись транзакций в web:** варианты -- WASM aic-core, Rust-релей, JS-крипто. Решаем на след. блоке.
   - Портфель 150 сетей (курсы, балансы в одном экране)
+
+### 2026-11-10 -- Сессия #40 (UI РАБОТАЕТ -- Flutter + AIC Chain)
+- **ВЕХА: AIC Wallet Flutter UI работает в браузере, читает данные из AIC Chain.**
+- **Что видно:**
+  - Balance: 1 003 030 AIC (1M genesis + 6060 наград за 606 блоков)
+  - Chain ID 2026
+  - Block height: 609 (растёт)
+  - Address: 0xf39fd6...2266
+- **Архитектура UI:**
+  - packages/mobile/ (Flutter web + windows + android)
+  - lib/services/aic_rpc.dart -- JSON-RPC клиент (blockNumber, chainId, getBalance)
+  - lib/services/wallet_service.dart -- состояние + refresh()
+  - lib/screens/home_screen.dart -- минималистичный экран (заголовок + баланс + сеть)
+- **WASM собран:**
+  - packages/wasm/pkg/ (aic_wasm.js, aic_wasm_bg.wasm)
+  - 7 функций: generate_mnemonic_12, wallet_from_mnemonic, address_from_privkey, encode_aicid_register, encode_resolve_call, sign_legacy_tx, version
+  - CORS в ноде (CorsLayer::permissive) -- браузер может делать запросы
+  - lib/services/wasm_bridge.dart -- Dart-обёртка (готова, но не подключена к UI)
+- **Уроки:**
+  - PowerShell: НЕ использовать $home (это системная переменная). Использовать другие имена ($fileContent, $src).
+  - Длинные heredoc с $ и кириллицей ломаются при вставке (превращаются в \x0a escape). Разбивать на короткие файлы.
+  - flutter analyze может упасть с внутренним exception (Dart LSP channel). Это баг инструмента, не кода. Запускать `flutter run` отдельно.
+  - flutter run -d chrome часто падает на Windows. Использовать `flutter run -d web-server --web-port=8080` + открывать http://localhost:8080 вручную.
+- **Следующее:**
+  1. Красивый UI (вернуть кнопки Отправить/Получить/Своп, курсы USD/RUB, авто-poll каждые 3 сек)
+  2. Проверка WASM в консоли
+  3. Экран Отправить (подпись через WASM + aic_sendRawTransaction)
+  4. Экран Получить (QR)
+  5. AIC-ID регистрация через UI

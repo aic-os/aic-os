@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 01:47:18
+> Generated: 2026-11-10 02:13:51
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -280,7 +280,8 @@ aic-os/
 |   |   |   |   \-- home_screen.dart
 |   |   |   |-- services
 |   |   |   |   |-- aic_rpc.dart
-|   |   |   |   \-- wallet_service.dart
+|   |   |   |   |-- wallet_service.dart
+|   |   |   |   \-- wasm_bridge.dart
 |   |   |   |-- widgets
 |   |   |   \-- main.dart
 |   |   |-- test
@@ -291,6 +292,13 @@ aic-os/
 |   |   |   |   |-- Icon-512.png
 |   |   |   |   |-- Icon-maskable-192.png
 |   |   |   |   \-- Icon-maskable-512.png
+|   |   |   |-- wasm
+|   |   |   |   |-- .gitignore
+|   |   |   |   |-- aic_wasm.d.ts
+|   |   |   |   |-- aic_wasm.js
+|   |   |   |   |-- aic_wasm_bg.wasm
+|   |   |   |   |-- aic_wasm_bg.wasm.d.ts
+|   |   |   |   \-- package.json
 |   |   |   |-- favicon.png
 |   |   |   |-- index.html
 |   |   |   \-- manifest.json
@@ -341,7 +349,19 @@ aic-os/
 |   |   |   \-- transaction.rs
 |   |   \-- Cargo.toml
 |   |-- sdk
-|   \-- wallet
+|   |-- wallet
+|   \-- wasm
+|       |-- pkg
+|       |   |-- .gitignore
+|       |   |-- aic_wasm.d.ts
+|       |   |-- aic_wasm.js
+|       |   |-- aic_wasm_bg.wasm
+|       |   |-- aic_wasm_bg.wasm.d.ts
+|       |   \-- package.json
+|       |-- src
+|       |   \-- lib.rs
+|       |-- Cargo.lock
+|       \-- Cargo.toml
 |-- tools
 |   \-- scripts
 |       \-- update-tree.ps1

@@ -67,13 +67,13 @@
 ## ✅ AIC Wallet (Flutter, UI)
 
 - Flutter 3.47.7, web + windows + android
-- Главный экран: баланс AIC, курсы USD/RUB, block height, адрес
-- RPC-клиент к AIC Chain (chainId, blockNumber, getBalance)
-- Тёмная тема, градиенты
-- Запуск: `cd packages/mobile && flutter run -d web-server --web-port=8080`
-- Нода должна быть запущена: `.\target\debug\aic-node.exe`
+- **Работает:** главный экран (баланс AIC, block height, адрес) -- читает из AIC Chain
+- **WASM собран:** 7 функций (mnemonic, address, ABI-encode, sign_legacy_tx)
+- **Запуск:** `cd packages/mobile && flutter run -d web-server --web-port=8080`
+- **Нода:** `.\target\debug\aic-node.exe --validators 0xf39F...,0x7099... --my-address 0xf39F...`
+- Открыть: `http://localhost:8080`
 
-## 🛠️ Стек
+## 🛠️ Стек## 🛠️ Стек
 
 - **Ядро:** Rust (tokio, k256, bip39, bip32)
 - **Нода:** axum + revm 43 + libp2p 0.56 + ml-dsa + serde_json
@@ -102,6 +102,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 
