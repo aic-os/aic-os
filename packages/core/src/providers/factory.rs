@@ -4,12 +4,13 @@ use std::sync::Arc;
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
 use crate::providers::evm::EvmProvider;
+use crate::settings::Settings;
 use crate::traits::ChainTraits;
 
-/// Per-chain RPC settings (later -- loaded from Settings.yaml).
+/// Per-chain settings. rpc_urls: first = primary, rest = fallback.
 #[derive(Debug, Clone)]
 pub struct ChainSettings {
-    pub rpc_url: String,
+    pub rpc_urls: Vec<String>,
     pub chain_id: Option<u64>,
 }
 
@@ -26,6 +27,31 @@ impl ProviderFactory {
 
     pub fn with_settings(settings: HashMap<Chain, ChainSettings>) -> Self {
         Self { settings }
+    }
+
+    /// Build a factory from a loaded Settings (Settings.yaml).
+    /// Registers every chain that has at least one RPC URL.
+    pub fn from_settings(settings: &Settings) -> Self {
+        let mut map = HashMap::new();
+        for chain in [
+            Chain::Ethereum,
+            Chain::Bsc,
+            Chain::Polygon,
+            Chain::Arbitrum,
+            Chain::Optimism,
+            Chain::Base,
+            Chain::Avalanche,
+        ] {
+            if let Some(rpc_urls) = settings.rpc_urls_for(chain) {
+                if !rpc_urls.is_empty() {
+                    map.insert(chain, ChainSettings {
+                        rpc_urls,
+                        chain_id: settings.chain_id_for(chain),
+                    });
+                }
+            }
+        }
+        Self { settings: map }
     }
 
     pub fn register(&mut self, chain: Chain, settings: ChainSettings) {

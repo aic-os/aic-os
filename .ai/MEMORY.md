@@ -77,3 +77,15 @@ text
 - `rpc_call` устойчив: сначала text, потом JSON-парсинг, при не-JSON -- понятная ошибка с превью.
 - Пример: `cargo run --example get_balance -p aic-core`.
 - **Следующие задачи (Phase 1.2):** `estimate_fee` (eth_gasPrice + eth_estimateGas), `Settings.yaml` загрузчик с RPC-фолбэком, тесты.
+
+### 2026-11-09 -- Сессия #4 (Settings.yaml + RPC fallback + мультичейн)
+- Добавлен `serde_yaml_ng`, реализован `Settings` + `ChainConfig` (`config/settings.yaml`).
+- `ProviderFactory::from_settings(&Settings)` строит фабрику из YAML.
+- `ChainSettings.rpc_urls: Vec<String>` -- первый = primary, остальные = fallback.
+- `EvmProvider::rpc_call` перебирает все RPC по очереди, собирает ошибки, возвращает первый успех.
+- **ВЕХА:** живые балансы и комиссии с 3 mainnet-сетей одновременно:
+  - Ethereum: 5.793820 ETH, fee 0.00002287 ETH
+  - Polygon: 592.719867 MATIC, fee 0.00524279 MATIC
+  - BSC: 0.170081 BNB, fee 0.00000105 BNB
+- `config/settings.yaml` покрывает: ethereum, bsc, polygon, arbitrum, optimism, base, avalanche.
+- **Следующее:** (1) таймауты в reqwest; (2) тесты для Settings и fallback; (3) `broadcast` через `eth_sendRawTransaction`; (4) подпись транзакций (secp256k1 + RLP) -- отдельный большой блок.

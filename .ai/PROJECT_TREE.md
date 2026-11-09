@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 19:27:41
+> Generated: 2026-11-09 19:32:12
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -8,6 +8,8 @@ aic-os/
 |-- .ai
 |   |-- MEMORY.md
 |   \-- PROJECT_TREE.md
+|-- config
+|   \-- settings.yaml
 |-- docs
 |   |-- ARCHITECTURE.md
 |   \-- GLOSSARY.md
@@ -24,6 +26,7 @@ aic-os/
 |   |   |   |-- chain.rs
 |   |   |   |-- error.rs
 |   |   |   |-- lib.rs
+|   |   |   |-- settings.rs
 |   |   |   \-- traits.rs
 |   |   \-- Cargo.toml
 |   |-- node

@@ -1,0 +1,45 @@
+# AIC-OS chain settings.
+# Order of rpc items matters: first = primary, rest = fallback.
+
+chains:
+  ethereum:
+    chain_id: 1
+    rpc:
+      - https://ethereum-rpc.publicnode.com
+      - https://eth.drpc.org
+
+  bsc:
+    chain_id: 56
+    rpc:
+      - https://bsc-rpc.publicnode.com
+      - https://binance.llamarpc.com
+
+  polygon:
+    chain_id: 137
+    rpc:
+      - https://polygon-bor-rpc.publicnode.com
+      - https://polygon.llamarpc.com
+
+  arbitrum:
+    chain_id: 42161
+    rpc:
+      - https://arbitrum-one-rpc.publicnode.com
+      - https://arb1.arbitrum.io/rpc
+
+  optimism:
+    chain_id: 10
+    rpc:
+      - https://optimism-rpc.publicnode.com
+      - https://mainnet.optimism.io
+
+  base:
+    chain_id: 8453
+    rpc:
+      - https://base-rpc.publicnode.com
+      - https://mainnet.base.org
+
+  avalanche:
+    chain_id: 43114
+    rpc:
+      - https://avalanche-c-chain-rpc.publicnode.com
+      - https://api.avax.network/ext/bc/C/rpc

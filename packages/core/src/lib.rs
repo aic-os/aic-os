@@ -1,13 +1,15 @@
-//! AIC-OS core library (scaffold).
+//! AIC-OS core library.
 
 pub mod chain;
 pub mod error;
 pub mod providers;
+pub mod settings;
 pub mod traits;
 
 pub use chain::{Chain, ChainType};
 pub use error::{CoreError, Result};
 pub use providers::ProviderFactory;
+pub use settings::Settings;
 pub use traits::ChainTraits;
 
 pub fn version() -> &'static str {

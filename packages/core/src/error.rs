@@ -14,6 +14,12 @@ pub enum CoreError {
     #[error("invalid address: {0}")]
     InvalidAddress(String),
 
+    #[error("settings error: {0}")]
+    Settings(String),
+
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+
     #[error("http error: {0}")]
     Http(#[from] reqwest::Error),
 

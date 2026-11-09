@@ -1,30 +1,30 @@
-use std::collections::HashMap;
-
 use aic_core::chain::Chain;
-use aic_core::providers::factory::ChainSettings;
-use aic_core::ProviderFactory;
+use aic_core::{ProviderFactory, Settings};
 
 #[tokio::main]
 async fn main() {
-    let mut settings = HashMap::new();
-    settings.insert(Chain::Ethereum, ChainSettings {
-        rpc_url: "https://ethereum-rpc.publicnode.com".to_string(),
-        chain_id: Some(1),
-    });
+    let settings = Settings::from_yaml("config/settings.yaml").expect("load settings");
+    let factory = ProviderFactory::from_settings(&settings);
 
-    let factory = ProviderFactory::with_settings(settings);
-    let provider = factory.create(Chain::Ethereum).expect("provider");
+    let vitalik = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+    let recipient = "0x000000000000000000000000000000000000dEaD";
+    let amount = 1_000_000_000_000_000u128; // 0.001 ETH
 
-    // Vitalik's public address
-    let addr = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
-
-    println!("health: {:?}", provider.health().await);
-
-    match provider.get_balance(addr).await {
-        Ok(wei) => {
-            let eth = wei as f64 / 1e18;
-            println!("balance: {wei} wei = {eth:.6} ETH");
+    for chain in [Chain::Ethereum, Chain::Polygon, Chain::Bsc] {
+        println!("--- {} ---", chain.as_str());
+        match factory.create(chain) {
+            Ok(provider) => {
+                println!("health: {:?}", provider.health().await);
+                match provider.get_balance(vitalik).await {
+                    Ok(wei) => println!("balance: {:.6} native", wei as f64 / 1e18),
+                    Err(e) => println!("balance error: {e}"),
+                }
+                match provider.estimate_fee(vitalik, recipient, amount).await {
+                    Ok(fee) => println!("fee: {:.8} native", fee as f64 / 1e18),
+                    Err(e) => println!("fee error: {e}"),
+                }
+            }
+            Err(e) => println!("create error: {e}"),
         }
-        Err(e) => println!("error: {e}"),
     }
 }

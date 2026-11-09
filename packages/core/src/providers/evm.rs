@@ -7,7 +7,8 @@ use crate::traits::ChainTraits;
 
 pub struct EvmProvider {
     chain: Chain,
-    settings: ChainSettings,
+    chain_id: Option<u64>,
+    rpc_urls: Vec<String>,
     client: reqwest::Client,
 }
 
@@ -18,13 +19,24 @@ impl EvmProvider {
             .user_agent("aic-core/0.1")
             .build()
             .expect("http client");
-        Self { chain, settings, client }
+        Self {
+            chain,
+            chain_id: settings.chain_id,
+            rpc_urls: settings.rpc_urls,
+            client,
+        }
     }
 
-    pub fn rpc_url(&self) -> &str { &self.settings.rpc_url }
-    pub fn chain_id(&self) -> Option<u64> { self.settings.chain_id }
+    pub fn rpc_urls(&self) -> &[String] { &self.rpc_urls }
+    pub fn chain_id(&self) -> Option<u64> { self.chain_id }
 
+    /// Try every RPC URL in order. Return the first successful result,
+    /// or an aggregated error if all endpoints fail.
     async fn rpc_call(&self, method: &str, params: serde_json::Value) -> Result<serde_json::Value> {
+        if self.rpc_urls.is_empty() {
+            return Err(CoreError::Rpc("no rpc urls configured".into()));
+        }
+
         let body = serde_json::json!({
             "jsonrpc": "2.0",
             "method": method,
@@ -32,22 +44,37 @@ impl EvmProvider {
             "id": 1
         });
 
+        let mut errors = Vec::new();
+        for url in &self.rpc_urls {
+            match self.rpc_call_one(url, &body).await {
+                Ok(v) => return Ok(v),
+                Err(e) => errors.push(format!("{url}: {e}")),
+            }
+        }
+        Err(CoreError::Rpc(format!(
+            "all rpc endpoints failed for {method}: {}",
+            errors.join(" | ")
+        )))
+    }
+
+    async fn rpc_call_one(
+        &self,
+        url: &str,
+        body: &serde_json::Value,
+    ) -> Result<serde_json::Value> {
         let resp = self.client
-            .post(&self.settings.rpc_url)
-            .json(&body)
+            .post(url)
+            .json(body)
             .send()
             .await
             .map_err(|e| CoreError::Rpc(e.to_string()))?;
 
         let status = resp.status();
-        let text = resp.text().await?;
+        let text = resp.text().await.map_err(|e| CoreError::Rpc(e.to_string()))?;
 
         let json: serde_json::Value = serde_json::from_str(&text).map_err(|_| {
-            let preview: String = text.chars().take(200).collect();
-            CoreError::Rpc(format!(
-                "non-JSON response from {} (status {}): {}",
-                self.settings.rpc_url, status, preview
-            ))
+            let preview: String = text.chars().take(160).collect();
+            CoreError::Rpc(format!("non-JSON (status {status}): {preview}"))
         })?;
 
         if let Some(err) = json.get("error") {
@@ -55,8 +82,12 @@ impl EvmProvider {
         }
         json.get("result")
             .cloned()
-            .ok_or_else(|| CoreError::Rpc("missing result".to_string()))
+            .ok_or_else(|| CoreError::Rpc("missing result".into()))
     }
+}
+
+fn is_evm_address(s: &str) -> bool {
+    s.len() == 42 && s.starts_with("0x") && s[2..].chars().all(|c| c.is_ascii_hexdigit())
 }
 
 fn parse_hex_u128(hex: &str) -> Result<u128> {
@@ -66,22 +97,43 @@ fn parse_hex_u128(hex: &str) -> Result<u128> {
         .map_err(|_| CoreError::Rpc(format!("invalid hex: {hex}")))
 }
 
+fn hex_result_u128(v: &serde_json::Value) -> Result<u128> {
+    let s = v.as_str().ok_or_else(|| CoreError::Rpc("result is not a string".into()))?;
+    parse_hex_u128(s)
+}
+
 #[async_trait]
 impl ChainTraits for EvmProvider {
     fn chain(&self) -> Chain { self.chain }
 
     async fn get_balance(&self, address: &str) -> Result<u128> {
         let addr = address.trim();
-        if !addr.starts_with("0x") || addr.len() != 42 {
+        if !is_evm_address(addr) {
             return Err(CoreError::InvalidAddress(address.to_string()));
         }
         let res = self.rpc_call("eth_getBalance", serde_json::json!([addr, "latest"])).await?;
-        let hex = res.as_str().ok_or_else(|| CoreError::Rpc("result is not a string".into()))?;
-        parse_hex_u128(hex)
+        hex_result_u128(&res)
     }
 
-    async fn estimate_fee(&self, _from: &str, _to: &str, _amount: u128) -> Result<u128> {
-        Err(CoreError::NotImplemented("EvmProvider::estimate_fee (Phase 1.2)"))
+    async fn estimate_fee(&self, from: &str, to: &str, amount: u128) -> Result<u128> {
+        let from = from.trim();
+        let to = to.trim();
+        if !is_evm_address(from) { return Err(CoreError::InvalidAddress(from.to_string())); }
+        if !is_evm_address(to) { return Err(CoreError::InvalidAddress(to.to_string())); }
+
+        let gas_price_res = self.rpc_call("eth_gasPrice", serde_json::json!([])).await?;
+        let gas_price = hex_result_u128(&gas_price_res)?;
+
+        let tx = serde_json::json!({
+            "from": from,
+            "to": to,
+            "value": format!("0x{:x}", amount),
+        });
+        let gas_res = self.rpc_call("eth_estimateGas", serde_json::json!([tx])).await?;
+        let gas = hex_result_u128(&gas_res)?;
+
+        gas_price.checked_mul(gas)
+            .ok_or_else(|| CoreError::Rpc("fee overflow (u128)".into()))
     }
 
     async fn broadcast(&self, _raw_tx_hex: &str) -> Result<String> {
