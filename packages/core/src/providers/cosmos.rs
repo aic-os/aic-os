@@ -49,6 +49,14 @@ impl CosmosProvider {
             Chain::Desmos => "udsm",
             Chain::Emoney => "ungm",
             Chain::Medibloc => "umed",
+            Chain::Band => "uband",
+            Chain::Fetch => "afet",
+            Chain::Axelar => "uaxl",
+            Chain::Dydx => "adydx",
+            Chain::Saga => "usaga",
+            Chain::Nomic => "unom",
+            Chain::Terra => "uluna",
+            Chain::AssetMantle => "umntl",
             _ => "uatom",
         }
     }
@@ -113,3 +121,4 @@ impl ChainTraits for CosmosProvider {
         Ok(false)
     }
 }
+

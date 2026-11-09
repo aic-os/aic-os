@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 21:23:28
+> Generated: 2026-11-09 21:28:57
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -182,18 +182,30 @@ aic-os/
 |   |   |   \-- send_eth_1559.rs
 |   |   |-- src
 |   |   |   |-- providers
+|   |   |   |   |-- algorand.rs
 |   |   |   |   |-- aptos.rs
 |   |   |   |   |-- bitcoin.rs
+|   |   |   |   |-- cardano.rs
 |   |   |   |   |-- cosmos.rs
 |   |   |   |   |-- evm.rs
 |   |   |   |   |-- evm_abi.rs
 |   |   |   |   |-- factory.rs
+|   |   |   |   |-- hedera.rs
+|   |   |   |   |-- kaspa.rs
 |   |   |   |   |-- mod.rs
+|   |   |   |   |-- monero.rs
+|   |   |   |   |-- multiversx.rs
+|   |   |   |   |-- near.rs
+|   |   |   |   |-- polkadot.rs
 |   |   |   |   |-- prices.rs
 |   |   |   |   |-- solana.rs
+|   |   |   |   |-- stellar.rs
 |   |   |   |   |-- sui.rs
+|   |   |   |   |-- tezos.rs
+|   |   |   |   |-- theta.rs
 |   |   |   |   |-- ton.rs
 |   |   |   |   |-- tron.rs
+|   |   |   |   |-- vechain.rs
 |   |   |   |   \-- xrp.rs
 |   |   |   |-- wallet
 |   |   |   |   |-- erc20.rs

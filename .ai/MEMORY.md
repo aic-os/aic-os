@@ -366,3 +366,31 @@ text
   - Фазы 2-5 -- запланированы
 - Текущее состояние: 107 сетей, 70 Rust-тестов, 53 Solidity-теста, 3 контракта работают на Anvil, 0 в публичной сети.
 - Следующий приоритет: добить до 150 сетей + отправка BTC/SOL.
+
+### 2026-11-09 -- Сессия #23 (135 сетей + 12 новых провайдеров)
+- **ВЕХА: кошелёк поддерживает 135 сетей.**
+- Распределение: EVM 74, UTXO 10, Cosmos 33, Other 18.
+- **+12 новых провайдеров** (каждый -- REST/JSON-RPC через публичный API, без ключей):
+  - `NearProvider` -- fastnear.com / rpc.mainnet.near.org (`query` view_account).
+  - `AlgorandProvider` -- AlgoNode (`/v2/accounts/{addr}`).
+  - `StellarProvider` -- Horizon (`/accounts/{addr}`, конверсия XLM * 1e7).
+  - `KaspaProvider` -- api.kaspa.org (`/addresses/{addr}/balance`).
+  - `MoneroProvider` -- xmrchain.net (`/api/address/{addr}`).
+  - `TezosProvider` -- TzKT (`/v1/accounts/{addr}/balance`).
+  - `MultiversXProvider` -- api.multiversx.com.
+  - `HederaProvider` -- mirror node (`/api/v1/accounts/{addr}`).
+  - `VeChainProvider` -- sync-mainnet.vechain.org.
+  - `ThetaProvider` -- theta-explorer (`/account/{addr}`).
+  - `CardanoProvider` -- Koios (`/address_info?_address=`).
+  - `PolkadotProvider` -- Subscan (`/api/v2/scan/search`).
+- **+8 EVM**: Meter, KavaEVM, OasisSapphire, Elastos, Syscoin, Lightlink, XLayer, Berachain.
+- **+8 Cosmos**: Band, Fetch, Axelar, Dydx, Saga, Nomic, Terra, AssetMantle. Denom-маппинг расширен (uband, afet, uaxl, adydx, usaga, unom, uluna, umntl).
+- `prices.rs` -- coingecko_id для всех 135 сетей (~125 id, экзотика через `_ => return None`).
+- `config/settings.yaml` -- все 135 сетей (компактный inline-формат).
+- **Живые балансы (sample 12):** BTC 57.71 (~$4.29M), SOL 0.147 (~$12.69), TRX 14493.8 (~$4,590), XRP 1113.55 (~$1,207).
+- **70 тестов зелёные.**
+- **Уроки:**
+  - При добавлении новых сетей -- factory match по `Chain::Variant` должен быть exhaustive; иначе compile error.
+  - Cosmos denom-маппинг: без правильного `denom` баланс всегда 0 (даже если API отвечает).
+  - Некоторые REST API возвращают balance как string (не number) -- парсить через `.as_str().and_then(|s| s.parse())`.
+- **Следующее:** отправка BTC/SOL (PSBT + ed25519), либо оставшиеся сети для 150+ (NEAR уже есть, нужны: ICP, FLOW, XMR -- есть, KAS -- есть; остались: ICP, FLOW, WAVES, ZEN, ZIL, ETC, AR, RUNE, ROSE, KSM, ASTR -- часть уже через EVM/Cosmos).

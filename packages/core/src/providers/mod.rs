@@ -1,14 +1,26 @@
+pub mod algorand;
 pub mod aptos;
 pub mod bitcoin;
+pub mod cardano;
 pub mod cosmos;
 pub mod evm;
 pub mod evm_abi;
 pub mod factory;
+pub mod hedera;
+pub mod kaspa;
+pub mod monero;
+pub mod multiversx;
+pub mod near;
+pub mod polkadot;
 pub mod prices;
 pub mod solana;
+pub mod stellar;
 pub mod sui;
+pub mod tezos;
+pub mod theta;
 pub mod ton;
 pub mod tron;
+pub mod vechain;
 pub mod xrp;
 
 pub use factory::ProviderFactory;

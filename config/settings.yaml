@@ -69,6 +69,14 @@ chains:
   curtis: { chain_id: 33111, rpc: [https://cronos-testnet.calderachain.xyz/http] }
   frame: { chain_id: 5453, rpc: [https://rpc.frame.xyz] }
   rari: { chain_id: 1380012617, rpc: [https://rari.calderachain.xyz/http] }
+  meter: { chain_id: 82, rpc: [https://rpc.meter.io] }
+  kava-evm: { chain_id: 2222, rpc: [https://kava-evm.publicnode.com] }
+  oasis-sapphire: { chain_id: 23294, rpc: [https://sapphire.oasis.io] }
+  elastos: { chain_id: 20, rpc: [https://api.elastos.io/evm] }
+  syscoin: { chain_id: 57, rpc: [https://rpc.syscoin.org] }
+  lightlink: { chain_id: 1890, rpc: [https://republic.rpc.lightlink.io] }
+  xlayer: { chain_id: 196, rpc: [https://rpc.xlayer.tech] }
+  berachain: { chain_id: 80094, rpc: [https://rpc.berachain.com] }
 
   # ===== UTXO =====
   bitcoin: { rpc: [https://blockstream.info/api, https://mempool.space/api] }
@@ -108,6 +116,14 @@ chains:
   desmos: { rpc: [https://desmos-rest.publicnode.com] }
   emoney: { rpc: [https://emoney-rest.publicnode.com] }
   medibloc: { rpc: [https://medibloc-rest.publicnode.com] }
+  band: { rpc: [https://band-rest.publicnode.com] }
+  fetch: { rpc: [https://fetch-rest.publicnode.com] }
+  axelar: { rpc: [https://axelar-rest.publicnode.com] }
+  dydx: { rpc: [https://dydx-rest.publicnode.com] }
+  saga: { rpc: [https://saga-rest.publicnode.com] }
+  nomic: { rpc: [https://nomic-rest.publicnode.com] }
+  terra: { rpc: [https://terra-rest.publicnode.com] }
+  assetmantle: { rpc: [https://assetmantle-rest.publicnode.com] }
 
   # ===== Other =====
   solana: { rpc: [https://api.mainnet-beta.solana.com] }
@@ -116,3 +132,16 @@ chains:
   sui: { rpc: [https://fullnode.mainnet.sui.io:443] }
   aptos: { rpc: [https://fullnode.mainnet.aptoslabs.com/v1] }
   ripple: { rpc: [https://xrplcluster.com, https://s1.ripple.com:51234] }
+  near: { rpc: [https://free.rpc.fastnear.com, https://rpc.mainnet.near.org] }
+  algorand: { rpc: [https://mainnet-api.algonode.cloud] }
+  stellar: { rpc: [https://horizon.stellar.org] }
+  kaspa: { rpc: [https://api.kaspa.org] }
+  monero: { rpc: [https://xmrchain.net] }
+  tezos: { rpc: [https://api.tzkt.io] }
+  multiversx: { rpc: [https://api.multiversx.com] }
+  hedera: { rpc: [https://mainnet-public.mirrornode.hedera.com] }
+  vechain: { rpc: [https://sync-mainnet.vechain.org] }
+  theta: { rpc: [https://theta-explorer.thetatoken.org/api] }
+  cardano: { rpc: [https://api.koios.rest/api/v1] }
+  polkadot: { rpc: [https://polkadot.api.subscan.io] }
+

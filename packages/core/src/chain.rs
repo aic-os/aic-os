@@ -5,7 +5,7 @@ pub enum ChainType { Evm, Utxo, Cosmos, Other }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Chain {
-    // EVM (65)
+    // EVM (74)
     Ethereum, Bsc, Polygon, Arbitrum, Optimism, Base, Avalanche,
     Linea, Scroll, ZkSync, Mantle, Blast, Gnosis, Celo, Fantom,
     Cronos, Moonbeam, Aurora, Filecoin, PolygonZkEvm,
@@ -16,21 +16,25 @@ pub enum Chain {
     Opbnb, Zora, Mode, Mint, MantaPacific, Kroma, Pgn,
     Redstone, Ancient8, Cyber, Lisk, Rsk, Bitlayer,
     Zetachain, Dexalot, ApeChain, Curtis, Frame, Rari,
+    Meter, KavaEvm, OasisSapphire, Elastos, Syscoin, Lightlink,
+    XLayer, Berachain,
     // UTXO (10)
     Bitcoin, Litecoin, Dogecoin, BitcoinCash, Dash, Zcash,
     BitcoinSv, DigiByte, Ravencoin, Groestlcoin,
-    // Cosmos (25)
+    // Cosmos (33)
     CosmosHub, Osmosis, Celestia, Injective, Kava, Sei, Akash, Juno,
     Stargaze, Kujira, Stride, Neutron, Archway, Persistence,
     Umee, Comdex, Crescent, Regen, Sentinel, Sifchain,
     Chihuahua, Bitsong, Desmos, Emoney, Medibloc,
-    // Other (6)
+    Band, Fetch, Axelar, Dydx, Saga, Nomic, Terra, AssetMantle,
+    // Other (18)
     Solana, Tron, Ton, Sui, Aptos, Ripple,
+    Near, Algorand, Stellar, Kaspa, Monero, Tezos,
+    MultiversX, Hedera, VeChain, Theta, Cardano, Polkadot,
 }
 
 impl Chain {
     pub const ALL: &'static [Chain] = &[
-        // EVM
         Chain::Ethereum, Chain::Bsc, Chain::Polygon, Chain::Arbitrum,
         Chain::Optimism, Chain::Base, Chain::Avalanche, Chain::Linea,
         Chain::Scroll, Chain::ZkSync, Chain::Mantle, Chain::Blast,
@@ -47,22 +51,25 @@ impl Chain {
         Chain::Kroma, Chain::Pgn, Chain::Redstone, Chain::Ancient8,
         Chain::Cyber, Chain::Lisk, Chain::Rsk, Chain::Bitlayer,
         Chain::Zetachain, Chain::Dexalot, Chain::ApeChain, Chain::Curtis,
-        Chain::Frame, Chain::Rari,
-        // UTXO
+        Chain::Frame, Chain::Rari, Chain::Meter, Chain::KavaEvm,
+        Chain::OasisSapphire, Chain::Elastos, Chain::Syscoin, Chain::Lightlink,
+        Chain::XLayer, Chain::Berachain,
         Chain::Bitcoin, Chain::Litecoin, Chain::Dogecoin, Chain::BitcoinCash,
         Chain::Dash, Chain::Zcash, Chain::BitcoinSv, Chain::DigiByte,
         Chain::Ravencoin, Chain::Groestlcoin,
-        // Cosmos
         Chain::CosmosHub, Chain::Osmosis, Chain::Celestia, Chain::Injective,
         Chain::Kava, Chain::Sei, Chain::Akash, Chain::Juno,
         Chain::Stargaze, Chain::Kujira, Chain::Stride, Chain::Neutron,
         Chain::Archway, Chain::Persistence, Chain::Umee, Chain::Comdex,
         Chain::Crescent, Chain::Regen, Chain::Sentinel, Chain::Sifchain,
         Chain::Chihuahua, Chain::Bitsong, Chain::Desmos, Chain::Emoney,
-        Chain::Medibloc,
-        // Other
+        Chain::Medibloc, Chain::Band, Chain::Fetch, Chain::Axelar,
+        Chain::Dydx, Chain::Saga, Chain::Nomic, Chain::Terra, Chain::AssetMantle,
         Chain::Solana, Chain::Tron, Chain::Ton, Chain::Sui,
-        Chain::Aptos, Chain::Ripple,
+        Chain::Aptos, Chain::Ripple, Chain::Near, Chain::Algorand,
+        Chain::Stellar, Chain::Kaspa, Chain::Monero, Chain::Tezos,
+        Chain::MultiversX, Chain::Hedera, Chain::VeChain, Chain::Theta,
+        Chain::Cardano, Chain::Polkadot,
     ];
 
     pub fn count() -> usize { Self::ALL.len() }
@@ -79,14 +86,19 @@ impl Chain {
             | ThunderCore | Hoo | Kcc | Tombchain | Bitgert | ArbitrumNova
             | Opbnb | Zora | Mode | Mint | MantaPacific | Kroma | Pgn
             | Redstone | Ancient8 | Cyber | Lisk | Rsk | Bitlayer
-            | Zetachain | Dexalot | ApeChain | Curtis | Frame | Rari => ChainType::Evm,
+            | Zetachain | Dexalot | ApeChain | Curtis | Frame | Rari
+            | Meter | KavaEvm | OasisSapphire | Elastos | Syscoin | Lightlink
+            | XLayer | Berachain => ChainType::Evm,
             Bitcoin | Litecoin | Dogecoin | BitcoinCash | Dash | Zcash
             | BitcoinSv | DigiByte | Ravencoin | Groestlcoin => ChainType::Utxo,
             CosmosHub | Osmosis | Celestia | Injective | Kava | Sei | Akash | Juno
             | Stargaze | Kujira | Stride | Neutron | Archway | Persistence
             | Umee | Comdex | Crescent | Regen | Sentinel | Sifchain
-            | Chihuahua | Bitsong | Desmos | Emoney | Medibloc => ChainType::Cosmos,
-            Solana | Tron | Ton | Sui | Aptos | Ripple => ChainType::Other,
+            | Chihuahua | Bitsong | Desmos | Emoney | Medibloc
+            | Band | Fetch | Axelar | Dydx | Saga | Nomic | Terra | AssetMantle => ChainType::Cosmos,
+            Solana | Tron | Ton | Sui | Aptos | Ripple
+            | Near | Algorand | Stellar | Kaspa | Monero | Tezos
+            | MultiversX | Hedera | VeChain | Theta | Cardano | Polkadot => ChainType::Other,
         }
     }
 
@@ -115,7 +127,10 @@ impl Chain {
             Cyber => "cyber", Lisk => "lisk", Rsk => "rsk",
             Bitlayer => "bitlayer", Zetachain => "zetachain", Dexalot => "dexalot",
             ApeChain => "apechain", Curtis => "curtis", Frame => "frame",
-            Rari => "rari",
+            Rari => "rari", Meter => "meter", KavaEvm => "kava-evm",
+            OasisSapphire => "oasis-sapphire", Elastos => "elastos",
+            Syscoin => "syscoin", Lightlink => "lightlink", XLayer => "xlayer",
+            Berachain => "berachain",
             Bitcoin => "bitcoin", Litecoin => "litecoin", Dogecoin => "dogecoin",
             BitcoinCash => "bitcoin-cash", Dash => "dash", Zcash => "zcash",
             BitcoinSv => "bitcoin-sv", DigiByte => "digibyte", Ravencoin => "ravencoin",
@@ -128,9 +143,15 @@ impl Chain {
             Comdex => "comdex", Crescent => "crescent", Regen => "regen",
             Sentinel => "sentinel", Sifchain => "sifchain", Chihuahua => "chihuahua",
             Bitsong => "bitsong", Desmos => "desmos", Emoney => "emoney",
-            Medibloc => "medibloc",
+            Medibloc => "medibloc", Band => "band", Fetch => "fetch",
+            Axelar => "axelar", Dydx => "dydx", Saga => "saga",
+            Nomic => "nomic", Terra => "terra", AssetMantle => "assetmantle",
             Solana => "solana", Tron => "tron", Ton => "ton",
             Sui => "sui", Aptos => "aptos", Ripple => "ripple",
+            Near => "near", Algorand => "algorand", Stellar => "stellar",
+            Kaspa => "kaspa", Monero => "monero", Tezos => "tezos",
+            MultiversX => "multiversx", Hedera => "hedera", VeChain => "vechain",
+            Theta => "theta", Cardano => "cardano", Polkadot => "polkadot",
         }
     }
 
@@ -149,7 +170,11 @@ impl Chain {
             "inj" => Injective, "sol" => Solana, "trx" => Tron,
             "xrp" => Ripple, "apt" => Aptos, "ftm" => Fantom,
             "glmr" => Moonbeam, "movr" => Moonriver, "cro" => Cronos,
-            "fil" => Filecoin, "xdai" => Gnosis,
+            "fil" => Filecoin, "xdai" => Gnosis, "ada" => Cardano,
+            "dot" => Polkadot, "xmr" => Monero, "xtz" => Tezos,
+            "algo" => Algorand, "xlm" => Stellar, "vet" => VeChain,
+            "hbar" => Hedera, "egld" => MultiversX, "theta" => Theta,
+            "near" => Near, "kas" => Kaspa,
             _ => return None,
         })
     }

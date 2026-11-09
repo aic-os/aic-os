@@ -119,6 +119,34 @@ impl PriceClient {
             Sui => "sui",
             Aptos => "aptos",
             Ripple => "ripple",
+            Near => "near",
+            Algorand => "algorand",
+            Stellar => "stellar",
+            Kaspa => "kaspa",
+            Monero => "monero",
+            Tezos => "tezos",
+            MultiversX => "elrond-erd-2",
+            Hedera => "hedera-hashgraph",
+            VeChain => "vechain",
+            Theta => "theta-token",
+            Cardano => "cardano",
+            Polkadot => "polkadot",
+            Meter => "meter",
+            KavaEvm => "kava",
+            OasisSapphire => "oasis-network",
+            Elastos => "elastos",
+            Syscoin => "syscoin",
+            Lightlink => "lightlink",
+            XLayer => "okb",
+            Berachain => "berachain-bera",
+            Band => "band-protocol",
+            Fetch => "fetch-ai",
+            Axelar => "axelar",
+            Dydx => "dydx-chain",
+            Saga => "saga-2",
+            Nomic => "nomic",
+            Terra => "terra-luna-2",
+            AssetMantle => "assetmantle",
             _ => return None,
         })
     }
@@ -168,4 +196,5 @@ mod tests {
         assert!(PriceClient::new().get_prices(&[]).await.unwrap().is_empty());
     }
 }
+
 
