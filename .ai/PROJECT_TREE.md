@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 21:00:30
+> Generated: 2026-11-09 21:10:12
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -172,6 +172,7 @@ aic-os/
 |   |-- core
 |   |   |-- examples
 |   |   |   |-- aic_id_resolve.rs
+|   |   |   |-- all_networks.rs
 |   |   |   |-- broadcast_test.rs
 |   |   |   |-- erc20_balance.rs
 |   |   |   |-- erc20_metadata.rs
@@ -182,12 +183,17 @@ aic-os/
 |   |   |-- src
 |   |   |   |-- providers
 |   |   |   |   |-- bitcoin.rs
+|   |   |   |   |-- cosmos.rs
 |   |   |   |   |-- evm.rs
 |   |   |   |   |-- evm_abi.rs
 |   |   |   |   |-- factory.rs
 |   |   |   |   |-- mod.rs
+|   |   |   |   |-- prices.rs
 |   |   |   |   |-- solana.rs
-|   |   |   |   \-- ton.rs
+|   |   |   |   |-- sui.rs
+|   |   |   |   |-- ton.rs
+|   |   |   |   |-- tron.rs
+|   |   |   |   \-- xrp.rs
 |   |   |   |-- wallet
 |   |   |   |   |-- erc20.rs
 |   |   |   |   |-- eth.rs

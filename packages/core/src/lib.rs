@@ -9,7 +9,7 @@ pub mod wallet;
 
 pub use chain::{Chain, ChainType};
 pub use error::{CoreError, Result};
-pub use providers::ProviderFactory;
+pub use providers::{PriceClient, PriceInfo, ProviderFactory};
 pub use settings::Settings;
 pub use traits::ChainTraits;
 pub use wallet::{

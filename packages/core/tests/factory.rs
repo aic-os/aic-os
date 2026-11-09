@@ -38,19 +38,19 @@ fn factory_creates_evm_provider_with_multiple_rpc() {
 }
 
 #[test]
-fn factory_rejects_not_implemented_cosmos() {
+fn factory_rejects_not_implemented_aptos() {
     let mut settings = HashMap::new();
-    settings.insert(Chain::CosmosHub, ChainSettings {
-        rpc_urls: vec!["http://localhost:26657".to_string()],
+    settings.insert(Chain::Aptos, ChainSettings {
+        rpc_urls: vec!["https://fullnode.mainnet.aptoslabs.com/v1".to_string()],
         chain_id: None,
     });
     let f = ProviderFactory::with_settings(settings);
-    let err = f.create(Chain::CosmosHub).err().expect("should err");
+    let err = f.create(Chain::Aptos).err().expect("should err");
     assert!(format!("{err}").contains("not implemented"));
 }
 
 #[test]
-fn factory_creates_bitcoin_provider_now_that_utxo_is_implemented() {
+fn factory_creates_bitcoin_provider() {
     let mut settings = HashMap::new();
     settings.insert(Chain::Bitcoin, ChainSettings {
         rpc_urls: vec!["https://blockstream.info/api".to_string()],
@@ -59,6 +59,66 @@ fn factory_creates_bitcoin_provider_now_that_utxo_is_implemented() {
     let f = ProviderFactory::with_settings(settings);
     let p = f.create(Chain::Bitcoin).expect("bitcoin provider");
     assert_eq!(p.chain(), Chain::Bitcoin);
+}
+
+#[test]
+fn factory_creates_solana_provider() {
+    let mut settings = HashMap::new();
+    settings.insert(Chain::Solana, ChainSettings {
+        rpc_urls: vec!["https://api.mainnet-beta.solana.com".to_string()],
+        chain_id: None,
+    });
+    let f = ProviderFactory::with_settings(settings);
+    let p = f.create(Chain::Solana).expect("solana provider");
+    assert_eq!(p.chain(), Chain::Solana);
+}
+
+#[test]
+fn factory_creates_cosmos_provider() {
+    let mut settings = HashMap::new();
+    settings.insert(Chain::CosmosHub, ChainSettings {
+        rpc_urls: vec!["https://cosmos-rest.publicnode.com".to_string()],
+        chain_id: None,
+    });
+    let f = ProviderFactory::with_settings(settings);
+    let p = f.create(Chain::CosmosHub).expect("cosmos provider");
+    assert_eq!(p.chain(), Chain::CosmosHub);
+}
+
+#[test]
+fn factory_creates_tron_provider() {
+    let mut settings = HashMap::new();
+    settings.insert(Chain::Tron, ChainSettings {
+        rpc_urls: vec!["https://api.trongrid.io".to_string()],
+        chain_id: None,
+    });
+    let f = ProviderFactory::with_settings(settings);
+    let p = f.create(Chain::Tron).expect("tron provider");
+    assert_eq!(p.chain(), Chain::Tron);
+}
+
+#[test]
+fn factory_creates_ripple_provider() {
+    let mut settings = HashMap::new();
+    settings.insert(Chain::Ripple, ChainSettings {
+        rpc_urls: vec!["https://xrplcluster.com".to_string()],
+        chain_id: None,
+    });
+    let f = ProviderFactory::with_settings(settings);
+    let p = f.create(Chain::Ripple).expect("ripple provider");
+    assert_eq!(p.chain(), Chain::Ripple);
+}
+
+#[test]
+fn factory_creates_sui_provider() {
+    let mut settings = HashMap::new();
+    settings.insert(Chain::Sui, ChainSettings {
+        rpc_urls: vec!["https://fullnode.mainnet.sui.io:443".to_string()],
+        chain_id: None,
+    });
+    let f = ProviderFactory::with_settings(settings);
+    let p = f.create(Chain::Sui).expect("sui provider");
+    assert_eq!(p.chain(), Chain::Sui);
 }
 
 #[test]

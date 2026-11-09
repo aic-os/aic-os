@@ -307,3 +307,29 @@ text
   - B) CoinGecko integration -- курсы всех монет к USD/RUB (фишка из исходной задумки).
   - C) Отправка BTC/SOL (подпись + broadcast) -- самый сложный шаг.
   - D) AIC Chain scaffold -- `packages/node` на Rust (Фаза 2).
+
+### 2026-11-09 -- Сессия #21 (Block B: CoinGecko + 4 новые сети)
+- **ВЕХА: кошелёк показывает балансы с курсами к USD/RUB и работает с 10 сетями.**
+- CoinGecko integration:
+  - `PriceClient::get_prices(chains)` -- один HTTP-запрос на все сети (CoinGecko simple/price).
+  - `PriceInfo { usd, rub }` -- цена единицы нативной монеты.
+  - Маппинг `Chain -> coingecko_id`: ETH/Polygon/BSC/Arb/OP/Base/Avax/BTC/LTC/DOGE/ATOM/OSMO/TIA/SOL/TRX/TON/SUI/APT/XRP.
+  - Arb/Optimism/Base используют `ethereum` (нативный газ = ETH).
+- Новые провайдеры (`aic-core/src/providers/`):
+  - `TronProvider` -- trongrid `/v1/accounts/{addr}`, balance в sun.
+  - `XrpProvider` -- `account_info` JSON-RPC, drops как u128, actNotFound -> 0.
+  - `CosmosProvider` -- REST `/cosmos/bank/v1beta1/balances/{addr}` с denom-маппингом (uatom/uosmo/utia).
+  - `SuiProvider` -- `suix_getBalance` (0x2::sui::SUI).
+- `ProviderFactory` регистрирует 19 сетей: 7 EVM + 3 UTXO + 3 Cosmos + SOL/TON/TRX/SUI/XRP.
+- `ChainType::Cosmos` -> `CosmosProvider`. `ChainType::Other`: SOL/TON/TRX/SUI/Ripple работают, Aptos -> NotImplemented.
+- `config/settings.yaml` расширен: tron, ripple, cosmos, sui.
+- **Живые данные (mainnet, 10 сетей):**
+  - ETH 5.79 (~$12,308), POL 592.72 (~$74), BNB 0.17 (~$116)
+  - BTC 57.71 (~$4.3M), SOL 0.147 (~$12.77), TON 0.114 (~$0.12)
+  - TRX 14,493 (~$4,592), XRP 1,113 (~$1,217), ATOM 0, SUI 0
+- **81 тест зелёный** (было 76, +5 factory: bitcoin/solana/cosmos/tron/ripple/sui и замена Cosmos->Aptos в not-implemented).
+- **Уроки:**
+  - Settings YAML: ключ должен точно совпадать с `Chain::as_str()` (xrp -> ripple).
+  - При добавлении сетей в settings.yaml -- тест `settings_unknown_chain_returns_none` переключить на реально отсутствующую (Aptos).
+  - Regex-замены для многострочных блоков ненадёжны -- перезаписывать файл целиком.
+- **Следующее:** отправка BTC/SOL (PSBT + ed25519) или AIC Chain scaffold.
