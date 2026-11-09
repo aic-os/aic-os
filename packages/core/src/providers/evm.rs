@@ -24,12 +24,7 @@ impl EvmProvider {
             .connect_timeout(Duration::from_secs(RPC_TIMEOUT_SECS))
             .build()
             .expect("http client");
-        Self {
-            chain,
-            chain_id: settings.chain_id,
-            rpc_urls: settings.rpc_urls,
-            client,
-        }
+        Self { chain, chain_id: settings.chain_id, rpc_urls: settings.rpc_urls, client }
     }
 
     pub fn rpc_urls(&self) -> &[String] { &self.rpc_urls }
@@ -39,14 +34,12 @@ impl EvmProvider {
         if self.rpc_urls.is_empty() {
             return Err(CoreError::Rpc("no rpc urls configured".into()));
         }
-
         let body = serde_json::json!({
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
             "id": 1
         });
-
         let mut errors = Vec::new();
         for url in &self.rpc_urls {
             match self.rpc_call_one(url, &body).await {
@@ -60,31 +53,19 @@ impl EvmProvider {
         )))
     }
 
-    async fn rpc_call_one(
-        &self,
-        url: &str,
-        body: &serde_json::Value,
-    ) -> Result<serde_json::Value> {
-        let resp = self.client
-            .post(url)
-            .json(body)
-            .send()
-            .await
+    async fn rpc_call_one(&self, url: &str, body: &serde_json::Value) -> Result<serde_json::Value> {
+        let resp = self.client.post(url).json(body).send().await
             .map_err(|e| CoreError::Rpc(e.to_string()))?;
-
         let status = resp.status();
         let text = resp.text().await.map_err(|e| CoreError::Rpc(e.to_string()))?;
-
         let json: serde_json::Value = serde_json::from_str(&text).map_err(|_| {
             let preview: String = text.chars().take(160).collect();
             CoreError::Rpc(format!("non-JSON (status {status}): {preview}"))
         })?;
-
         if let Some(err) = json.get("error") {
             return Err(CoreError::Rpc(err.to_string()));
         }
-        json.get("result")
-            .cloned()
+        json.get("result").cloned()
             .ok_or_else(|| CoreError::Rpc("missing result".into()))
     }
 }
@@ -127,20 +108,27 @@ impl ChainTraits for EvmProvider {
         let to = to.trim();
         if !is_evm_address(from) { return Err(CoreError::InvalidAddress(from.to_string())); }
         if !is_evm_address(to) { return Err(CoreError::InvalidAddress(to.to_string())); }
-
-        let gas_price_res = self.rpc_call("eth_gasPrice", serde_json::json!([])).await?;
-        let gas_price = hex_result_u128(&gas_price_res)?;
-
-        let tx = serde_json::json!({
-            "from": from,
-            "to": to,
-            "value": format!("0x{:x}", amount),
-        });
+        let gas_price = self.get_gas_price().await?;
+        let tx = serde_json::json!({ "from": from, "to": to, "value": format!("0x{:x}", amount) });
         let gas_res = self.rpc_call("eth_estimateGas", serde_json::json!([tx])).await?;
         let gas = hex_result_u128(&gas_res)?;
-
         gas_price.checked_mul(gas)
             .ok_or_else(|| CoreError::Rpc("fee overflow (u128)".into()))
+    }
+
+    async fn get_nonce(&self, address: &str) -> Result<u64> {
+        let addr = address.trim();
+        if !is_evm_address(addr) {
+            return Err(CoreError::InvalidAddress(address.to_string()));
+        }
+        let res = self.rpc_call("eth_getTransactionCount", serde_json::json!([addr, "pending"])).await?;
+        let n = hex_result_u128(&res)?;
+        Ok(n as u64)
+    }
+
+    async fn get_gas_price(&self) -> Result<u128> {
+        let res = self.rpc_call("eth_gasPrice", serde_json::json!([])).await?;
+        hex_result_u128(&res)
     }
 
     async fn broadcast(&self, raw_tx_hex: &str) -> Result<String> {
@@ -152,11 +140,8 @@ impl ChainTraits for EvmProvider {
             )));
         }
         if (raw.len() - 2) % 2 != 0 {
-            return Err(CoreError::Rpc(
-                "invalid raw tx hex: odd number of hex chars".into(),
-            ));
+            return Err(CoreError::Rpc("invalid raw tx hex: odd number of hex chars".into()));
         }
-
         let res = self.rpc_call("eth_sendRawTransaction", serde_json::json!([raw])).await?;
         let hash = res.as_str()
             .ok_or_else(|| CoreError::Rpc("eth_sendRawTransaction: result is not a string".into()))?;
@@ -177,7 +162,7 @@ mod tests {
     fn hex_validation_accepts_valid() {
         assert!(is_hex_string("0xdeadbeef"));
         assert!(is_hex_string("0x00"));
-        assert!(is_hex_string("0x12345")); // hex chars, even if odd length; length check is separate
+        assert!(is_hex_string("0x12345"));
     }
 
     #[test]

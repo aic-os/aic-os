@@ -14,6 +14,13 @@ pub trait ChainTraits: Send + Sync {
     /// Rough network fee estimate for a simple transfer.
     async fn estimate_fee(&self, from: &str, to: &str, amount: u128) -> Result<u128>;
 
+    /// Transaction sequence number (nonce) for the given address.
+    /// For EVM -- pending nonce; for account-based chains -- current sequence.
+    async fn get_nonce(&self, address: &str) -> Result<u64>;
+
+    /// Current network gas price in smallest unit (wei for EVM).
+    async fn get_gas_price(&self) -> Result<u128>;
+
     /// Broadcast a signed transaction. Returns tx hash.
     async fn broadcast(&self, raw_tx_hex: &str) -> Result<String>;
 

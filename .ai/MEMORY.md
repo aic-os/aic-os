@@ -133,3 +133,20 @@ text
 - Всего тестов в проекте: **36**.
 - Rust-ядро теперь умеет полный цикл: seed -> address -> build tx -> sign -> broadcast.
 - **Следующее (Session #10):** пример `send_eth.rs`, который собирает tx, подписывает, отправляет в mainnet (запуск с 0 балансом даст корректную RPC-ошибку -- докажем цикл). Потом -- `get_nonce` helper и `Settings.yaml` расширим (SOL, BTC, TON).
+
+### 2026-11-09 -- Сессия #10 (полный цикл ETH)
+- **ВЕХА: полный цикл Ethereum работает end-to-end.**
+- `send_eth.rs` от Hardhat test-мнемоники:
+  - derive → 0xf39Fd6... (совпадает с Hardhat vector)
+  - nonce = 11632 (эта публичная мнемоника уже использовалась в mainnet)
+  - build LegacyTransaction (1 wei, 21000 gas, chain_id 1)
+  - sign (EIP-155) → raw_hex `0xf86582...`
+  - broadcast → RPC отверг по insufficient funds (ожидаемо)
+- Добавлены методы `ChainTraits::get_nonce` (pending) и `ChainTraits::get_gas_price`.
+- `estimate_fee` теперь использует `get_gas_price`.
+- Тесты: **36 зелёных**.
+- Rust-ядро для Ethereum -- готово. Есть всё: сид-фраза, адрес, баланс, fee, nonce, подпись, broadcast.
+- **Следующее -- кандидаты:**
+  - A) EIP-1559 (Type 2 tx) -- MetaMask default, современный формат.
+  - B) ERC-20 (balanceOf, transfer) -- база для aCOIN и USDT/USDC.
+  - C) AIC-ID контракт (Solidity + Foundry) -- уникальная фишка.
