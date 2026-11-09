@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "packages/core",
+    "packages/node",
 ]
 
 [workspace.package]
@@ -10,6 +11,7 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
+aic-core = { path = "packages/core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml_ng = "0.10"
@@ -28,3 +30,5 @@ rlp = "0.5"
 primitive-types = { version = "0.12", features = ["rlp"] }
 bs58 = "0.5"
 base64 = "0.22"
+
+

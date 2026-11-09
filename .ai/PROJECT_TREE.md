@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 21:33:43
+> Generated: 2026-11-09 22:01:40
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -12,17 +12,21 @@ aic-os/
 |   \-- settings.yaml
 |-- docs
 |   |-- ARCHITECTURE.md
-|   \-- GLOSSARY.md
+|   |-- GLOSSARY.md
+|   \-- TOKENOMICS.md
 |-- packages
 |   |-- contracts
 |   |   |-- broadcast
-|   |   |   \-- DeployAICID.s.sol
-|   |   |       |-- 1
-|   |   |       |   \-- dry-run
-|   |   |       \-- 31337
-|   |   |           |-- run-1794245449763.json
-|   |   |           |-- run-latest.json
-|   |   |           \-- run-latest.recovery.lock
+|   |   |   |-- DeployAICID.s.sol
+|   |   |   |   |-- 1
+|   |   |   |   |   \-- dry-run
+|   |   |   |   \-- 31337
+|   |   |   |       |-- run-1794245449763.json
+|   |   |   |       |-- run-latest.json
+|   |   |   |       \-- run-latest.recovery.lock
+|   |   |   \-- DeployAll.s.sol
+|   |   |       \-- 1
+|   |   |           \-- dry-run
 |   |   |-- cache
 |   |   |   |-- DeployAICID.s.sol
 |   |   |   |   |-- 1
@@ -32,6 +36,9 @@ aic-os/
 |   |   |   |       |-- run-latest.json
 |   |   |   |       |-- run-latest.json.recovery.json
 |   |   |   |       \-- run-latest.json.recovery.lock
+|   |   |   |-- DeployAll.s.sol
+|   |   |   |   \-- 1
+|   |   |   |       \-- dry-run
 |   |   |   \-- solidity-files-cache.json
 |   |   |-- lib
 |   |   |   \-- forge-std
@@ -105,11 +112,13 @@ aic-os/
 |   |   |   |   |-- ScriptBase.json
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
-|   |   |   |   \-- def5867243cd2a9b.json
+|   |   |   |   \-- b046b1c023c18b4d.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
 |   |   |   |-- DeployAICID.s.sol
 |   |   |   |   \-- DeployAICID.json
+|   |   |   |-- DeployAll.s.sol
+|   |   |   |   \-- DeployAll.json
 |   |   |   |-- IMulticall3.sol
 |   |   |   |   \-- IMulticall3.json
 |   |   |   |-- InheritanceVault.sol
@@ -158,7 +167,8 @@ aic-os/
 |   |   |       |-- Vm.json
 |   |   |       \-- VmSafe.json
 |   |   |-- script
-|   |   |   \-- DeployAICID.s.sol
+|   |   |   |-- DeployAICID.s.sol
+|   |   |   \-- DeployAll.s.sol
 |   |   |-- src
 |   |   |   |-- AICID.sol
 |   |   |   |-- InheritanceVault.sol
@@ -167,6 +177,8 @@ aic-os/
 |   |   |   |-- AICID.t.sol
 |   |   |   |-- InheritanceVault.t.sol
 |   |   |   \-- TimeCapsule.t.sol
+|   |   |-- .env.example
+|   |   |-- DEPLOY.md
 |   |   |-- foundry.toml
 |   |   \-- README.md
 |   |-- core
@@ -234,6 +246,14 @@ aic-os/
 |   |   |   \-- settings.rs
 |   |   \-- Cargo.toml
 |   |-- node
+|   |   |-- src
+|   |   |   |-- block.rs
+|   |   |   |-- main.rs
+|   |   |   |-- mempool.rs
+|   |   |   |-- rpc.rs
+|   |   |   |-- state.rs
+|   |   |   \-- transaction.rs
+|   |   \-- Cargo.toml
 |   |-- sdk
 |   \-- wallet
 |-- tools
@@ -242,6 +262,9 @@ aic-os/
 |-- .gitignore
 |-- Cargo.lock
 |-- Cargo.toml
+|-- node.err
+|-- node.log
+|-- PRINCIPLES.md
 |-- README.md
 \-- ROADMAP.md
 ```

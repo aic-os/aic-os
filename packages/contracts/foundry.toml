@@ -7,6 +7,19 @@ optimizer = true
 optimizer_runs = 200
 
 [lint]
-# block.timestamp manipulation by validators is bounded to ~12s.
-# Our expiry window is 365 days -- 12s is noise. Safe to ignore.
+# Манипуляция block.timestamp валидатором ограничена ~12 секундами.
+# Наше окно истечения -- 365 дней, 12 секунд это шум. Отключаем проверку.
 exclude_lints = ["block-timestamp"]
+
+[rpc_endpoints]
+mainnet = "https://ethereum-rpc.publicnode.com"
+sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
+polygon = "https://polygon-bor-rpc.publicnode.com"
+base = "https://base-rpc.publicnode.com"
+arbitrum = "https://arbitrum-one-rpc.publicnode.com"
+optimism = "https://optimism-rpc.publicnode.com"
+bsc = "https://bsc-rpc.publicnode.com"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_API_KEY}", chain = 1 }
+sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }

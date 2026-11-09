@@ -410,3 +410,53 @@ text
   - Radix -- fungible vaults нужно суммировать, placeholder 0 OK.
 - **Что осталось для >150:** сети, требующие API-ключей (Etherscan, BSCScan, Blockfrost for ADA full, Covalent). Это отдельный платный трек.
 - **Следующее (Блок C):** публичный деплой контрактов на Sepolia. Без faucet -- dry-run симуляция + runbook.
+
+### 2026-11-09 -- ГЛАВНОЕ ПРАВИЛО ПРОЕКТА (утверждено)
+**AIC-OS ЗАРАБАТЫВАЕТ НА СВОЕЙ СЕТИ, А НЕ ПЛАТИТ ЧУЖИМ.**
+- Все базовые операции (регистрация AIC-ID, отправка, наследство, капсула времени) -- в **AIC Chain**, газ в **AIC**.
+- Мы не платим комиссии Ethereum/Base/Polygon за пользовательские действия. Эти сети -- только для чтения балансов и бриджей aCOIN.
+- Газ AIC Chain -- контролируем мы (можем сделать 0, 0.001 AIC, или субсидировать).
+- Все комиссии протокола (DEX, мост, регистрация) -- идут в казну AIC-OS (фонд развития + стейкинг мастер-нод).
+- Пользователь получает AIC бесплатно: лотерея, airdrop, faucet, награды за активность.
+
+**Монетизация (все потоки -- в AIC):**
+1. Газ AIC Chain (микро-комиссии, ~0.0001 AIC за tx).
+2. Регистрация AIC-ID (10 AIC за имя, 5 AIC/год продление).
+3. DEX-комиссия (0.3% от свопа, из них 0.1% -- казна).
+4. Мост aCOIN (0.1% от перевода).
+5. Наследство / TimeCapsule (фикс 1 AIC за создание).
+6. Стейкинг мастер-нод (награды из эмиссии, часть -- foundation).
+7. Premium (аналитика, приватность, повышенные лимиты).
+
+**Что НЕ делаем:**
+- Не платим за EVM-деплой пользовательских операций.
+- Не отдаём % от комиссий внешним сетям/агрегаторам, если можно сделать нативно.
+- Не делаем токен-обёртку вокруг чужого протокола (aCOIN -- это наш мост, наши правила).
+
+## 🔴 ПРИНЦИП №1 (главный, не обсуждается)
+**AIC Chain -- независимая сеть. Берём чужой опыт как пример, делаем лучше, ЗАРАБАТЫВАЕМ МЫ.**
+- Не платим Ethereum/Base/Polygon/Solana за операции пользователей.
+- Чужие сети -- ТОЛЬКО источник данных (балансы, цены) и мост aCOIN (наш мост, наша комиссия).
+- Вся экономика (газ, комиссии, стейкинг, регистрация) -- в AIC.
+- Каждая фича, которую можно сделать нативно в AIC Chain -- делаем нативно, не через чужой протокол.
+- Заработок -- в казну AIC-OS (multisig), не третьим сторонам.
+
+### 2026-11-09 -- Сессия #25 (AIC NODE v0.1 -- ЖИВОЙ)
+- **ВЕХА: AIC Chain нода запущена и отвечает на RPC.**
+- `packages/node` на Rust (axum + tokio + tracing + clap):
+  - `block.rs` -- Block + BlockHeader (parent_hash, number, timestamp, state_root, tx_root, gas_used, gas_limit, proposer, extra_data), hash через RLP+keccak256.
+  - `transaction.rs` -- Transaction (nonce, from, to, value, gas_price, gas_limit, data, chain_id, signature), signing_hash (EIP-155-стиль), hash.
+  - `state.rs` -- State (HashMap аккаунтов), Account { balance, nonce }, credit/debit, root через keccak256(JSON).
+  - `mempool.rs` -- Mempool (Arc<RwLock<HashMap<[u8;32], Transaction>>>), add/contains/len/drain.
+  - `rpc.rs` -- HTTP JSON-RPC на axum (POST /).
+  - `main.rs` -- CLI (--rpc-port 8545, --chain-id 2026), tracing.
+- **RPC-методы v0.1:** aic_chainId, aic_blockNumber, aic_mempoolSize, aic_getBalance.
+- **Проверено на живой ноде (порт 8545):**
+  - aic_chainId => 2026
+  - aic_blockNumber => 0
+  - aic_mempoolSize => 0
+  - aic_getBalance(0x...0001) => 0x0
+  - aic_unknownMethod => error -32601 (правильно)
+- **ПРИНЦИП №1 зафиксирован:** AIC Chain -- независимая сеть, зарабатываем мы, не платим другим. Записан в `.ai/MEMORY.md` и `PRINCIPLES.md`.
+- **Токеномика зафиксирована** в `docs/TOKENOMICS.md`: все комиссии -- в AIC, все потоки -- в казну AIC-OS, airdrop 100 AIC первым 10k пользователям.
+- **Следующее:** genesis + первый блок + эмиссия AIC + transfer tx. Нода должна РОДИТЬ блоки, а не только отдавать пустой ответ.
