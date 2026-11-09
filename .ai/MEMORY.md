@@ -503,3 +503,21 @@ text
   - Документ: docs/TOKENOMICS.md
 - **Исправлен баг:** dev-адрес был 0x...ffffb9226 вместо 0x...cffFb92266 (сдвиг байтов).
 - **Принцип №1 соблюдается:** 100% газа/эмиссии -- в AIC, никому не платим.
+
+### 2026-11-09 -- Сессия #28 (Блок C: Persistence)
+- **ВЕХА: нода сохраняет состояние на диск и восстанавливает при перезапуске.**
+- `serde_helpers.rs`: кастомная сериализация HashMap<[u8; 20], V> и <[u8; 32], V> в Vec<(hex, V)> для JSON.
+- `state.rs`: State + Account с derive Serialize/Deserialize; root() -- детерминированный (сортировка ключей + keccak256).
+- `chain.rs`: Chain с derive Serialize/Deserialize; save(path) и load(path).
+- `rpc.rs`:
+  - При старте: если data/chain.json существует -- загружаем, иначе создаём genesis.
+  - После каждого блока -- chain.save("data/chain.json").
+  - Проверка совпадения chain_id при загрузке.
+- `.gitignore`: data/ (runtime state, не коммитим).
+- **Тест persistence пройден:**
+  - Запуск 1: GENESIS -> 3 блока -> Saved to: data\chain.json
+  - Stop-Process
+  - Запуск 2: AIC CHAIN LOADED, Blocks: 3, Head: #2, State root совпал
+  - Продолжил с 2 до 3 (не с нуля)
+  - Alice balance сохранился: 1 000 000 AIC
+- **Следующее (Блок A):** EVM execution через revm -- AICID, InheritanceVault, TimeCapsule запускаются в AIC Chain, комиссии идут в AIC.

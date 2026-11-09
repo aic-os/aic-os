@@ -23,10 +23,12 @@ pub struct TxReceipt {
 }
 
 /// Вся цепочка AIC: блоки, состояние, квитанции.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chain {
     pub chain_id: u64,
     pub blocks: Vec<Block>,
     pub state: State,
+    #[serde(with = "crate::serde_helpers::map_bytes32")]
     pub receipts: HashMap<[u8; 32], TxReceipt>,
 }
 
@@ -152,6 +154,22 @@ impl Chain {
         self.blocks.push(block.clone());
         block
     }
+
+    /// Сохранить всю цепочку в JSON-файл.
+    pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let json = serde_json::to_string(self)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("serialize: {e}")))?;
+        std::fs::write(path, json)
+    }
+
+    /// Загрузить цепочку из JSON-файла.
+    pub fn load(path: &std::path::Path) -> std::io::Result<Self> {
+        let text = std::fs::read_to_string(path)?;
+        let chain: Chain = serde_json::from_str(&text)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("deserialize: {e}")))?;
+        Ok(chain)
+    }
 }
-
-

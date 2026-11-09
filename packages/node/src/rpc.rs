@@ -72,25 +72,57 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         (dev,      dev_balance),
     ];
 
-    let chain = Chain::genesis(chain_id, &alloc);
+    // ===== Загрузка или создание genesis =====
+    let data_dir = std::path::PathBuf::from("data");
+    let chain_file = data_dir.join("chain.json");
 
-    // ===== GENESIS LOG =====
-    println!("\n========= AIC CHAIN GENESIS =========");
-    println!("Chain ID:    {chain_id}");
-    println!("Block 0 hash: 0x{}", hex::encode(chain.head().hash()));
-    println!("State root:  0x{}", hex::encode(chain.head().header.state_root));
-    println!("--- Allocations ---");
-    for (a, bal) in &alloc {
-        println!("  {}  =>  {} wei ({} AIC)",
-            hex::encode(a), bal, bal / AIC);
-    }
-    println!("--- Verification ---");
-    for (a, expected) in &alloc {
-        let actual = chain.state.get_account(a).balance;
-        let mark = if actual == *expected { "OK" } else { "MISMATCH" };
-        println!("  {}: {} (expected {})", hex::encode(a), mark, actual);
-    }
-    println!("=====================================\n");
+    let chain = if chain_file.exists() {
+        match Chain::load(&chain_file) {
+            Ok(c) => {
+                println!("\n========= AIC CHAIN LOADED =========");
+                println!("Loaded from: {}", chain_file.display());
+                println!("Blocks:      {}", c.blocks.len());
+                println!("Head:        #{}", c.block_number());
+                println!("State root:  0x{}", hex::encode(c.head().header.state_root));
+                println!("Chain ID:    {}", c.chain_id);
+                if c.chain_id != chain_id {
+                    eprintln!("⚠ Chain ID mismatch: saved={}, arg={}. Перезапусти с --chain-id {}",
+                        c.chain_id, chain_id, c.chain_id);
+                    std::process::exit(1);
+                }
+                println!("====================================\n");
+                c
+            }
+            Err(e) => {
+                eprintln!("⚠ Не удалось загрузить chain: {e}. Создаём genesis заново.");
+                std::fs::remove_file(&chain_file).ok();
+                let c = Chain::genesis(chain_id, &alloc);
+                c.save(&chain_file).ok();
+                c
+            }
+        }
+    } else {
+        let c = Chain::genesis(chain_id, &alloc);
+        c.save(&chain_file)?;
+        println!("\n========= AIC CHAIN GENESIS =========");
+        println!("Chain ID:    {chain_id}");
+        println!("Block 0 hash: 0x{}", hex::encode(c.head().hash()));
+        println!("State root:  0x{}", hex::encode(c.head().header.state_root));
+        println!("--- Allocations ---");
+        for (a, bal) in &alloc {
+            println!("  {}  =>  {} wei ({} AIC)",
+                hex::encode(a), bal, bal / AIC);
+        }
+        println!("--- Verification ---");
+        for (a, expected) in &alloc {
+            let actual = c.state.get_account(a).balance;
+            let mark = if actual == *expected { "OK" } else { "MISMATCH" };
+            println!("  {}: {} (expected {})", hex::encode(a), mark, actual);
+        }
+        println!("Saved to: {}", chain_file.display());
+        println!("=====================================\n");
+        c
+    };
 
     let state = Arc::new(AppState {
         mempool: Mempool::new(),
@@ -109,9 +141,15 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
             let mut chain = producer_state.chain.write().unwrap();
             let bn = chain.block_number() + 1;
             let block = chain.produce_block(txs, now_unix());
-            println!("[BLOCK] #{} hash=0x{} txs={} gas={}",
-                bn, hex::encode(&block.hash()[..8]),
-                block.transactions.len(), block.header.gas_used);
+            let tx_count = block.transactions.len();
+            let gas_used = block.header.gas_used;
+            let hash_short = hex::encode(&block.hash()[..8]);
+            // Persist after every block
+            let chain_file = std::path::PathBuf::from("data").join("chain.json");
+            if let Err(e) = chain.save(&chain_file) {
+                eprintln!("⚠ Save failed: {e}");
+            }
+            println!("[BLOCK] #{} hash=0x{} txs={} gas={}", bn, hash_short, tx_count, gas_used);
         }
     });
 
@@ -218,4 +256,5 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 

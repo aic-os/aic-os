@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-/// Состояние AIC Chain: аккаунты, их балансы и nonce.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct State {
+    #[serde(with = "crate::serde_helpers::map_bytes20")]
     accounts: HashMap<[u8; 20], Account>,
 }
 
@@ -38,10 +38,18 @@ impl State {
         true
     }
 
-    /// Корневой хеш состояния (упрощённо -- хеш сериализованной карты).
     pub fn root(&self) -> [u8; 32] {
-        let json = serde_json::to_vec(&self.accounts).unwrap_or_default();
+        // Детерминированная сортировка для стабильного хеша
+        let mut items: Vec<(&[u8; 20], &Account)> = self.accounts.iter().collect();
+        items.sort_by_key(|(k, _)| **k);
+        let mut buf = Vec::new();
+        for (addr, acc) in items {
+            buf.extend_from_slice(addr.as_slice());
+            buf.extend_from_slice(&acc.balance.to_be_bytes());
+            buf.extend_from_slice(&acc.nonce.to_be_bytes());
+        }
         use sha3::{Digest, Keccak256};
-        Keccak256::digest(&json).into()
+        Keccak256::digest(&buf).into()
     }
 }
+

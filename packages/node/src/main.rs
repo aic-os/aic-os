@@ -1,4 +1,5 @@
 mod block;
+mod serde_helpers;
 mod chain;
 mod mempool;
 mod rpc;
@@ -39,4 +40,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     rpc::run_rpc(&addr, args.chain_id).await?;
     Ok(())
 }
+
 

@@ -46,3 +46,7 @@ packages/contracts/broadcast/
 
 # Foundry -- dependencies installed via `forge install`, not committed
 packages/contracts/lib/
+
+# AIC Node runtime state
+data/
+packages/node/data/
