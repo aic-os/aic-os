@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 01:31:03
+> Generated: 2026-11-10 01:47:18
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -254,6 +254,78 @@ aic-os/
 |   |   |   |-- mnemonic.rs
 |   |   |   \-- settings.rs
 |   |   \-- Cargo.toml
+|   |-- mobile
+|   |   |-- android
+|   |   |   |-- app
+|   |   |   |   |-- src
+|   |   |   |   |   |-- debug
+|   |   |   |   |   |-- main
+|   |   |   |   |   \-- profile
+|   |   |   |   \-- build.gradle.kts
+|   |   |   |-- gradle
+|   |   |   |   \-- wrapper
+|   |   |   |       |-- gradle-wrapper.jar
+|   |   |   |       \-- gradle-wrapper.properties
+|   |   |   |-- .gitignore
+|   |   |   |-- aic_wallet_android.iml
+|   |   |   |-- build.gradle.kts
+|   |   |   |-- gradle.properties
+|   |   |   |-- gradlew
+|   |   |   |-- gradlew.bat
+|   |   |   |-- local.properties
+|   |   |   \-- settings.gradle.kts
+|   |   |-- lib
+|   |   |   |-- models
+|   |   |   |-- screens
+|   |   |   |   \-- home_screen.dart
+|   |   |   |-- services
+|   |   |   |   |-- aic_rpc.dart
+|   |   |   |   \-- wallet_service.dart
+|   |   |   |-- widgets
+|   |   |   \-- main.dart
+|   |   |-- test
+|   |   |   \-- widget_test.dart
+|   |   |-- web
+|   |   |   |-- icons
+|   |   |   |   |-- Icon-192.png
+|   |   |   |   |-- Icon-512.png
+|   |   |   |   |-- Icon-maskable-192.png
+|   |   |   |   \-- Icon-maskable-512.png
+|   |   |   |-- favicon.png
+|   |   |   |-- index.html
+|   |   |   \-- manifest.json
+|   |   |-- windows
+|   |   |   |-- flutter
+|   |   |   |   |-- ephemeral
+|   |   |   |   |   \-- .plugin_symlinks
+|   |   |   |   |-- CMakeLists.txt
+|   |   |   |   |-- generated_plugin_registrant.cc
+|   |   |   |   |-- generated_plugin_registrant.h
+|   |   |   |   \-- generated_plugins.cmake
+|   |   |   |-- runner
+|   |   |   |   |-- resources
+|   |   |   |   |   \-- app_icon.ico
+|   |   |   |   |-- CMakeLists.txt
+|   |   |   |   |-- flutter_window.cpp
+|   |   |   |   |-- flutter_window.h
+|   |   |   |   |-- main.cpp
+|   |   |   |   |-- resource.h
+|   |   |   |   |-- runner.exe.manifest
+|   |   |   |   |-- Runner.rc
+|   |   |   |   |-- utils.cpp
+|   |   |   |   |-- utils.h
+|   |   |   |   |-- win32_window.cpp
+|   |   |   |   \-- win32_window.h
+|   |   |   |-- .gitignore
+|   |   |   \-- CMakeLists.txt
+|   |   |-- .flutter-plugins-dependencies
+|   |   |-- .gitignore
+|   |   |-- .metadata
+|   |   |-- aic_wallet.iml
+|   |   |-- analysis_options.yaml
+|   |   |-- pubspec.lock
+|   |   |-- pubspec.yaml
+|   |   \-- README.md
 |   |-- node
 |   |   |-- src
 |   |   |   |-- block.rs
@@ -320,6 +392,8 @@ aic-os/
 |-- node-test.log
 |-- node-trace.err
 |-- node-trace.log
+|-- node-ui.err
+|-- node-ui.log
 |-- node-v03.err
 |-- node-v03.log
 |-- node-win.err

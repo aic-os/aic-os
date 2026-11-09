@@ -904,3 +904,36 @@ text
   - Quantum Puzzle (после public mainnet)
   - Соц. восстановление AIC-ID
   - Внешний аудит (перед public launch)
+
+### 2026-11-10 -- Сессия #39 (UI РАБОТАЕТ -- Flutter + AIC Chain)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Wallet UI работает в браузере.**
+- **Что видно на экране:**
+  - AIC Wallet, Chain ID 2026
+  - Total balance: **1 000 390 AIC** (реальный баланс Alice из AIC Chain)
+  - $10,003,900.00 • ₽950,370,500.00 (курс $10/AIC, ₽950/AIC)
+  - Block height: **81** (цепочка растёт в реальном времени)
+  - Адрес: 0xf39f...2266
+  - Кнопки: Отправить / Получить / Своп (заглушки -- "в разработке")
+- **Что подтверждено:**
+  - Flutter 3.47.7 + Dart 3.13.5 работают
+  - Flutter web (`flutter run -d web-server --web-port=8080`) -- стабильный запуск (не Chrome launcher, который падал)
+  - RPC-клиент `AicRpc` успешно читает chainId, blockNumber, getBalance из AIC Chain
+  - CORS в ноде (`CorsLayer::permissive()`) -- браузер не блокирует запросы
+  - Provider state management работает
+  - Тёмная тема с градиентами, крупный баланс, курсы USD/RUB
+- **Архитектура UI:**
+  - `packages/mobile/` -- Flutter-проект (web, windows, android)
+  - `lib/main.dart` -- точка входа + Provider + тема
+  - `lib/services/aic_rpc.dart` -- JSON-RPC клиент к AIC Chain
+  - `lib/services/wallet_service.dart` -- состояние (баланс, курс, блоки) + refresh()
+  - `lib/screens/home_screen.dart` -- главный экран
+- **Уроки:**
+  - Flutter на Windows: `flutter run -d chrome` может падать (браузер не стартует). Надёжнее `-d web-server --web-port=8080` + вручную открыть URL.
+  - Flutter web -> нода: обязателен CORS в axum (`CorsLayer::permissive()` для dev).
+  - Стартовая цена AIC = $10 (из TOKENOMICS.md) -- захардкожена в WalletService.
+- **Следующее (UI v0.2):**
+  - Экран «Отправить» (ввод @name или 0x-адреса, сумма, подпись)
+  - Экран «Получить» (QR-код)
+  - AIC-ID регистрация через UI
+  - **Подпись транзакций в web:** варианты -- WASM aic-core, Rust-релей, JS-крипто. Решаем на след. блоке.
+  - Портфель 150 сетей (курсы, балансы в одном экране)

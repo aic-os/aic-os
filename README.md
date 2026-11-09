@@ -64,6 +64,15 @@
 - Публичный счётчик "День N: 2M AIC в безопасности".
 - Смарт-контракт живёт в AIC Chain (никаких чужих сетей).
 
+## ✅ AIC Wallet (Flutter, UI)
+
+- Flutter 3.47.7, web + windows + android
+- Главный экран: баланс AIC, курсы USD/RUB, block height, адрес
+- RPC-клиент к AIC Chain (chainId, blockNumber, getBalance)
+- Тёмная тема, градиенты
+- Запуск: `cd packages/mobile && flutter run -d web-server --web-port=8080`
+- Нода должна быть запущена: `.\target\debug\aic-node.exe`
+
 ## 🛠️ Стек
 
 - **Ядро:** Rust (tokio, k256, bip39, bip32)
@@ -93,6 +102,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 

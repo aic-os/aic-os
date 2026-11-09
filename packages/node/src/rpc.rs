@@ -10,6 +10,7 @@ use crate::chain::Chain;
 use crate::mempool::Mempool;
 use crate::transaction::Transaction;
 use crate::p2p::{P2PCommand, P2PEvent, P2PHandles};
+use tower_http::cors::CorsLayer;
 
 use revm::{
     context::{Context, TxEnv},
@@ -134,7 +135,11 @@ let p2p_tx = p2p_handles.command_tx.clone();
 
     
 
-    let app = Router::new().route("/", post(handle_rpc)).with_state(state);
+    let cors = CorsLayer::permissive(); // разрешаем запросы из браузера (Flutter web, dev)
+    let app = Router::new()
+        .route("/", post(handle_rpc))
+        .layer(cors)
+        .with_state(state);
     let listener = TcpListener::bind(addr).await?;
     println!("AIC Node RPC listening on http://{addr}");
     axum::serve(listener, app).await?;
@@ -311,6 +316,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 

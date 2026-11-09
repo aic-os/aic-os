@@ -1,0 +1,29 @@
+name: aic_wallet
+description: "AIC-OS Wallet -- 150 chains, AIC Chain, PQ-криптография."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # HTTP для RPC AIC Chain
+  http: ^1.2.0
+  # Хранение настроек (RPC URL, тема)
+  shared_preferences: ^2.2.0
+  # QR-код для отправки/приёма
+  qr_flutter: ^4.1.0
+  # Форматирование чисел (1 000 000 AIC)
+  intl: ^0.19.0
+  # State management (простой)
+  provider: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
