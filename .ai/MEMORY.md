@@ -242,3 +242,22 @@ text
   - `@bob is free`, unknown address -> `no name`
 - 72 теста зелёные (56 + 16 в evm_abi).
 - **Следующее (Block B):** контракт Inheritance (Dead Man's Switch) -- бенефициары, ping, claim.
+
+### 2026-11-09 -- Сессия #18 (Block B: InheritanceVault)
+- `packages/contracts/src/InheritanceVault.sol` -- Dead Man's Switch для ETH:
+  - `deposit(beneficiary, inactivityPeriod)` -- депонировать ETH (можно top-up).
+  - `ping()` -- «я жив», сбрасывает таймер.
+  - `changeBeneficiary(newBeneficiary)` -- смена наследника (только owner).
+  - `withdraw()` -- owner забирает всё и закрывает vault.
+  - `claim(owner)` -- наследник забирает после неактивности.
+  - `timeUntilClaim(owner)` -- сколько секунд до claim.
+  - Константы: MIN_INACTIVITY=30d, MAX_INACTIVITY=10y.
+- **22 теста зелёные** (все ветки: deposit/topup/zero/revert/bounds, ping, withdraw, claim happy/early/wrong/double, changeBeneficiary, timeUntilClaim).
+- **ВЕХА:** деплой на Anvil `0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0`, end-to-end проверено через cast:
+  - Alice deposit 1 ETH (30d, Bob beneficiary) -- status 1
+  - timeUntilClaim = 2592000 (30d)
+  - Bob claim до срока -> `Error: execution reverted: StillActive` (правильно)
+  - warp +31d -> timeUntilClaim = 0
+  - Bob claim -> status 1
+  - Vault state: balance=0, active=false
+- **Следующее (Block C):** TimeCapsule (капсула времени) -- блокировка ETH/токенов до timestamp.

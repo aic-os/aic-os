@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 20:38:03
+> Generated: 2026-11-09 20:49:47
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -105,15 +105,18 @@ aic-os/
 |   |   |   |   |-- ScriptBase.json
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
-|   |   |   |   |-- 70fc5cb483860830.json
-|   |   |   |   |-- 865f837d761249bc.json
-|   |   |   |   \-- ac6e27ad2032786e.json
+|   |   |   |   \-- 9a5a9274aef3568a.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
 |   |   |   |-- DeployAICID.s.sol
 |   |   |   |   \-- DeployAICID.json
 |   |   |   |-- IMulticall3.sol
 |   |   |   |   \-- IMulticall3.json
+|   |   |   |-- InheritanceVault.sol
+|   |   |   |   \-- InheritanceVault.json
+|   |   |   |-- InheritanceVault.t.sol
+|   |   |   |   |-- InheritanceVaultTest.json
+|   |   |   |   \-- VmContractHelperb2ac49e06e29e9748c7e074424a250f418aaf914f826b640ed1b711c2ca30c45.json
 |   |   |   |-- safeconsole.sol
 |   |   |   |   \-- safeconsole.json
 |   |   |   |-- Script.sol
@@ -152,9 +155,11 @@ aic-os/
 |   |   |-- script
 |   |   |   \-- DeployAICID.s.sol
 |   |   |-- src
-|   |   |   \-- AICID.sol
+|   |   |   |-- AICID.sol
+|   |   |   \-- InheritanceVault.sol
 |   |   |-- test
-|   |   |   \-- AICID.t.sol
+|   |   |   |-- AICID.t.sol
+|   |   |   \-- InheritanceVault.t.sol
 |   |   |-- foundry.toml
 |   |   \-- README.md
 |   |-- core
