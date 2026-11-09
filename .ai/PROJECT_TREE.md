@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 18:54:53
+> Generated: 2026-11-09 19:27:41
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -14,6 +14,18 @@ aic-os/
 |-- packages
 |   |-- contracts
 |   |-- core
+|   |   |-- examples
+|   |   |   \-- get_balance.rs
+|   |   |-- src
+|   |   |   |-- providers
+|   |   |   |   |-- evm.rs
+|   |   |   |   |-- factory.rs
+|   |   |   |   \-- mod.rs
+|   |   |   |-- chain.rs
+|   |   |   |-- error.rs
+|   |   |   |-- lib.rs
+|   |   |   \-- traits.rs
+|   |   \-- Cargo.toml
 |   |-- node
 |   |-- sdk
 |   \-- wallet
@@ -21,6 +33,8 @@ aic-os/
 |   \-- scripts
 |       \-- update-tree.ps1
 |-- .gitignore
+|-- Cargo.lock
+|-- Cargo.toml
 |-- README.md
 \-- ROADMAP.md
 ```

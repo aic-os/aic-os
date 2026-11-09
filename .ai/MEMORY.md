@@ -68,3 +68,12 @@ text
 - **ПРАВИЛО:** в скриптах, которые передаются через терминал, использовать ТОЛЬКО ASCII (без эмодзи, box-chars, типографики). Для дерева: `|-- `, `\-- `, `|   `, `    `.
 - Переписаны: `tools/scripts/update-tree.ps1`, `docs/ARCHITECTURE.md` -- теперь pure ASCII.
 - README.md, ROADMAP.md, GLOSSARY.md содержат эмодзи в заголовках -- если отображаются как `?`, это косметика, поправим через VS Code.
+
+### 2026-11-09 -- Сессия #3 (первый живой RPC)
+- `aic-core` собран, компилируется без ошибок.
+- Реализован `EvmProvider` с реальным JSON-RPC (`eth_getBalance`, `eth_blockNumber`).
+- **ВЕХА:** получен живой баланс Виталика на Ethereum mainnet: `5.793820 ETH` (5793819533768043912 wei) через `https://ethereum-rpc.publicnode.com`.
+- RPC-диагностика: `ethereum-rpc.publicnode.com` OK, `eth.drpc.org` OK, `cloudflare-eth.com` пустой, `eth.llamarpc.com` мертв (SSL 525).
+- `rpc_call` устойчив: сначала text, потом JSON-парсинг, при не-JSON -- понятная ошибка с превью.
+- Пример: `cargo run --example get_balance -p aic-core`.
+- **Следующие задачи (Phase 1.2):** `estimate_fee` (eth_gasPrice + eth_estimateGas), `Settings.yaml` загрузчик с RPC-фолбэком, тесты.
