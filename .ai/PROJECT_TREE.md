@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 20:49:47
+> Generated: 2026-11-09 20:53:48
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -105,7 +105,7 @@ aic-os/
 |   |   |   |   |-- ScriptBase.json
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
-|   |   |   |   \-- 9a5a9274aef3568a.json
+|   |   |   |   \-- def5867243cd2a9b.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
 |   |   |   |-- DeployAICID.s.sol
@@ -149,6 +149,11 @@ aic-os/
 |   |   |   |   \-- StdUtils.json
 |   |   |   |-- Test.sol
 |   |   |   |   \-- Test.json
+|   |   |   |-- TimeCapsule.sol
+|   |   |   |   \-- TimeCapsule.json
+|   |   |   |-- TimeCapsule.t.sol
+|   |   |   |   |-- TimeCapsuleTest.json
+|   |   |   |   \-- VmContractHelper0321a662350064d94ec52ec0b176e5304aed7e3c74eaf513879e0612a2587a24.json
 |   |   |   \-- Vm.sol
 |   |   |       |-- Vm.json
 |   |   |       \-- VmSafe.json
@@ -156,10 +161,12 @@ aic-os/
 |   |   |   \-- DeployAICID.s.sol
 |   |   |-- src
 |   |   |   |-- AICID.sol
-|   |   |   \-- InheritanceVault.sol
+|   |   |   |-- InheritanceVault.sol
+|   |   |   \-- TimeCapsule.sol
 |   |   |-- test
 |   |   |   |-- AICID.t.sol
-|   |   |   \-- InheritanceVault.t.sol
+|   |   |   |-- InheritanceVault.t.sol
+|   |   |   \-- TimeCapsule.t.sol
 |   |   |-- foundry.toml
 |   |   \-- README.md
 |   |-- core

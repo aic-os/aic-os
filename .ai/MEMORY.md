@@ -261,3 +261,25 @@ text
   - Bob claim -> status 1
   - Vault state: balance=0, active=false
 - **Следующее (Block C):** TimeCapsule (капсула времени) -- блокировка ETH/токенов до timestamp.
+
+### 2026-11-09 -- Сессия #19 (Block C: TimeCapsule)
+- `packages/contracts/src/TimeCapsule.sol`:
+  - `create(recipient, unlockAt)` -- создать капсулу (ETH), unlockAt в [now+1h, now+100y].
+  - `topUp(id)` -- пополнить (только sender, пока активна).
+  - `claim(id)` -- получатель забирает после unlockAt.
+  - `cancel(id)` -- sender возвращает до unlockAt.
+  - `timeUntilUnlock(id)` -- секунд до открытия.
+  - `nextId` глобальный, `capsules[id]` mapping.
+- **20 тестов зелёные.**
+- **ВЕХА:** деплой на Anvil `0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9`, end-to-end проверено:
+  - create 1 ETH unlock +2h -- status 1
+  - timeUntilUnlock = 7149
+  - claim до срока -> `Error: execution reverted: NotYetUnlocked`
+  - warp +7201s -> timeUntilUnlock = 0
+  - claim -> status 1
+  - state: balance=0, claimed=true
+- **Уроки смоук-тестов (актуально для Anvil):**
+  - После `evm_increaseTime` в предыдущих тестах chain-time сдвинут вперёд -- всегда брать `block.timestamp` из Anvil (`cast block latest -f timestamp`), не из системных часов.
+  - Между чтением timestamp и выполнением tx проходит >=1 блок -- всегда оставлять буфер (>=1h для MIN_LOCK=1h).
+- Всего тестов: 53 contracts + 72 core = 125.
+- **Следующее (Block D):** мультичейн в `aic-core` -- провайдеры для Bitcoin (UTXO), Solana (Other), TON (Other).
