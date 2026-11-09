@@ -204,3 +204,10 @@ text
 - Убрано из git: `foundry-install.ps1`, `packages/contracts/lib/forge-std/` (deps через `forge install`).
 - Добавлено в `.gitignore`: `packages/contracts/lib/`.
 - **Следующее:** создать deployer keystore, пополнить его ETH, реальный деплой на mainnet + верификация на Etherscan.
+
+### 2026-11-09 -- Сессия #15 (deploy script + dry-run)
+- `packages/contracts/script/DeployAICID.s.sol` -- Foundry Script, деплоит AICID.
+- **Dry-run на форке mainnet прошёл:** `Script ran successfully`, `REGISTRATION_PERIOD = 31536000`, estimated gas 1,130,945, cost ~0.0006 ETH.
+- Реальный деплой откладывается (нет бюджета на газ). Идём через Anvil (локально) и Sepolia (testnet faucet).
+- Убрано из git: `foundry-install.ps1`, `packages/contracts/lib/forge-std/`.
+- **Следующее:** деплой на Anvil (локально) -> деплой на Sepolia (публично) -> mainnet, когда будет газ.
