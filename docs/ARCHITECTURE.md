@@ -1,60 +1,74 @@
 # Архитектура AIC-OS
 
-## 1. Слои системы
-+-------------------------------------------------+
-| UI (Mobile / Desktop / Web) |
-+-------------------------------------------------+
-| SDK (TypeScript) |
-+-------------------------------------------------+
-| Wallet Core (Rust) |
-| - ChainTraits (EVM/UTXO/Cosmos/Other) |
-| - ProviderFactory + Settings.yaml |
-| - Crypto (Schnorr, Dilithium) |
-| - AIC-ID resolver |
-+-------------------------------------------------+
-| AIC Chain Node (Rust) |
-| - Consensus (DPoS + RandomX PoW) |
-| - Mempool / State / Storage |
-| - RPC |
-+-------------------------------------------------+
-| Contracts (Solidity) |
-| - AIC-ID (ENS-like) |
-| - Inheritance (Dead Man's Switch) |
-| - TimeCapsule |
-| - Bridge (DKG, quarantine) |
-+-------------------------------------------------+
+## 1. Общая картина
 
-text
+AIC Chain (своя сеть) -- здесь живут все контракты и все деньги:
 
-## 2. Мультичейн-абстракция
+- packages/node (Rust)
+  - Block producer (3 сек)
+  - EVM (revm 43) -- read + write
+  - P2P (libp2p: Kademlia + Gossipsub + Sync)
+  - PQ (Schnorr + ML-DSA-65, threshold 1000 AIC)
+  - State (accounts + contracts + storage)
+  - Persistence (chain.json)
+- Genesis contracts (Solidity, вшиты в genesis):
+  - AICID (0x...a1c1d0) -- register @name
+  - InheritanceVault (0x...dead)
+  - TimeCapsule (0x...c4b5e0)
 
-По образцу Gem Wallet:
-- `Chain` enum -- единый реестр всех поддерживаемых сетей.
-- `ChainType` -- 4 класса: `EVM`, `UTXO`, `Cosmos`, `Other`.
-- `ChainTraits` -- общий интерфейс: `balance`, `tx_load`, `broadcast`, `fee_estimate`.
-- `ProviderFactory` -- читает `Settings.yaml`, создает нужный клиент.
-- Приоритет RPC: сначала свой нод (для 15 "тяжелых" сетей), fallback -- публичный агрегатор.
+Кошелёк (packages/core, Rust) -- только для чтения чужих сетей:
 
-## 3. Гибридный консенсус
+- BIP-39/BIP-32 -- один сид на 150 сетей
+- secp256k1 + EIP-155/1559 -- отправка ETH (если пользователь сам захочет)
+- 150 сетей -- чтение балансов + курсы USD/RUB
+- AIC-ID resolve -- через RPC AIC Chain
 
-- DPoS мастер-ноды -- раундовые лидеры через VRF, мгновенная финальность.
-- RandomX PoW -- легкий, CPU-friendly, встроен в кошелек-ноду.
-- Атака 51% требует контроля и стейка, и хешрейта одновременно -> экономически невыгодно.
+## 2. AIC Chain -- детали
 
-## 4. Квантовая защита (гибридная)
+### Нода (packages/node)
+- Язык: Rust
+- RPC: axum (HTTP JSON-RPC на 8545)
+- P2P: libp2p 0.56
+- EVM: revm 43 (CfgEnv chain_id 2026)
+- Persistence: chain.json (serde + кастомные map_bytes20/map_bytes32/map_storage)
 
-- Все транзакции -- Schnorr (64 байта, быстро).
-- Критичные операции -- доп. подпись ML-DSA-65 (Dilithium) в "конверте".
-- Обычные ноды проверяют Schnorr; архивные ноды и контракты наследства -- обе.
+### Модули
+| Файл | Назначение |
+|---|---|
+| main.rs | Точка входа, CLI, создание chain, запуск P2P + RPC |
+| chain.rs | Chain, Block, TxReceipt, produce_block, add_block_from_peer, apply_evm_tx, init_or_genesis |
+| block.rs | BlockHeader, RLP-сериализация |
+| transaction.rs | Transaction (Legacy EIP-155), pq_message, verify, verify_pq |
+| state.rs | State (accounts + contracts + storage), to_inmemory для revm |
+| mempool.rs | Mempool (Arc<RwLock<HashMap>>) |
+| rpc.rs | JSON-RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, aic_call, aic_sendRawTransaction |
+| p2p.rs | AicBehaviour: Kademlia + Gossipsub + Sync + Identify + Ping |
+| genesis_contracts.rs | Загрузка runtime bytecode из Foundry artifacts + деплой в state |
+| serde_helpers.rs | Сериализация HashMap с бинарными ключами |
 
-## 5. AIC-ID
+### Правила исполнения транзакций
+- Если tx.data.len() > 0 или tx.to -- контракт -> EVM (revm).
+- Иначе -> простой transfer AIC.
+- Комиссия за газ -> TREASURY.
+- Если tx.value > 0 и tx успешна -> дополнительно tx.value -> TREASURY (монетизация).
+- PQ: если tx.value >= 1000 AIC -- требуется Dilithium-подпись.
 
-- Регистрация `@name` через смарт-контракт.
-- Разрешение `@name -> address` на клиенте через RPC.
-- Социальное восстановление: 3-5 хранителей, мультисиг для перепривязки ключа.
+### P2P протоколы
+- Kademlia DHT -- discovery пиров.
+- Gossipsub (топики aic/blocks/1 и aic/txs/1) -- broadcast.
+- Request-Response (/aic/sync/1) -- SyncRequest -> блоки, SyncResponse -> применяем.
+- Identify + Ping -- служебные.
 
-## 6. Безопасность
+## 3. Кошелёк (packages/core)
+Только для чтения чужих сетей и отправки ETH/BTC пользователем по его желанию.
 
-- Ключи хранятся только в Secure Enclave / Keystore устройства.
-- Мессенджер и VPN -- в отдельных sandbox-процессах без доступа к ключам.
-- Мосты -- DKG (7 из 10 нод), режим карантина для новых активов.
+## 4. Безопасность
+- PQ-подписи (Schnorr + ML-DSA-65).
+- Приватные ключи -- только в Secure Enclave (фаза UI).
+- Социальное восстановление (3-5 хранителей).
+- Мессенджер/VPN -- sandbox (фаза UI).
+
+## 5. Что НЕ делаем
+- НЕ деплоим AICID/InheritanceVault/TimeCapsule в Ethereum/Base/Sepolia.
+- НЕ платим газ в чужих сетях за операции пользователя.
+- НЕ зависим от внешних API для базовых операций AIC Chain.

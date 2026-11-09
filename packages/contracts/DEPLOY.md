@@ -1,130 +1,46 @@
-# Инструкция по деплою контрактов AIC-OS
+# Как контракты попадают в AIC Chain
 
-Три контракта: **AICID**, **InheritanceVault**, **TimeCapsule**.
+## Принцип №1
 
-## 0. Проверка перед деплоем
+Контракты НЕ деплоятся в Ethereum, Base, Sepolia или любую другую чужую сеть.
+Они деплоятся ТОЛЬКО в genesis AIC Chain.
 
-~~~bash
-forge --version          # 1.9.0+
-forge build              # без ошибок
-forge test               # 53 теста зелёные
-~~~
+## Как это работает
 
-## 1. Создать зашифрованный кошелёк деплоера (один раз)
+1. Контракты написаны на Solidity (src/AICID.sol, src/InheritanceVault.sol, src/TimeCapsule.sol).
+2. Foundry компилирует их: forge build -> out/*.sol/*.json.
+3. Нода (packages/node/src/genesis_contracts.rs) читает deployedBytecode.object (runtime code, НЕ bytecode.object!) из артефактов.
+4. При создании genesis (первый запуск ноды) deploy_genesis_contracts() кладёт runtime code в State по фиксированным адресам:
+   - AICID: 0x0000000000000000000000000000000000a1c1d0
+   - InheritanceVault: 0x000000000000000000000000000000000000dead
+   - TimeCapsule: 0x0000000000000000000000000000000000c4b5e0
+5. Всё. Контракты живут в AIC Chain, вызываются через aic_call (read) и aic_sendRawTransaction (write).
 
-Никогда не коммить приватный ключ. Зашифруй его локально:
+## Команды
 
-~~~bash
-cast wallet import deployer --interactive
-#   Введи приватный ключ: (скрыто)
-#   Введи пароль:         (скрыто, запомни его)
-~~~
+Скомпилировать контракты (при изменениях в .sol):
+  cd packages/contracts
+  forge build
 
-Файл сохранится в ~/.foundry/keystores/deployer.
+Запустить тесты контрактов:
+  forge test
 
-## 2. Пополнить кошелёк ETH
+Запустить ноду (контракты уже в genesis):
+  cd C:\Users\КОЛЮНЯ\aic-os
+  .\target\debug\aic-node.exe
 
-Узнать адрес:
+## Никаких faucet, mainnet, Sepolia, Etherscan
 
-~~~bash
-cast wallet address --account deployer
-~~~
+Это не нужно. Все контракты -- у нас.
 
-Сколько газа нужно:
+## Проверка
 
-| Сеть | Газ (оценка) | Стоимость при 1 gwei |
-|---|---|---|
-| AICID | ~900k | ~0.0009 ETH |
-| InheritanceVault | ~800k | ~0.0008 ETH |
-| TimeCapsule | ~900k | ~0.0009 ETH |
-| Итого | ~2.6M | ~0.0026 ETH |
+resolve('alice') должен вернуть адрес или 0x0:
+  cast call 0x0000000000000000000000000000000000a1c1d0 "resolve(string)(address)" "alice" --rpc-url http://127.0.0.1:8545
 
-### Sepolia (бесплатно)
+## Что НЕ надо делать
 
-Варианты faucet:
-
-- Google Web3: https://cloud.google.com/application/web3/faucet/ethereum/sepolia (нужен 0.001 ETH на mainnet)
-- Alchemy: https://www.alchemy.com/faucets/ethereum-sepolia (нужен аккаунт + баланс на mainnet)
-- PoW: https://sepolia-faucet.pk910.de (proof-of-work, ~30 минут, баланс не нужен)
-
-### Mainnet (платно)
-
-Купи ~$5 ETH в любом обменнике, отправь на адрес деплоера.
-
-## 3. Прогон без отправки (без газа, без broadcast)
-
-~~~bash
-forge script script/DeployAll.s.sol --rpc-url mainnet
-~~~
-
-Ожидаемый вывод:
-
-~~~
-AICID (реестр имён)          : 0x...
-InheritanceVault (наследство): 0x...
-TimeCapsule (капсула времени): 0x...
-~~~
-
-Если прошло -- скрипт корректен, готов к реальному деплою.
-
-## 4. Реальный деплой -- Sepolia
-
-~~~bash
-export ETHERSCAN_API_KEY=...   # взять на https://etherscan.io/myapikey
-
-forge script script/DeployAll.s.sol \
-  --rpc-url sepolia \
-  --broadcast \
-  --verify \
-  --account deployer
-~~~
-
-Ожидаемый вывод:
-
-~~~
-[Success] Hash: 0x...
-Contract: AICID
-Contract Address: 0x...
-ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
-~~~
-
-Скопируй три адреса. Проверь на https://sepolia.etherscan.io.
-
-## 5. Реальный деплой -- Mainnet
-
-Та же команда, но --rpc-url mainnet. Только после того, как Sepolia отработала 24 часа без проблем и у тебя есть ~$5 газа.
-
-## 6. Smoke-тест после деплоя
-
-~~~bash
-# Проверить, что имя свободно (должен вернуть 0x000...)
-cast call $AICID_ADDRESS "resolve(string)(address)" "alice" --rpc-url sepolia
-
-# Зарегистрировать имя
-cast send $AICID_ADDRESS "register(string,address)" "alice" $YOUR_ADDRESS --rpc-url sepolia --account deployer
-
-# Обратный резолв
-cast call $AICID_ADDRESS "reverseResolve(address)(string)" $YOUR_ADDRESS --rpc-url sepolia
-# => "alice"
-~~~
-
-## 7. Сохранить адреса
-
-Создай файл deployments/sepolia.json:
-
-~~~json
-{
-  "chainId": 11155111,
-  "AICID": "0x...",
-  "InheritanceVault": "0x...",
-  "TimeCapsule": "0x..."
-}
-~~~
-
-Закоммить -- публичная запись о деплое.
-
-## Частые проблемы
-
-- Error: Failed to estimate gas -- баланс деплоера = 0, пополни кошелёк.
-- Invalid username or token -- неверный ETHERSCAN_API_KEY, перегенерируй.
-- --verify зависает -- rate limit Etherscan, убери --verify и верифицируй позже командой forge verify-contract.
+- forge create -- мы не создаём контракты, они уже в genesis.
+- forge script script/DeployAll.s.sol --broadcast -- скрипт устарел.
+- cast wallet import -- нет deployer'а, нет чужих сетей.
+- faucet для Sepolia/mainnet -- не нужно.

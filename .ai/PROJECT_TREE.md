@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 00:52:28
+> Generated: 2026-11-10 01:00:11
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -171,8 +171,6 @@ aic-os/
 |   |   |       |-- Vm.json
 |   |   |       \-- VmSafe.json
 |   |   |-- script
-|   |   |   |-- DeployAICID.s.sol
-|   |   |   \-- DeployAll.s.sol
 |   |   |-- src
 |   |   |   |-- AICID.sol
 |   |   |   |-- InheritanceVault.sol
@@ -181,7 +179,6 @@ aic-os/
 |   |   |   |-- AICID.t.sol
 |   |   |   |-- InheritanceVault.t.sol
 |   |   |   \-- TimeCapsule.t.sol
-|   |   |-- .env.example
 |   |   |-- DEPLOY.md
 |   |   |-- foundry.toml
 |   |   |-- node-fee2.err

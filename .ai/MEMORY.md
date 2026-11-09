@@ -734,3 +734,10 @@ text
   - Мост aCOIN (DKG 7/10).
   - DEX-агрегатор.
   - UI (Flutter/RN).
+
+### 2026-11-10 -- Сессия #36 (ЧИСТКА ДОКУМЕНТАЦИИ от чужих сетей)
+- Убраны все упоминания деплоя в Ethereum/Base/Sepolia/mainnet.
+- Контракты (AICID, InheritanceVault, TimeCapsule) живут ТОЛЬКО в genesis AIC Chain.
+- Перезаписаны: README.md, ROADMAP.md, PRINCIPLES.md, docs/ARCHITECTURE.md, packages/contracts/DEPLOY.md.
+- Удалены устаревшие файлы: script/DeployAll.s.sol, script/DeployAICID.s.sol, .env.example.
+- Принцип №1: чужие сети -- только для чтения балансов + отправки ETH/BTC пользователем.

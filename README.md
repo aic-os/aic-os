@@ -1,6 +1,6 @@
 # AIC-OS 🚀
 
-> **Независимая криптовалюта AIC + мультичейн-кошелёк (150 сетей) + EVM смарт-контракты + DeFi.**
+> **Независимая криптовалюта AIC + мультичейн-кошелёк (150 сетей) + DeFi.**
 
 ## 🎯 Принцип №1
 **AIC Chain -- независимая сеть. Берём чужой опыт как пример, делаем лучше, ЗАРАБАТЫВАЕМ МЫ.**
@@ -11,68 +11,76 @@
 - **Стартовая цена:** $10
 - **Цель к 2030:** $120–150 (кап $8.5–10.6T)
 - **Распределение:** 40% казна, 30% airdrop, 20% стейкинг, 10% foundation
-- **Монетизация (проверено):** 10 AIC за регистрацию @name, 5 AIC продление, газ
+- **Монетизация:** 10 AIC за регистрацию @name, 5 AIC продление, газ → казна
 - Подробно: [docs/TOKENOMICS.md](./docs/TOKENOMICS.md)
 
-## ✅ Что работает
+---
 
-### Кошелёк (aic-core, Rust)
+## ✅ AIC Chain (своя сеть, Rust)
+
+**Это главное. Наша собственная децентрализованная криптовалюта.**
+
+- **Chain ID:** 2026
+- **Нода:** Rust + axum (RPC) + libp2p (P2P) + revm (EVM)
+- **Эмиссия в genesis:** 71 млрд AIC
+- **Block producer:** каждые 3 секунды
+- **EVM-совместимость:** наша нода исполняет smart-контракты через revm. **Внутри AIC Chain. За AIC.**
+- **Контракты в genesis AIC Chain** (написаны на Solidity, но исполняются НАМИ в НАШЕЙ сети):
+  - AICID (`0x...a1c1d0`) -- регистрация @name за 10 AIC → казна
+  - InheritanceVault (`0x...dead`) -- dead man's switch
+  - TimeCapsule (`0x...c4b5e0`) -- блокировка AIC до timestamp
+- **PQ-защита:** Schnorr (BIP-340) + ML-DSA-65 (Dilithium3, FIPS 204) для value ≥ 1000 AIC
+- **P2P:** libp2p 0.56, Kademlia DHT + Gossipsub + Request-Response
+  - Sync истории: новая нода догоняет цепочку
+  - Real-time broadcast блоков и транзакций
+- **Persistence:** chain.json (блоки, state, storage контрактов)
+- **Первая реальная транзакция:** Alice→Bob 1000 AIC, блок #21
+- **Первая регистрация @name:** `@alice → 0xf39Fd6e5...`, +10 AIC в казну
+- **Тесты:** 74 Rust-теста (ядро) + 51 Solidity-тест (контракты)
+
+---
+
+## ✅ Мультичейн-кошелёк (Rust, aic-core)
+
+**Чтение балансов 150 сетей + отправка ETH/BTC/SOL.**
+
 - BIP-39, BIP-32, secp256k1, EIP-55
 - Legacy ETH tx (EIP-155) + EIP-1559
-- ERC-20 (balanceOf/decimals/symbol/name/transfer)
-- **150 сетей** с балансами и курсами USD/RUB
-- AIC-ID: resolve(@name) в Rust
-- 70 тестов
+- ERC-20: balanceOf/decimals/symbol/name/transfer
+- **150 сетей** -- live балансы + курсы USD/RUB (CoinGecko)
+- AIC-ID resolve(@name) в Rust (через RPC AIC Chain)
+- 74 теста
 
-### Смарт-контракты (Solidity + Foundry)
-- **AICID.sol** -- регистрация @name (10 AIC), resolve, reverse, transfer, renew (5 AIC)
-- **InheritanceVault.sol** -- dead man's switch
-- **TimeCapsule.sol** -- блокировка ETH до timestamp
-- 51 тест
-- Деплой + DEPLOY.md
+**Важно:** кошелёк используется для чтения чужих сетей и отправки ETH/BTC (если пользователь сам того хочет). Он **не отправляет наши контракты в чужие сети.** Все контракты -- только в AIC Chain.
 
-### AIC Chain (своя нода, Rust)
-- Chain ID 2026, порт 8545
-- Block producer каждые 3 сек
-- Genesis 71 млрд AIC
-- **EVM работает** (revm 43): read + write
-- **AICID.register() -- 10 AIC в казну AIC-OS** ✅
-- **resolve("alice") -> 0xf39Fd6e5...** ✅
-- Persistence: chain.json (блоки, state, storage контрактов)
-- Первая транзакция AIC Alice→Bob (блок #21)
-- RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, aic_call, aic_sendRawTransaction
+---
 
-## 🚧 В работе
-- ✅ **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium)** -- квантовая устойчивость РАБОТАЕТ:
-  - Все транзакции: Schnorr (BIP-340).
-  - Транзакции >= 1000 AIC: дополнительно ML-DSA-65 (FIPS 204, Dilithium3).
-  - Проверено: 5000 AIC без PQ отклоняется, с PQ -- принимается.
-  - AIC Chain -- первая криптовалюта с гибридной квантовой защитой.
-- ✅ **P2P (несколько нод)** -- работает: 2+ ноды синхронизируются через libp2p (Kademlia + Gossipsub)
-- Монетизация InheritanceVault/TimeCapsule (1 AIC каждая)
-- Мост aCOIN (DKG 7/10)
-- DPoS консенсус + мастер-ноды
-- UI (Flutter/RN)
+## 🛠️ Стек
+
+- **Ядро:** Rust (tokio, k256, bip39, bip32)
+- **Нода:** axum + revm 43 + libp2p 0.56 + ml-dsa + serde_json
+- **Контракты в AIC Chain:** Solidity 0.8.24 (компилятор Foundry, но деплой -- только в AIC Chain genesis)
+- **Тесты:** 125 (74 Rust + 51 Solidity)
+
+---
 
 ## 📚 Документация
+
 - [ROADMAP.md](./ROADMAP.md) -- полная карта
 - [PRINCIPLES.md](./PRINCIPLES.md) -- принципы проекта
 - [docs/TOKENOMICS.md](./docs/TOKENOMICS.md) -- экономика
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) -- архитектура
-- [packages/contracts/DEPLOY.md](./packages/contracts/DEPLOY.md) -- деплой
 - [.ai/MEMORY.md](./.ai/MEMORY.md) -- память проекта
 
-## 🛠️ Стек
-- Rust (tokio, revm 43, k256, bip39, bip32, axum)
-- Solidity 0.8.24 + Foundry 1.9.0
-- 121 тест (70 Rust + 51 Solidity)
+---
 
 ## 📊 Метрики
-- Сетей: **150** (EVM 80, UTXO 10, Cosmos 36, Other 24)
-- Chain ID: **2026**
-- Эмиссия: **71 млрд AIC**
-- Стартовая цена: **$10**
-- Первая регистрация @alice: **+10.0012 AIC в казну** ✅
 
-
-
+- **Сетей в кошельке:** 150 (EVM 80, UTXO 10, Cosmos 36, Other 24)
+- **Chain ID AIC:** 2026
+- **Эмиссия:** 71 млрд AIC
+- **Стартовая цена:** $10
+- **Монетизация:** 10 AIC/регистрация → казна (проверено)
+- **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
+- **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
+- **Тестов:** 125
