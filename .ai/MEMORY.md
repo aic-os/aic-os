@@ -124,3 +124,12 @@ text
   - 3 официальных EIP-55 spec vector.
 - Всего в проекте: **34 теста**.
 - **Следующее:** Block C -- подпись ETH-транзакции (RLP-encode + EIP-155 chain_id) → broadcast на mainnet.
+
+### 2026-11-09 -- Сессия #9 (Block C: подпись ETH-транзакции)
+- `wallet::LegacyTransaction` (Type 0) + `SignedTransaction`.
+- `signing_hash()` -- keccak256(rlp([nonce, gasPrice, gasLimit, to, value, data, chain_id, 0, 0])).
+- `sign(&account)` -- secp256k1 + EIP-155 (`v = rec_id + chain_id * 2 + 35`), RLP-encode 9 полей.
+- **Официальный EIP-155 test vector проходит:** signing hash = `0xdaf5a779...`.
+- Всего тестов в проекте: **36**.
+- Rust-ядро теперь умеет полный цикл: seed -> address -> build tx -> sign -> broadcast.
+- **Следующее (Session #10):** пример `send_eth.rs`, который собирает tx, подписывает, отправляет в mainnet (запуск с 0 балансом даст корректную RPC-ошибку -- докажем цикл). Потом -- `get_nonce` helper и `Settings.yaml` расширим (SOL, BTC, TON).
