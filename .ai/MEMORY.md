@@ -211,3 +211,18 @@ text
 - Реальный деплой откладывается (нет бюджета на газ). Идём через Anvil (локально) и Sepolia (testnet faucet).
 - Убрано из git: `foundry-install.ps1`, `packages/contracts/lib/forge-std/`.
 - **Следующее:** деплой на Anvil (локально) -> деплой на Sepolia (публично) -> mainnet, когда будет газ.
+
+### 2026-11-09 -- Сессия #16 (AICID deployed to Anvil, first name registered)
+- **ВЕХА: AICID работает end-to-end в реальной EVM.**
+- Anvil запущен локально (`http://127.0.0.1:8545`, chain 31337).
+- Контракт задеплоен: `0x5FbDB2315678afecb367f032d93F642f64180aa3` (block 1, 869,958 gas, ~0.00087 ETH на Anvil).
+- `register("alice", 0x7099...)` -- tx type 2, status 1, gas 116,401.
+- `resolve("alice")` -> `0x70997970C51812dc3A010C7d01b50e0d17dc79C8` -- правильный адрес.
+- `reverseResolve(0x7099...)` -> `"alice"` -- правильное имя.
+- `isAvailable("alice")` -> `false`, `isAvailable("bob")` -> `true`.
+- Скрипт деплоя и полный flow подтверждены на реальных EVM-транзакциях.
+- **Следующее (варианты, ждём решения):**
+  - A) Интегрировать AIC-ID в Rust-ядро (`aic-core`): `resolve @name -> address` нативно в кошельке. Закрывает цикл.
+  - B) Контракт Inheritance (Dead Man's Switch).
+  - C) Контракт TimeCapsule.
+  - D) Расширить мультичейн (BTC, SOL, TON провайдеры).
