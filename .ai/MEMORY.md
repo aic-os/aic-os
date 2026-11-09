@@ -89,3 +89,11 @@ text
   - BSC: 0.170081 BNB, fee 0.00000105 BNB
 - `config/settings.yaml` покрывает: ethereum, bsc, polygon, arbitrum, optimism, base, avalanche.
 - **Следующее:** (1) таймауты в reqwest; (2) тесты для Settings и fallback; (3) `broadcast` через `eth_sendRawTransaction`; (4) подпись транзакций (secp256k1 + RLP) -- отдельный большой блок.
+
+### 2026-11-09 -- Сессия #5 (timeouts + tests)
+- `reqwest::Client` получил `timeout(5s)` и `connect_timeout(5s)` -- зависший RPC больше не вешает приложение.
+- 11 тестов зелёные:
+  - `tests/settings.rs` (6): парсинг YAML, алиасы сетей, chain_id, unknown-chain.
+  - `tests/factory.rs` (5): создание EVM-провайдера с 1/несколькими RPC, отказ на unknown и на not-implemented.
+- Для тестов, читающих `config/settings.yaml`, используем `env!("CARGO_MANIFEST_DIR")` + `../..` -- работает и локально, и в CI на любой ОС.
+- **Следующее:** `broadcast` (eth_sendRawTransaction) -- принимает подписанный raw-hex, возвращает tx hash. Плюс тест на невалидный hex.

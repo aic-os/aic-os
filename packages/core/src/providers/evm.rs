@@ -1,9 +1,12 @@
 use async_trait::async_trait;
+use std::time::Duration;
 
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
 use crate::providers::factory::ChainSettings;
 use crate::traits::ChainTraits;
+
+const RPC_TIMEOUT_SECS: u64 = 5;
 
 pub struct EvmProvider {
     chain: Chain,
@@ -17,6 +20,8 @@ impl EvmProvider {
         debug_assert_eq!(chain.chain_type(), ChainType::Evm);
         let client = reqwest::Client::builder()
             .user_agent("aic-core/0.1")
+            .timeout(Duration::from_secs(RPC_TIMEOUT_SECS))
+            .connect_timeout(Duration::from_secs(RPC_TIMEOUT_SECS))
             .build()
             .expect("http client");
         Self {
@@ -30,8 +35,6 @@ impl EvmProvider {
     pub fn rpc_urls(&self) -> &[String] { &self.rpc_urls }
     pub fn chain_id(&self) -> Option<u64> { self.chain_id }
 
-    /// Try every RPC URL in order. Return the first successful result,
-    /// or an aggregated error if all endpoints fail.
     async fn rpc_call(&self, method: &str, params: serde_json::Value) -> Result<serde_json::Value> {
         if self.rpc_urls.is_empty() {
             return Err(CoreError::Rpc("no rpc urls configured".into()));

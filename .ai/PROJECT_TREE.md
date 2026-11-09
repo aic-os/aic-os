@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 19:32:12
+> Generated: 2026-11-09 19:34:54
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -28,6 +28,9 @@ aic-os/
 |   |   |   |-- lib.rs
 |   |   |   |-- settings.rs
 |   |   |   \-- traits.rs
+|   |   |-- tests
+|   |   |   |-- factory.rs
+|   |   |   \-- settings.rs
 |   |   \-- Cargo.toml
 |   |-- node
 |   |-- sdk
