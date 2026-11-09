@@ -171,3 +171,13 @@ text
 - **ВЕХА:** живая metadata USDC mainnet: name="USD Coin", symbol="USDC", decimals=6.
 - 51 тест зелёный.
 - **Следующее -- Block A (EIP-1559):** Type 2 транзакции (`maxFeePerGas`, `maxPriorityFeePerGas`), MetaMask-совместимый формат.
+
+### 2026-11-09 -- Сессия #13 (Block A: EIP-1559 / Type 2)
+- `wallet::Eip1559Transaction` + `SignedEip1559`.
+- Signing hash: keccak256(0x02 || rlp([chain_id, nonce, max_priority, max_fee, gas, to, value, data, []])).
+- Signed raw: 0x02 || rlp([...9 полей..., y_parity, r, s]).
+- `ChainTraits`: `get_base_fee()` (eth_getBlockByNumber -> baseFeePerGas), `get_max_priority_fee()` (eth_maxPriorityFeePerGas).
+- 5 тестов, включая **recovery**: подпись -> восстановление pubkey -> адрес совпал с исходным. Формат подписи корректен по EIP-1559.
+- **ВЕХА:** живой raw EIP-1559 отправлен в mainnet: `0x02f86801...`, tx_hash `0x8d57ccc3...`, отвергнут по insufficient funds (ожидаемо для Hardhat-мнемоники).
+- Всего тестов: **56**.
+- **Следующее -- Block C (AIC-ID):** смарт-контракт ENS-подобный, Foundry, регистрация/разрешение имён.

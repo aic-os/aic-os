@@ -14,16 +14,25 @@ pub trait ChainTraits: Send + Sync {
     async fn broadcast(&self, raw_tx_hex: &str) -> Result<String>;
     async fn health(&self) -> Result<bool>;
 
-    async fn get_erc20_balance(&self, _contract: &str, _holder: &str) -> Result<u128> {
-        Err(CoreError::NotImplemented("ERC-20 balance (non-EVM chain)"))
+    async fn get_erc20_balance(&self, _c: &str, _h: &str) -> Result<u128> {
+        Err(CoreError::NotImplemented("ERC-20 balance (non-EVM)"))
     }
-    async fn get_erc20_decimals(&self, _contract: &str) -> Result<u8> {
-        Err(CoreError::NotImplemented("ERC-20 decimals (non-EVM chain)"))
+    async fn get_erc20_decimals(&self, _c: &str) -> Result<u8> {
+        Err(CoreError::NotImplemented("ERC-20 decimals (non-EVM)"))
     }
-    async fn get_erc20_symbol(&self, _contract: &str) -> Result<String> {
-        Err(CoreError::NotImplemented("ERC-20 symbol (non-EVM chain)"))
+    async fn get_erc20_symbol(&self, _c: &str) -> Result<String> {
+        Err(CoreError::NotImplemented("ERC-20 symbol (non-EVM)"))
     }
-    async fn get_erc20_name(&self, _contract: &str) -> Result<String> {
-        Err(CoreError::NotImplemented("ERC-20 name (non-EVM chain)"))
+    async fn get_erc20_name(&self, _c: &str) -> Result<String> {
+        Err(CoreError::NotImplemented("ERC-20 name (non-EVM)"))
+    }
+
+    /// EIP-1559 base fee per gas (latest block). EVM only.
+    async fn get_base_fee(&self) -> Result<u128> {
+        Err(CoreError::NotImplemented("base fee (non-EVM)"))
+    }
+    /// EIP-1559 recommended priority fee (tip). EVM only.
+    async fn get_max_priority_fee(&self) -> Result<u128> {
+        Err(CoreError::NotImplemented("priority fee (non-EVM)"))
     }
 }

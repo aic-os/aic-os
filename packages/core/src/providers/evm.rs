@@ -162,6 +162,26 @@ impl ChainTraits for EvmProvider {
         let res = self.rpc_call("eth_blockNumber", serde_json::json!([])).await?;
         Ok(res.as_str().is_some())
     }
+    async fn get_base_fee(&self) -> Result<u128> {
+        let res = self
+            .rpc_call("eth_getBlockByNumber", serde_json::json!(["latest", false]))
+            .await?;
+        let base = res
+            .get("baseFeePerGas")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| CoreError::Rpc("baseFeePerGas missing in block".into()))?;
+        parse_hex_u128(base)
+    }
+
+    async fn get_max_priority_fee(&self) -> Result<u128> {
+        let res = self
+            .rpc_call("eth_maxPriorityFeePerGas", serde_json::json!([]))
+            .await?;
+        let s = res
+            .as_str()
+            .ok_or_else(|| CoreError::Rpc("maxPriorityFeePerGas not a string".into()))?;
+        parse_hex_u128(s)
+    }
 
     async fn get_erc20_balance(&self, contract: &str, holder: &str) -> Result<u128> {
         let contract = contract.trim();
@@ -243,4 +263,5 @@ mod tests {
         assert!(!is_evm_address("not_an_address"));
     }
 }
+
 
