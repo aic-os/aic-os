@@ -4,6 +4,12 @@ use std::sync::Arc;
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
 use crate::providers::algorand::AlgorandProvider;
+use crate::providers::arweave::ArweaveProvider;
+use crate::providers::ckb::CkbProvider;
+use crate::providers::flow::FlowProvider;
+use crate::providers::icp::IcpProvider;
+use crate::providers::radix::RadixProvider;
+use crate::providers::waves::WavesProvider;
 use crate::providers::aptos::AptosProvider;
 use crate::providers::bitcoin::BitcoinProvider;
 use crate::providers::cardano::CardanoProvider;
@@ -90,8 +96,15 @@ impl ProviderFactory {
                 Chain::Theta => Ok(Arc::new(ThetaProvider::new(chain, s))),
                 Chain::Cardano => Ok(Arc::new(CardanoProvider::new(chain, s))),
                 Chain::Polkadot => Ok(Arc::new(PolkadotProvider::new(chain, s))),
+                Chain::ICP => Ok(Arc::new(IcpProvider::new(chain, s))),
+                Chain::Waves => Ok(Arc::new(WavesProvider::new(chain, s))),
+                Chain::Flow => Ok(Arc::new(FlowProvider::new(chain, s))),
+                Chain::CKB => Ok(Arc::new(CkbProvider::new(chain, s))),
+                Chain::Arweave => Ok(Arc::new(ArweaveProvider::new(chain, s))),
+                Chain::Radix => Ok(Arc::new(RadixProvider::new(chain, s))),
                 _ => Err(CoreError::NotImplemented("Other-chain provider")),
             },
         }
     }
 }
+

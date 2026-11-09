@@ -77,6 +77,12 @@ chains:
   lightlink: { chain_id: 1890, rpc: [https://republic.rpc.lightlink.io] }
   xlayer: { chain_id: 196, rpc: [https://rpc.xlayer.tech] }
   berachain: { chain_id: 80094, rpc: [https://rpc.berachain.com] }
+  kaia: { chain_id: 8217, rpc: [https://public-en.node.kaia.io] }
+  taiko: { chain_id: 167000, rpc: [https://rpc.mainnet.taiko.xyz] }
+  viction: { chain_id: 88, rpc: [https://rpc.viction.xyz] }
+  kinto: { chain_id: 7887, rpc: [https://rpc.kinto.xyz/http] }
+  zilliqa: { chain_id: 32769, rpc: [https://api.zilliqa.com] }
+  bob: { chain_id: 60808, rpc: [https://rpc.gobob.xyz] }
 
   # ===== UTXO =====
   bitcoin: { rpc: [https://blockstream.info/api, https://mempool.space/api] }
@@ -124,6 +130,9 @@ chains:
   nomic: { rpc: [https://nomic-rest.publicnode.com] }
   terra: { rpc: [https://terra-rest.publicnode.com] }
   assetmantle: { rpc: [https://assetmantle-rest.publicnode.com] }
+  cheqd: { rpc: [https://cheqd-rest.publicnode.com] }
+  lava: { rpc: [https://lava-rest.publicnode.com] }
+  nois: { rpc: [https://nois-rest.publicnode.com] }
 
   # ===== Other =====
   solana: { rpc: [https://api.mainnet-beta.solana.com] }
@@ -144,4 +153,11 @@ chains:
   theta: { rpc: [https://theta-explorer.thetatoken.org/api] }
   cardano: { rpc: [https://api.koios.rest/api/v1] }
   polkadot: { rpc: [https://polkadot.api.subscan.io] }
+  icp: { rpc: [https://rosetta-api.internetcomputer.org] }
+  waves: { rpc: [https://nodes.wavesnodes.com] }
+  flow: { rpc: [https://rest-mainnet.onflow.org] }
+  ckb: { rpc: [https://explorer.nervos.org] }
+  arweave: { rpc: [https://arweave.net] }
+  radix: { rpc: [https://mainnet.radixdlt.com] }
+
 

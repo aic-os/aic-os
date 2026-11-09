@@ -57,6 +57,9 @@ impl CosmosProvider {
             Chain::Nomic => "unom",
             Chain::Terra => "uluna",
             Chain::AssetMantle => "umntl",
+            Chain::Cheqd => "ncheq",
+            Chain::Lava => "ulava",
+            Chain::Nois => "unois",
             _ => "uatom",
         }
     }
@@ -121,4 +124,5 @@ impl ChainTraits for CosmosProvider {
         Ok(false)
     }
 }
+
 

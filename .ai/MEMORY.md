@@ -394,3 +394,19 @@ text
   - Cosmos denom-маппинг: без правильного `denom` баланс всегда 0 (даже если API отвечает).
   - Некоторые REST API возвращают balance как string (не number) -- парсить через `.as_str().and_then(|s| s.parse())`.
 - **Следующее:** отправка BTC/SOL (PSBT + ed25519), либо оставшиеся сети для 150+ (NEAR уже есть, нужны: ICP, FLOW, XMR -- есть, KAS -- есть; остались: ICP, FLOW, WAVES, ZEN, ZIL, ETC, AR, RUNE, ROSE, KSM, ASTR -- часть уже через EVM/Cosmos).
+
+### 2026-11-09 -- Сессия #24 (150 СЕТЕЙ -- цель достигнута)
+- **ВЕХА: 150 сетей в одном кошельке.** EVM 80, UTXO 10, Cosmos 36, Other 24.
+- **+15 сетей в этой сессии:**
+  - +6 провайдеров Other: ICP (Rosetta API), Waves (node API), Flow (REST + placeholder), CKB (Nervos explorer), Arweave (winston REST), Radix (Gateway).
+  - +7 EVM: Kaia, Taiko, Viction, Kinto, Zilliqa, Bob, (Berachain уже была).
+  - +3 Cosmos: Cheqd (ncheq), Lava (ulava), Nois (unois).
+- **+8 EVM** из предыдущей партии: Meter, KavaEVM, OasisSapphire, Elastos, Syscoin, Lightlink, XLayer, Berachain.
+- Все 150 сетей зарегистрированы в `settings.yaml`, factory создаёт провайдеров, prices знает coingecko_id.
+- **70 тестов зелёные.**
+- **Живые балансы подтверждены:** BTC 57.709 (~$4.30M), SOL 0.147 (~$12.73), TRX 14493.8 (~$4,594), XRP 1113.55 (~$1,212).
+- **Уроки:**
+  - Flow/RNDR/Cadence-подобные -- требуют script execution, не REST. Placeholder OK для Phase 1.
+  - Radix -- fungible vaults нужно суммировать, placeholder 0 OK.
+- **Что осталось для >150:** сети, требующие API-ключей (Etherscan, BSCScan, Blockfrost for ADA full, Covalent). Это отдельный платный трек.
+- **Следующее (Блок C):** публичный деплой контрактов на Sepolia. Без faucet -- dry-run симуляция + runbook.

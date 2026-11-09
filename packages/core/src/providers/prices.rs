@@ -131,6 +131,21 @@ impl PriceClient {
             Theta => "theta-token",
             Cardano => "cardano",
             Polkadot => "polkadot",
+            ICP => "internet-computer",
+            Waves => "waves",
+            Flow => "flow",
+            CKB => "nervos-network",
+            Arweave => "arweave",
+            Radix => "radix",
+            Kaia => "kaia",
+            Taiko => "taiko",
+            Viction => "tomochain",
+            Kinto => "kinto",
+            Zilliqa => "zilliqa",
+            Bob => "ethereum",
+            Cheqd => "cheqd-network",
+            Lava => "lava-network",
+            Nois => "nois",
             Meter => "meter",
             KavaEvm => "kava",
             OasisSapphire => "oasis-network",
@@ -196,5 +211,6 @@ mod tests {
         assert!(PriceClient::new().get_prices(&[]).await.unwrap().is_empty());
     }
 }
+
 
 

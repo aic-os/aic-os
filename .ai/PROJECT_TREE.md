@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 21:28:57
+> Generated: 2026-11-09 21:33:43
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -184,13 +184,17 @@ aic-os/
 |   |   |   |-- providers
 |   |   |   |   |-- algorand.rs
 |   |   |   |   |-- aptos.rs
+|   |   |   |   |-- arweave.rs
 |   |   |   |   |-- bitcoin.rs
 |   |   |   |   |-- cardano.rs
+|   |   |   |   |-- ckb.rs
 |   |   |   |   |-- cosmos.rs
 |   |   |   |   |-- evm.rs
 |   |   |   |   |-- evm_abi.rs
 |   |   |   |   |-- factory.rs
+|   |   |   |   |-- flow.rs
 |   |   |   |   |-- hedera.rs
+|   |   |   |   |-- icp.rs
 |   |   |   |   |-- kaspa.rs
 |   |   |   |   |-- mod.rs
 |   |   |   |   |-- monero.rs
@@ -198,6 +202,7 @@ aic-os/
 |   |   |   |   |-- near.rs
 |   |   |   |   |-- polkadot.rs
 |   |   |   |   |-- prices.rs
+|   |   |   |   |-- radix.rs
 |   |   |   |   |-- solana.rs
 |   |   |   |   |-- stellar.rs
 |   |   |   |   |-- sui.rs
@@ -206,6 +211,7 @@ aic-os/
 |   |   |   |   |-- ton.rs
 |   |   |   |   |-- tron.rs
 |   |   |   |   |-- vechain.rs
+|   |   |   |   |-- waves.rs
 |   |   |   |   \-- xrp.rs
 |   |   |   |-- wallet
 |   |   |   |   |-- erc20.rs
