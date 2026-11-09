@@ -42,10 +42,10 @@
 - **EVM через revm 43 работает:** AICID, InheritanceVault, TimeCapsule задеплоены в genesis, вызываются через `aic_call` за 0 AIC
 
 ## 🚧 В работе
-- EVM в AIC Chain (aic_call выполняет CREATE вместо CALL)
-- P2P, DPoS консенсус
-- PQ-подписи (Schnorr + Dilithium)
-- Мост aCOIN
+- ✅ EVM в AIC Chain работает (read + write)
+- P2P, DPoS консенсус, PQ-подписи, мост aCOIN
+
+
 
 ## 📚 Документация
 - [ROADMAP.md](./ROADMAP.md) — полная дорожная карта
@@ -65,5 +65,9 @@
 - Rust-тестов: **71**
 - Solidity-тестов: **53**
 - Контрактов в AIC Chain genesis: **3**
+- **AIC-ID работает**: `resolve("alice")` -> `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`
+- **EVM write работает**: register, deposit, create
+- **Persistence**: storage контрактов сохраняется в data/chain.json
 - Chain ID: **2026**
+
 

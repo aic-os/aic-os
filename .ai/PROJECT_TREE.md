@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 23:30:14
+> Generated: 2026-11-09 23:45:25
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -192,6 +192,7 @@ aic-os/
 |   |   |   |-- erc20_metadata.rs
 |   |   |   |-- get_balance.rs
 |   |   |   |-- multichain_balance.rs
+|   |   |   |-- register_aicid.rs
 |   |   |   |-- send_aic.rs
 |   |   |   |-- send_eth.rs
 |   |   |   \-- send_eth_1559.rs
@@ -287,12 +288,24 @@ aic-os/
 |-- node-evm-final.log
 |-- node-final.err
 |-- node-final.log
+|-- node-final2.err
+|-- node-final2.log
 |-- node-genesis.err
 |-- node-genesis.log
+|-- node-persist1.err
+|-- node-persist1.log
+|-- node-persist2.err
+|-- node-persist2.log
+|-- node-reg.err
+|-- node-reg.log
 |-- node-test.err
 |-- node-test.log
+|-- node-trace.err
+|-- node-trace.log
 |-- node-v03.err
 |-- node-v03.log
+|-- node-write.err
+|-- node-write.log
 |-- PRINCIPLES.md
 |-- README.md
 \-- ROADMAP.md

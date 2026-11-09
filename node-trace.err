@@ -1,0 +1,12 @@
+[aic_call] to=0x0000000000000000000000000000000000a1c1d0 data_len=100 bytes
+[aic_call] state.get_code OK: len=3776
+[aic_call] BEFORE transact: tx.data.len()=100
+[aic_call] EVM result = Success { reason: Return, gas: ResultGas { total_gas_spent: 26861, state_gas_spent: 0, refunded: 0, floor_gas: 22330 }, logs: [], output: Call(0x0000000000000000000000000000000000000000000000000000000000000000) }
+[produce_block] received 1 tx from mempool
+[apply_evm_tx] from=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 acc.nonce=0 tx.nonce=0 acc.balance=1000000000000000000000000
+[apply_evm_tx] balance check: have=1000000000000000000000000 need=2000000000000000
+[apply_evm_tx] EVM ERROR: Transaction(InvalidChainId)
+[aic_call] to=0x0000000000000000000000000000000000a1c1d0 data_len=100 bytes
+[aic_call] state.get_code OK: len=3776
+[aic_call] BEFORE transact: tx.data.len()=100
+[aic_call] EVM result = Success { reason: Return, gas: ResultGas { total_gas_spent: 26861, state_gas_spent: 0, refunded: 0, floor_gas: 22330 }, logs: [], output: Call(0x0000000000000000000000000000000000000000000000000000000000000000) }

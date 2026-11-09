@@ -571,3 +571,29 @@ text
 - `TxEnv` в revm 43: поле `data` (не `input`), `kind` работает через `TxEnv::default()` + мутации.
 - `ExecutionResult::Success { output: Output::Call(bytes) }` -- правильный результат вызова.
 - `to_inmemory()` конвертирует наш State (accounts + contracts + storage) в revm::InMemoryDB.
+
+### 2026-11-09 -- Сессия #31 (ПОБЕДА: AIC-ID работает в AIC Chain)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Chain -- полноценная криптовалюта с работающими смарт-контрактами.**
+- **Что работает end-to-end:**
+  - Genesis 71 млрд AIC + деплой 3 контрактов (AICID, InheritanceVault, TimeCapsule) из deployedBytecode.
+  - EVM (revm 43) выполняет **write** транзакции -- не только read.
+  - `register("alice", alice_address)` через `aic_sendRawTransaction` -- tx попадает в блок, state diff применяется к нашему State.
+  - **`resolve("alice")` = `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`** (адрес Alice).
+  - Persistence сохраняет storage контракта (`map_storage` в serde_helpers).
+  - После перезапуска ноды: `LOADED, Blocks: 7, Head: #6` -> `resolve("alice")` всё ещё возвращает адрес Alice.
+  - Всё за **AIC** (газ в AIC), ни цента ETH, никому не платим.
+- **Пройденные баги (для истории):**
+  1. `bytecode.object` (creation) vs `deployedBytecode.object` (runtime) -- 6 часов отладки. EVM выполнял init при каждом вызове.
+  2. `Context::mainnet()` использует chain_id = 1, а наши tx подписаны под 2026 -> `InvalidChainId`. Фикс: `CfgEnv<SpecId>` с `cfg.chain_id = self.chain_id`.
+  3. `aic_sendRawTransaction` принимает только legacy (type 0), не EIP-1559. Пример переделан на `LegacyTransaction`.
+  4. `HashMap<Address, Account, FbBuildHasher>` -- убрали аннотацию типа.
+  5. `EvmStorageSlot.present_value` -- U256, а не EvmStorageSlot.
+  6. Storage в State не сериализовался (бинарные ключи) -- `map_storage` модуль.
+- **Что осталось:**
+  - P2P (несколько нод, gossip блоков).
+  - PQ-подписи (Schnorr + Dilithium / ML-DSA-65).
+  - Мост aCOIN (DKG 7/10, карантин).
+  - Регистрация @name за AIC (сейчас register бесплатный; добавить плату 10 AIC в казну).
+  - InheritanceVault и TimeCapsule write-операции (деплой уже работает).
+  - UI (Flutter/RN), мессенджер, VPN.
+  - Tokenomics: старт $10, цель 2030 $120-150.

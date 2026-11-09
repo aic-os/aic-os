@@ -9,7 +9,7 @@ pub struct State {
     #[serde(with = "crate::serde_helpers::map_bytes20", default)]
     contracts: HashMap<[u8; 20], Vec<u8>>,
     /// Storage контрактов: адрес -> (slot -> value)
-    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    #[serde(with = "crate::serde_helpers::map_storage", default, skip_serializing_if = "HashMap::is_empty")]
     storage: HashMap<[u8; 20], HashMap<[u8; 32], [u8; 32]>>,
 }
 
@@ -147,5 +147,6 @@ impl State {
         Keccak256::digest(&buf).into()
     }
 }
+
 
 

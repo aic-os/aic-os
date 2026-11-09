@@ -41,6 +41,9 @@
 
 ### 🔵 Не начато:
 - [ ] P2P (несколько нод, gossip блоков)
+- [x] **EVM в AIC Chain (read + write)** -- AICID работает, регистрация @alice за AIC
+- [x] **Первая write-транзакция** (register aicid, блок #2, gas 116401)
+- [x] **Storage контрактов + persistence** (map_storage в serde_helpers)
 - [ ] Мастер-ноды, DPoS консенсус
 - [ ] RandomX PoW (анти-51%)
 - [ ] PQ-подписи (Schnorr + Dilithium)
@@ -73,4 +76,5 @@
 2. P2P + DPoS
 3. PQ-подписи
 4. UI
+
 
