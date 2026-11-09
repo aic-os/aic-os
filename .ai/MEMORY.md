@@ -654,3 +654,46 @@ text
   - `ml-dsa = "0.1"` с фичей `getrandom` (RustCrypto, FIPS 204).
 - **Значение:** Bitcoin, Ethereum, Solana уязвимы к атакам квантовых компьютеров. AIC Chain -- нет. Это огромное конкурентное преимущество и маркетинговый козырь.
 - **Следующее (Блок A):** P2P (несколько нод, gossip блоков).
+
+### 2026-11-10 -- Сессия #34 (P2P РАБОТАЕТ: ДЕЦЕНТРАЛИЗОВАННАЯ СЕТЬ)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Chain -- децентрализованная сеть. 2+ ноды синхронизируются через P2P.**
+- **Стек P2P:**
+  - libp2p 0.56 (tokio, tcp, noise, yamux, kad, gossipsub, request-response, identify, ping, cbor).
+  - Kademlia DHT -- discovery пиров.
+  - Gossipsub -- broadcast блоков и транзакций.
+  - Request-Response (cbor) -- sync истории блоков.
+  - Identify + Ping -- служебные протоколы.
+- **Проверено на живом тесте (2 ноды):**
+  - Нода A: майнер, p2p-port 30333, rpc-port 8545, PeerId 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL.
+  - Нода B: sync-only (--no-mine), p2p-port 30334, rpc-port 8546, bootnode = A.
+  - Подключение: `[P2P] Connected to 12D3KooW...`, Kademlia routing updated.
+  - Синхронизация: `[P2P] Gossip: new block #2..#4` на ноде B.
+  - Проверка: `aic_blockNumber` A = B = `0x4`.
+- **Архитектура:**
+  - `packages/node/src/p2p.rs` -- AicBehaviour (Kademlia + Gossipsub + Request-Response + Identify + Ping).
+  - `main.rs` -- `--p2p-port`, `--rpc-port`, `--bootnodes`, `--no-mine`.
+  - `rpc.rs` -- P2P event loop (NewBlock -> chain.add_block_from_peer, NewTransaction -> mempool).
+  - `chain.rs::add_block_from_peer` -- принимаем блоки от пиров (проверка number + parent_hash).
+  - Block producer broadcast'ит блоки через gossipsub после производства.
+  - `aic_sendRawTransaction` broadcast'ит транзакции через gossipsub.
+- **Что осталось для production:**
+  - Sync истории при подключении (Request-Response уже есть в AicBehaviour, но не используется).
+  - Mempool gossip (принимаем, но не broadcast'им входящие от пиров -- нужен флаг "уже видел").
+  - Защита от спама и форков (награда/наказание).
+  - DPoS консенсус (сейчас block producer = майнер, любой может майнить, нужен стейк).
+  - DEX-агрегатор в кошельке.
+  - Мост aCOIN (DKG 7/10, карантин).
+- **Метрики:**
+  - Сетей в кошельке: 150.
+  - Rust-тестов: 74 (было 70, +4 в pq_crypto).
+  - Solidity-тестов: 51.
+  - Chain ID: 2026.
+  - Эмиссия: 71 млрд AIC.
+  - Монетизация: 10 AIC/регистрация в казну.
+  - PQ: Schnorr + ML-DSA-65 для value >= 1000 AIC.
+  - P2P: libp2p, gossipsub, Kademlia.
+
+### Три главных достижения проекта на текущий момент:
+1. **Своя криптовалюта** (AIC Chain, 71 млрд AIC, блоки, транзакции, persistence).
+2. **Монетизация** (10 AIC с каждой регистрации @name в казну).
+3. **Квантовая защита + P2P децентрализация** (Schnorr + Dilithium, 2+ ноды синхронизируются).

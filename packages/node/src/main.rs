@@ -1,10 +1,11 @@
 mod block;
-mod serde_helpers;
 mod chain;
 mod evm;
 mod genesis_contracts;
 mod mempool;
+mod p2p;
 mod rpc;
+mod serde_helpers;
 mod state;
 mod transaction;
 
@@ -18,9 +19,21 @@ struct Args {
     #[arg(long, default_value = "8545")]
     rpc_port: u16,
 
-    /// Chain ID (по умолчанию 2026 -- год запуска AIC Chain)
+    /// Порт P2P (по умолчанию 30333)
+    #[arg(long, default_value = "30333")]
+    p2p_port: u16,
+
+    /// Chain ID (по умолчанию 2026)
     #[arg(long, default_value_t = 2026)]
     chain_id: u64,
+
+    /// Bootnode адреса (Multiaddr через запятую)
+    #[arg(long, value_delimiter = ',')]
+    bootnodes: Vec<String>,
+
+    /// Не майнить блоки (sync-only режим)
+    #[arg(long, default_value_t = false)]
+    no_mine: bool,
 }
 
 #[tokio::main]
@@ -33,16 +46,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let args = Args::parse();
-    let addr = format!("0.0.0.0:{}", args.rpc_port);
+    let rpc_addr = format!("0.0.0.0:{}", args.rpc_port);
 
     tracing::info!("Starting AIC Node");
     tracing::info!("Chain ID: {}", args.chain_id);
-    tracing::info!("RPC: http://{}", addr);
+    tracing::info!("RPC: http://{}", rpc_addr);
+    tracing::info!("P2P: port {}", args.p2p_port);
+    tracing::info!("Mining: {}", if args.no_mine { "disabled" } else { "enabled" });
+    if !args.bootnodes.is_empty() {
+        tracing::info!("Bootnodes: {:?}", args.bootnodes);
+    }
 
-    rpc::run_rpc(&addr, args.chain_id).await?;
+    let p2p_handles = p2p::start_p2p(args.p2p_port, args.bootnodes).await?;
+    rpc::run_rpc(&rpc_addr, args.chain_id, p2p_handles, args.no_mine).await?;
     Ok(())
 }
-
-
-
-

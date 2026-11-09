@@ -1,0 +1,12 @@
+[P2P] Kademlia: routing updated, peer=12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] Connected to 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] Kademlia: routing updated, peer=12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] peer connected: 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] Gossip: new block #2
+[chain] peer block #2 accepted (txs=0)
+[P2P] Gossip: new block #3
+[chain] peer block #3 accepted (txs=0)
+[P2P] Gossip: new block #4
+[chain] peer block #4 accepted (txs=0)
+[P2P] Disconnected from 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL
+[P2P] peer disconnected: 12D3KooWGZ1sSdPCNTg54uQEm1dcErTbFD8NknMJKQZfM84mAjfL

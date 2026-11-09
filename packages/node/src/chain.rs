@@ -286,6 +286,30 @@ impl Chain {
         block
     }
 
+    /// Принять блок от пира P2P. Возвращает true, если блок валиден и добавлен.
+    pub fn add_block_from_peer(&mut self, block: Block) -> bool {
+        let head = self.head();
+
+        // Проверка: блок продолжает нашу цепочку?
+        if block.header.number != head.header.number + 1 {
+            eprintln!("[chain] peer block #{} rejected: expected #{}",
+                block.header.number, head.header.number + 1);
+            return false;
+        }
+        if block.header.parent_hash != head.hash() {
+            eprintln!("[chain] peer block #{} rejected: wrong parent_hash", block.header.number);
+            return false;
+        }
+
+        // Применяем state diff? Пока доверяем пиру (Phase 1, без полного валидатора).
+        // В Phase 2 добавим: применить все tx из блока, проверить state_root.
+
+        self.blocks.push(block.clone());
+        eprintln!("[chain] peer block #{} accepted (txs={})",
+            block.header.number, block.transactions.len());
+        true
+    }
+
     pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -302,6 +326,7 @@ impl Chain {
         Ok(chain)
     }
 }
+
 
 
 

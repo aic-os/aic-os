@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 00:30:54
+> Generated: 2026-11-10 00:45:11
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -265,6 +265,7 @@ aic-os/
 |   |   |   |-- genesis_contracts.rs
 |   |   |   |-- main.rs
 |   |   |   |-- mempool.rs
+|   |   |   |-- p2p.rs
 |   |   |   |-- rpc.rs
 |   |   |   |-- serde_helpers.rs
 |   |   |   |-- state.rs
@@ -284,6 +285,10 @@ aic-os/
 |-- node1.log
 |-- node2.err
 |-- node2.log
+|-- nodeA.err
+|-- nodeA.log
+|-- nodeB.err
+|-- nodeB.log
 |-- node-check.err
 |-- node-check.log
 |-- node-debug.err

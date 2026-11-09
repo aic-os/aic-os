@@ -9,6 +9,7 @@ use std::sync::RwLock;
 use crate::chain::Chain;
 use crate::mempool::Mempool;
 use crate::transaction::Transaction;
+use crate::p2p::{P2PCommand, P2PEvent, P2PHandles};
 
 use revm::{
     context::{Context, TxEnv},
@@ -21,6 +22,7 @@ pub struct AppState {
     pub mempool: Mempool,
     pub chain: RwLock<Chain>,
     pub chain_id: u64,
+    pub p2p_tx: tokio::sync::mpsc::UnboundedSender<P2PCommand>,
 }
 
 #[derive(Deserialize)]
@@ -44,7 +46,12 @@ fn now_unix() -> u64 {
 
 const TREASURY: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0F];
 
-pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_rpc(
+    addr: &str,
+    chain_id: u64,
+    mut p2p_handles: P2PHandles,
+    no_mine: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     const AIC: u128 = 1_000_000_000_000_000_000;
     let total: u128 = 71_000_000_000u128 * AIC;
 
@@ -96,14 +103,51 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         c
     };
 
+    let p2p_tx = p2p_handles.command_tx.clone();
+
     let state = Arc::new(AppState {
         mempool: Mempool::new(),
         chain: RwLock::new(chain),
         chain_id,
+        p2p_tx: p2p_tx.clone(),
     });
 
-    let producer_state = state.clone();
+    // === P2P event loop: принимаем чужие блоки и транзакции ===
+    let p2p_state = state.clone();
+    let mut event_rx = p2p_handles.event_rx;
     tokio::spawn(async move {
+        while let Some(event) = event_rx.recv().await {
+            match event {
+                P2PEvent::NewBlock(block) => {
+                    let mut chain = p2p_state.chain.write().unwrap();
+                    let bn = block.header.number;
+                    if chain.add_block_from_peer(block) {
+                        let chain_file = std::path::PathBuf::from("data").join("chain.json");
+                        if let Err(e) = chain.save(&chain_file) {
+                            eprintln!("⚠ Save failed: {e}");
+                        }
+                        println!("[BLOCK-P2P] accepted #{}", bn);
+                    }
+                }
+                P2PEvent::NewTransaction(tx) => {
+                    let from = hex::encode(&tx.from[..4]);
+                    p2p_state.mempool.add(tx).await;
+                    eprintln!("[TX-P2P] received from 0x{}...", from);
+                }
+                P2PEvent::PeerConnected(peer) => {
+                    eprintln!("[P2P] peer connected: {peer}");
+                }
+                P2PEvent::PeerDisconnected(peer) => {
+                    eprintln!("[P2P] peer disconnected: {peer}");
+                }
+            }
+        }
+    });
+
+    // === Block producer: рожаем блок -> сохраняем -> broadcast ===
+    if !no_mine {
+        let producer_state = state.clone();
+        tokio::spawn(async move {
         let mut ticker = tokio::time::interval(std::time::Duration::from_secs(3));
         ticker.tick().await;
         loop {
@@ -118,8 +162,15 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
             let chain_file = std::path::PathBuf::from("data").join("chain.json");
             if let Err(e) = chain.save(&chain_file) { eprintln!("⚠ Save failed: {e}"); }
             println!("[BLOCK] #{} hash=0x{} txs={} gas={}", bn, hash_short, tx_count, gas_used);
+            // Broadcast
+            let _ = producer_state.p2p_tx.send(P2PCommand::BroadcastBlock(block.clone()));
         }
-    });
+        });
+    } else {
+        println!("[miner] disabled (--no-mine): syncing only");
+    }
+
+    
 
     let app = Router::new().route("/", post(handle_rpc)).with_state(state);
     let listener = TcpListener::bind(addr).await?;
@@ -185,36 +236,23 @@ async fn handle_rpc(
         "aic_call" => {
             let to_str = req.params.get(0).and_then(|v| v.as_str());
             let data_str = req.params.get(1).and_then(|v| v.as_str());
-
             match (to_str.and_then(parse_addr), data_str) {
                 (Some(to_addr), Some(d)) => {
                     let clean = d.trim_start_matches("0x").trim_start_matches("0X");
                     let data_bytes = match hex::decode(clean) {
                         Ok(b) => b,
-                        Err(e) => {
-                            eprintln!("[aic_call] INVALID DATA HEX: len={} err={}", clean.len(), e);
-                            return Json(RpcResponse {
-                                jsonrpc: "2.0", id: req.id, result: None,
-                                error: Some(json!({
-                                    "code": -32602,
-                                    "message": format!("aic_call: invalid data hex (len={}, err={}). data must be hex string, no spaces.", clean.len(), e)
-                                })),
-                            });
-                        }
+                        Err(e) => return Json(RpcResponse {
+                            jsonrpc: "2.0", id: req.id, result: None,
+                            error: Some(json!({"code": -32602, "message": format!("aic_call: invalid data hex: {e}")})),
+                        }),
                     };
-                    eprintln!("[aic_call] to=0x{} data_len={} bytes", hex::encode(to_addr), data_bytes.len());
                     let chain_guard = st.chain.read().unwrap();
                     let db = chain_guard.state.to_inmemory();
                     drop(chain_guard);
 
-                    // Проверка: есть ли код в нашем State
-                    {
-                        let guard = st.chain.read().unwrap();
-                        match guard.state.get_code(&to_addr) {
-                            Some(code) => eprintln!("[aic_call] state.get_code OK: len={}", code.len()),
-                            None => eprintln!("[aic_call] state.get_code: NO CODE at 0x{}", hex::encode(to_addr)),
-                        }
-                    }let mut evm = Context::mainnet().with_db(db).build_mainnet();
+                    let mut cfg: revm::context::CfgEnv<revm::primitives::hardfork::SpecId> = Default::default();
+                    cfg.chain_id = st.chain_id;
+                    let mut evm = Context::mainnet().with_db(db).with_cfg(cfg).build_mainnet();
 
                     let mut tx = TxEnv::default();
                     tx.caller = Address::from(TREASURY);
@@ -222,67 +260,42 @@ async fn handle_rpc(
                     tx.gas_price = 0;
                     tx.kind = TxKind::Call(Address::from(to_addr));
                     tx.value = U256::ZERO;
-                    tx.data = Bytes::from(data_bytes.clone());
+                    tx.data = Bytes::from(data_bytes);
                     tx.nonce = 0;
-                    eprintln!("[aic_call] BEFORE transact: tx.data.len()={}", tx.data.len());
-                    
+                    tx.chain_id = Some(st.chain_id);
 
                     match evm.transact(tx) {
-                        Ok(res) => {
-                            eprintln!("[aic_call] EVM result = {:?}", res.result);
-                            match res.result {
+                        Ok(res) => match res.result {
                             ExecutionResult::Success { output: Output::Call(b), .. } => {
                                 Some(json!(format!("0x{}", hex::encode(&b))))
                             }
-                            ExecutionResult::Success { output: Output::Create(b, _), .. } => {
-                                Some(json!(format!("0x{}", hex::encode(&b))))
-                            }
-                            ExecutionResult::Revert { output, .. } => {
-                                return Json(RpcResponse {
-                                    jsonrpc: "2.0", id: req.id, result: None,
-                                    error: Some(json!({"code": -32000, "message": format!("revert: 0x{}", hex::encode(&output))})),
-                                });
-                            }
-                            ExecutionResult::Halt { reason, .. } => {
-                                return Json(RpcResponse {
-                                    jsonrpc: "2.0", id: req.id, result: None,
-                                    error: Some(json!({"code": -32000, "message": format!("halt: {:?}", reason)})),
-                                });
-                            }
-                            }
-                        },
-                        Err(e) => {
-                            return Json(RpcResponse {
+                            ExecutionResult::Revert { output, .. } => return Json(RpcResponse {
                                 jsonrpc: "2.0", id: req.id, result: None,
-                                error: Some(json!({"code": -32000, "message": format!("evm error: {e:?}")})),
-                            });
-                        }
+                                error: Some(json!({"code": -32000, "message": format!("revert: 0x{}", hex::encode(&output))})),
+                            }),
+                            ExecutionResult::Halt { reason, .. } => return Json(RpcResponse {
+                                jsonrpc: "2.0", id: req.id, result: None,
+                                error: Some(json!({"code": -32000, "message": format!("halt: {:?}", reason)})),
+                            }),
+                            _ => None,
+                        },
+                        Err(e) => return Json(RpcResponse {
+                            jsonrpc: "2.0", id: req.id, result: None,
+                            error: Some(json!({"code": -32000, "message": format!("evm error: {e:?}")})),
+                        }),
                     }
                 }
-                (Some(_), None) => {
-                    return Json(RpcResponse {
-                        jsonrpc: "2.0", id: req.id, result: None,
-                        error: Some(json!({"code": -32602, "message": "aic_call: missing data"})),
-                    });
-                }
-                (None, _) => {
-                    return Json(RpcResponse {
-                        jsonrpc: "2.0", id: req.id, result: None,
-                        error: Some(json!({"code": -32602, "message": "aic_call: bad contract addr"})),
-                    });
-                }
+                _ => None,
             }
         }
 
         "aic_sendRawTransaction" => {
-            // params: [raw_hex, pq_pubkey_hex?, pq_signature_hex?]
             let raw = req.params.get(0).and_then(|v| v.as_str());
             let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
             let pq_sig_hex = req.params.get(2).and_then(|v| v.as_str());
 
             match raw.and_then(Transaction::from_raw_hex) {
                 Some(mut tx) => {
-                    // Подключаем PQ-поля, если пришли
                     if let Some(pk) = pq_pk_hex {
                         if let Ok(bytes) = hex::decode(pk.trim_start_matches("0x")) {
                             if !bytes.is_empty() { tx.pq_pubkey = Some(bytes); }
@@ -293,7 +306,6 @@ async fn handle_rpc(
                             if !bytes.is_empty() { tx.pq_signature = Some(bytes); }
                         }
                     }
-
                     if !tx.verify() {
                         return Json(RpcResponse {
                             jsonrpc: "2.0", id: req.id, result: None,
@@ -311,7 +323,8 @@ async fn handle_rpc(
                     let hash = tx.hash();
                     let value_aic = tx.value / 1_000_000_000_000_000_000;
                     let has_pq = tx.pq_pubkey.is_some();
-                    st.mempool.add(tx).await;
+                    st.mempool.add(tx.clone()).await;
+                    let _ = st.p2p_tx.send(P2PCommand::BroadcastTx(tx));
                     eprintln!("[mempool] accepted tx hash=0x{} value={} AIC pq={}",
                         hex::encode(&hash[..8]), value_aic, has_pq);
                     Some(json!(format!("0x{}", hex::encode(hash))))
@@ -336,10 +349,4 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
-
-
-
-
-
-
 

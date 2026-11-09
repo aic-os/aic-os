@@ -11,30 +11,39 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
+# P2P
+libp2p = { version = "0.56", features = ["cbor", "tokio", "tcp", "noise", "yamux", "kad", "gossipsub", "request-response", "identify", "ping", "macros"] }
+futures = "0.3"
+
+# PQ crypto
 ml-dsa = { version = "0.1", features = ["getrandom"] }
+
+# AIC
 aic-core = { path = "packages/core" }
+
+# Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml_ng = "0.10"
+
+# Errors & async
 thiserror = "1"
 async-trait = "0.1"
+
+# HTTP
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+# Crypto
 bip39 = { version = "2", features = ["rand"] }
 rand = "0.8"
 zeroize = { version = "1", features = ["derive"] }
 bip32 = "0.5"
-k256 = { version = "0.13", features = ["ecdsa"] }
+k256 = { version = "0.13", features = ["ecdsa", "schnorr"] }
 sha3 = "0.10"
 hex = "0.4"
 rlp = "0.5"
 primitive-types = { version = "0.12", features = ["rlp"] }
 bs58 = "0.5"
 base64 = "0.22"
-
-
-
-
-
-
 
