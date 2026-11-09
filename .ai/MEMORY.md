@@ -181,3 +181,18 @@ text
 - **ВЕХА:** живой raw EIP-1559 отправлен в mainnet: `0x02f86801...`, tx_hash `0x8d57ccc3...`, отвергнут по insufficient funds (ожидаемо для Hardhat-мнемоники).
 - Всего тестов: **56**.
 - **Следующее -- Block C (AIC-ID):** смарт-контракт ENS-подобный, Foundry, регистрация/разрешение имён.
+
+### 2026-11-09 -- Сессия #14 (Block C: AICID.sol)
+- `packages/contracts` инициализирован через Foundry 1.9.0 (Solc 0.8.24, forge-std).
+- Контракт `AICID.sol`:
+  - `register(name, owner)` -- регистрация, 365 дней, отказ при дубликате неистёкшего имени.
+  - `renew(name)` -- продление (только owner).
+  - `transferName(name, newOwner)` -- трансфер, обновляет reverse-map.
+  - `resolve(name)` -- имя -> адрес (address(0) если свободно/истекло).
+  - `reverseResolve(addr)` -- адрес -> имя.
+  - `isAvailable(name)` / `isValidName(name)`.
+  - Валидация: `[a-z0-9_-]`, длина 1..32.
+  - `_now()` с `// forge-lint: disable-next-line(unsafe-typecast)` (Safe: block.timestamp < uint64 max >500M лет).
+- Foundry `[lint]` -- отключён `block-timestamp` (манипуляция ~12s vs окно 365 дней).
+- **14/14 тестов зелёные**, включая expiry через `vm.warp` и reverse-map consistency после transfer.
+- **Следующее:** деплой-скрипт (`script/DeployAICID.s.sol`) + реальный деплой (Anvil -> mainnet).

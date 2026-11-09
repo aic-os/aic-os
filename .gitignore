@@ -43,3 +43,6 @@ secrets/
 packages/contracts/out/
 packages/contracts/cache/
 packages/contracts/broadcast/
+
+# Foundry -- dependencies installed via `forge install`, not committed
+packages/contracts/lib/
