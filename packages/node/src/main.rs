@@ -32,6 +32,14 @@ struct Args {
 
     #[arg(long, default_value_t = false)]
     no_mine: bool,
+
+    /// Список адресов валидаторов (0x..., через запятую). Пусто = legacy (все майнят).
+    #[arg(long, value_delimiter = ',', default_value = "")]
+    validators: Vec<String>,
+
+    /// Мой адрес валидатора (0x...). Пусто = не участвую в консенсусе.
+    #[arg(long, default_value = "")]
+    my_address: String,
 }
 
 const AIC: u128 = 1_000_000_000_000_000_000;
@@ -83,10 +91,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chain = chain::init_or_genesis(args.chain_id, &alloc, &chain_path)?;
     let chain_arc = Arc::new(RwLock::new(chain));
 
+    // === DPoS: устанавливаем валидаторов ===
+    {
+        let mut c = chain_arc.write().unwrap();
+        c.validators = args.validators.iter().filter_map(|s| {
+            let clean = s.trim().trim_start_matches("0x");
+            if clean.len() != 40 { return None; }
+            hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
+                let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
+            } else { None })
+        }).collect();
+
+        let my_addr = {
+            let clean = args.my_address.trim().trim_start_matches("0x");
+            if clean.len() == 40 {
+                hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
+                    let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
+                } else { None })
+            } else { None }
+        };
+
+        if !c.validators.is_empty() {
+            tracing::info!("DPoS: {} validators, round-robin", c.validators.len());
+            for (i, v) in c.validators.iter().enumerate() {
+                tracing::info!("  [{}] 0x{}", i, hex::encode(v));
+            }
+            if let Some(me) = my_addr {
+                tracing::info!("My validator address: 0x{}", hex::encode(me));
+            }
+        } else {
+            tracing::warn!("DPoS: no validators configured, ALL nodes can mine (legacy mode)");
+        }
+    }
+
+    // Запоминаем my_address для block producer (через AppState)
+    let my_addr_for_state = {
+        let clean = args.my_address.trim().trim_start_matches("0x");
+        if clean.len() == 40 {
+            hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
+                let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
+            } else { None })
+        } else { None }
+    };
+
     // === P2P (получает shared chain) ===
     let p2p_handles = p2p::start_p2p(args.p2p_port, args.bootnodes, chain_arc.clone()).await?;
 
     // === RPC (получает shared chain + P2P handles) ===
-    rpc::run_rpc(&rpc_addr, args.chain_id, p2p_handles, args.no_mine, chain_arc).await?;
+    rpc::run_rpc(&rpc_addr, args.chain_id, p2p_handles, args.no_mine, chain_arc, my_addr_for_state).await?;
     Ok(())
 }
+

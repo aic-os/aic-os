@@ -36,6 +36,8 @@ pub struct Chain {
     pub chain_id: u64,
     pub blocks: Vec<Block>,
     pub state: State,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub validators: Vec<[u8; 20]>,
     #[serde(with = "crate::serde_helpers::map_bytes32")]
     pub receipts: HashMap<[u8; 32], TxReceipt>,
 }
@@ -74,6 +76,7 @@ impl Chain {
             chain_id,
             blocks: vec![Block { header, transactions: vec![] }],
             state,
+            validators: vec![],
             receipts: HashMap::new(),
         }
     }
@@ -310,6 +313,25 @@ impl Chain {
         true
     }
 
+    /// Может ли адрес `me` майнить следующий блок?
+    /// Правило: блок #N майнит validators[N % len].
+    pub fn can_mine(&self, me: &[u8; 20]) -> bool {
+        if self.validators.is_empty() {
+            return true; // нет списка -- все могут (legacy mode)
+        }
+        let next_block = self.block_number() + 1;
+        let idx = (next_block as usize) % self.validators.len();
+        &self.validators[idx] == me
+    }
+
+    /// Валидатор, который должен майнить следующий блок.
+    pub fn next_validator(&self) -> Option<[u8; 20]> {
+        if self.validators.is_empty() { return None; }
+        let next_block = self.block_number() + 1;
+        let idx = (next_block as usize) % self.validators.len();
+        Some(self.validators[idx])
+    }
+
     pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -353,3 +375,5 @@ pub fn init_or_genesis(
     println!("====================================\n");
     Ok(c)
 }
+
+

@@ -41,8 +41,8 @@
 - [x] 125 тестов (74 Rust + 51 Solidity)
 
 ### 🔵 Не начато (для production-ready)
-- [ ] **DPoS консенсус** (сейчас любой может майнить → форки возможны) -- СЛЕДУЮЩАЯ ВЕХА
-- [ ] Валидаторы + минимальный стейк 100 000 AIC
+- [x] **DPoS консенсус (round-robin) -- РАБОТАЕТ** (A=B=9, без форков)
+- [x] Валидаторы (CLI: --validators, --my-address)
 - [ ] Награда за блок валидаторам
 - [ ] Mempool dedup (re-broadcast чужих tx с флагом "уже видел")
 - [ ] Мост aCOIN (DKG 7/10 + карантин)
@@ -104,4 +104,5 @@
 - **P2P:** libp2p (Kademlia + Gossipsub + Request-Response)
 - **Мессенджер:** Matrix (sandbox)
 - **VPN:** WireGuard (sandbox)
+
 

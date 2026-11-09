@@ -52,6 +52,7 @@ pub async fn run_rpc(
     mut p2p_handles: P2PHandles,
     no_mine: bool,
     chain: Arc<RwLock<Chain>>,
+    my_addr: Option<[u8; 20]>,
 ) -> Result<(), Box<dyn std::error::Error>> {
 let p2p_tx = p2p_handles.command_tx.clone();
 
@@ -102,6 +103,17 @@ let p2p_tx = p2p_handles.command_tx.clone();
         ticker.tick().await;
         loop {
             ticker.tick().await;
+
+            // DPoS: проверяем, наша ли очередь
+            if let Some(me) = my_addr {
+                let chain_guard = producer_state.chain.read().unwrap();
+                if !chain_guard.can_mine(&me) {
+                    let next = chain_guard.next_validator().map(|v| hex::encode(&v[..4])).unwrap_or_default();
+                    drop(chain_guard);
+                    continue; // ждём, пока следующий валидатор создаст блок
+                }
+            }
+
             let txs = producer_state.mempool.drain(100).await;
             let mut chain = producer_state.chain.write().unwrap();
             let bn = chain.block_number() + 1;
@@ -299,6 +311,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 
