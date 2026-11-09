@@ -1,76 +1,71 @@
 # AIC-OS 🚀
 
-> **Независимая криптовалюта AIC + мультичейн-кошелёк (150 сетей) + смарт-контракты + DeFi.**
+> **Независимая криптовалюта AIC + мультичейн-кошелёк (150 сетей) + EVM смарт-контракты + DeFi.**
 
-## 🎯 Главный принцип
-**AIC Chain — независимая сеть. Берём чужой опыт как пример, делаем лучше, ЗАРАБАТЫВАЕМ МЫ.**
-Все комиссии — в AIC. Не платим Ethereum/Base/Polygon за действия пользователей.
+## 🎯 Принцип №1
+**AIC Chain -- независимая сеть. Берём чужой опыт как пример, делаем лучше, ЗАРАБАТЫВАЕМ МЫ.**
+Все комиссии идут в казну AIC-OS в AIC. Не платим Ethereum/Base/Polygon за действия пользователей.
 
 ## 💰 Токеномика
 - **Эмиссия:** 71 000 000 000 AIC (71 млрд)
 - **Стартовая цена:** $10
 - **Цель к 2030:** $120–150 (кап $8.5–10.6T)
 - **Распределение:** 40% казна, 30% airdrop, 20% стейкинг, 10% foundation
+- **Монетизация (проверено):** 10 AIC за регистрацию @name, 5 AIC продление, газ
 - Подробно: [docs/TOKENOMICS.md](./docs/TOKENOMICS.md)
 
-## ✅ Что уже работает
+## ✅ Что работает
 
-### Кошелёк (`packages/core`, Rust)
-- BIP-39 сид-фраза (12/24 слова), BIP-32 derivation
-- secp256k1 + EIP-55 (совместимость с MetaMask/Trust/Ledger)
+### Кошелёк (aic-core, Rust)
+- BIP-39, BIP-32, secp256k1, EIP-55
 - Legacy ETH tx (EIP-155) + EIP-1559
-- ERC-20: balanceOf, decimals, symbol, name, transfer calldata
-- **150 сетей** с балансами и курсами USD/RUB (CoinGecko)
-- AIC-ID: resolve(@name) / reverseResolve(addr)
+- ERC-20 (balanceOf/decimals/symbol/name/transfer)
+- **150 сетей** с балансами и курсами USD/RUB
+- AIC-ID: resolve(@name) в Rust
 - 70 тестов
 
-### Смарт-контракты (`packages/contracts`, Solidity + Foundry)
-- **AICID.sol** — регистрация @name, resolve, reverse, transfer, renew (365 дней)
-- **InheritanceVault.sol** — dead man's switch (наследство в блокчейне)
-- **TimeCapsule.sol** — блокировка ETH до timestamp
-- 53 теста Foundry
-- Деплой-скрипты + DEPLOY.md runbook
+### Смарт-контракты (Solidity + Foundry)
+- **AICID.sol** -- регистрация @name (10 AIC), resolve, reverse, transfer, renew (5 AIC)
+- **InheritanceVault.sol** -- dead man's switch
+- **TimeCapsule.sol** -- блокировка ETH до timestamp
+- 51 тест
+- Деплой + DEPLOY.md
 
-### AIC Chain (`packages/node`, Rust)
-- Своя нода, порт 8545, chain_id 2026
-- Block producer каждые 3 секунды
-- Genesis: 71 млрд AIC + 3 контракта
-- Подпись EIP-155 (secp256k1), verify
-- **Работающая транзакция:** Alice→Bob 1000 AIC, блок #21
-- Persistence (chain.json save/load)
-- RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, sendRawTransaction
-- **EVM через revm 43 работает:** AICID, InheritanceVault, TimeCapsule задеплоены в genesis, вызываются через `aic_call` за 0 AIC
+### AIC Chain (своя нода, Rust)
+- Chain ID 2026, порт 8545
+- Block producer каждые 3 сек
+- Genesis 71 млрд AIC
+- **EVM работает** (revm 43): read + write
+- **AICID.register() -- 10 AIC в казну AIC-OS** ✅
+- **resolve("alice") -> 0xf39Fd6e5...** ✅
+- Persistence: chain.json (блоки, state, storage контрактов)
+- Первая транзакция AIC Alice→Bob (блок #21)
+- RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, aic_call, aic_sendRawTransaction
 
 ## 🚧 В работе
-- ✅ EVM в AIC Chain работает (read + write)
-- P2P, DPoS консенсус, PQ-подписи, мост aCOIN
-
-
+- **PQ-подписи** (Schnorr + ML-DSA-65 / Dilithium) -- квантовая устойчивость
+- **P2P** (несколько нод, gossip блоков)
+- Монетизация InheritanceVault/TimeCapsule (1 AIC каждая)
+- Мост aCOIN (DKG 7/10)
+- DPoS консенсус + мастер-ноды
+- UI (Flutter/RN)
 
 ## 📚 Документация
-- [ROADMAP.md](./ROADMAP.md) — полная дорожная карта
-- [PRINCIPLES.md](./PRINCIPLES.md) — принципы проекта
-- [docs/TOKENOMICS.md](./docs/TOKENOMICS.md) — экономика
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — архитектура
-- [packages/contracts/DEPLOY.md](./packages/contracts/DEPLOY.md) — деплой
-- [.ai/MEMORY.md](./.ai/MEMORY.md) — память проекта
+- [ROADMAP.md](./ROADMAP.md) -- полная карта
+- [PRINCIPLES.md](./PRINCIPLES.md) -- принципы проекта
+- [docs/TOKENOMICS.md](./docs/TOKENOMICS.md) -- экономика
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) -- архитектура
+- [packages/contracts/DEPLOY.md](./packages/contracts/DEPLOY.md) -- деплой
+- [.ai/MEMORY.md](./.ai/MEMORY.md) -- память проекта
 
 ## 🛠️ Стек
-- Rust (tokio, revm, k256, reqwest)
+- Rust (tokio, revm 43, k256, bip39, bip32, axum)
 - Solidity 0.8.24 + Foundry 1.9.0
-- Axum (RPC), serde_json
+- 121 тест (70 Rust + 51 Solidity)
 
 ## 📊 Метрики
 - Сетей: **150** (EVM 80, UTXO 10, Cosmos 36, Other 24)
-- Rust-тестов: **71**
-- Solidity-тестов: **53**
-- Контрактов в AIC Chain genesis: **3**
-- **AIC-ID работает**: `resolve("alice")` -> `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`
-- **EVM write работает**: register, deposit, create
-- **Persistence**: storage контрактов сохраняется в data/chain.json
-- **МОНЕТИЗАЦИЯ**: AICID.register() = **10 AIC в казну** (проверено: +10.0012 AIC на тест)
-- **Экономика:** 10 AIC регистрация + 5 AIC продление + газ -> TREASURY (0x...0F)
 - Chain ID: **2026**
-
-
-
+- Эмиссия: **71 млрд AIC**
+- Стартовая цена: **$10**
+- Первая регистрация @alice: **+10.0012 AIC в казну** ✅

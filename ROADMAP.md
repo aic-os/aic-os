@@ -1,78 +1,103 @@
 # 🗺️ ROADMAP AIC-OS
 
-Актуально на: 2026-11-09 (Сессия #29)
+Актуально на: 2026-11-10 (Сессия #32)
 
 ## 🟢 Фаза 0 — Фундамент (ЗАВЕРШЕНО)
+- [x] Репозиторий aic-os/aic-os (GitHub)
+- [x] Rust workspace (packages/core, packages/node)
+- [x] Foundry (packages/contracts)
+- [x] .ai/MEMORY.md + автогенерация PROJECT_TREE
+- [x] CI (GitHub Actions: fmt + clippy + test)
 
-## 🟢 Фаза 1 — Кошелёк (ЗАВЕРШЕНО ~90%)
-- [x] BIP-39, BIP-32, secp256k1, EIP-55
-- [x] Legacy ETH tx (EIP-155), EIP-1559
+## 🟢 Фаза 1 — Кошелёк (ЗАВЕРШЕНО 95%)
+### Rust-core (aic-core)
+- [x] BIP-39 (12/24, seed с passphrase, spec vectors)
+- [x] BIP-32 derivation (m/44'/60'/0'/0/i)
+- [x] secp256k1 + EIP-55
+- [x] Legacy ETH tx (EIP-155) + EIP-1559
 - [x] ERC-20 (balanceOf, decimals, symbol, name, transfer)
-- [x] **150 сетей** с балансами и курсами USD/RUB
-- [x] AIC-ID resolve/reverseResolve в Rust
-- [x] 70 тестов Rust
+- [x] **150 сетей** -- live балансы + курсы USD/RUB (CoinGecko)
+- [x] AIC-ID: resolve/reverseResolve в Rust
+- [x] 70 тестов
 
 ## 🟢 Фаза 1.5 — Смарт-контракты (ЗАВЕРШЕНО)
-- [x] AICID.sol (register, resolve, reverse, transfer, renew, 365d)
+- [x] AICID.sol (register/resolve/reverse/transfer/renew, 365d)
 - [x] InheritanceVault.sol (dead man's switch)
 - [x] TimeCapsule.sol (lock ETH until timestamp)
-- [x] 53 теста Foundry
-- [x] Деплой-скрипты, DEPLOY.md runbook
-- [x] Dry-run mainnet (симуляция без broadcast)
+- [x] 51 тест Foundry
+- [x] Деплой-скрипты + DEPLOY.md
+- [x] Dry-run mainnet
 
-## 🟡 Фаза 2 — AIC Chain (В РАБОТЕ, ~60%)
-### ✅ Работает:
-- [x] `packages/node` на Rust (axum + tokio)
-- [x] Block, Transaction, State, Mempool, Chain
+## 🟢 Фаза 2 — AIC Chain (В РАБОТЕ, ~75%)
+### ✅ Работает
+- [x] Rust-нода (axum + tokio + revm 43)
 - [x] Block producer (3 сек)
-- [x] Genesis 71 млрд AIC (40/30/20/10 + dev)
-- [x] RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, sendRawTransaction
-- [x] Подпись EIP-155 (secp256k1), verify
-- [x] **Первая транзакция:** Alice→Bob 1000 AIC, блок #21, gas 21000
-- [x] Persistence (chain.json save/load)
-- [x] 71 тестов Rust
+- [x] Genesis 71 млрд AIC (40/30/20/10 + dev 1M)
+- [x] Подпись EIP-155 (secp256k1) + verify
+- [x] Первая транзакция AIC Alice→Bob (блок #21)
+- [x] Persistence: chain.json save/load + storage контрактов
+- [x] **EVM read (aic_call)**
+- [x] **EVM write (aic_sendRawTransaction)**
+- [x] Деплой 3 контрактов в genesis (runtime из deployedBytecode)
+- [x] **AICID.register() -- 10 AIC в казну (проверено +10.0012 AIC)**
+- [x] Архитектура: комиссии забирает нода (tx.value -> TREASURY)
+- [x] 121 тест (70 Rust + 51 Solidity)
 
-### 🟡 EVM (в процессе):
-- [x] revm 43 в dependencies
-- [x] AICID, InheritanceVault, TimeCapsule деплой в genesis
-- [x] `aic_call` принимает данные, code находится
-- [x] **ИСПРАВЛЕНО:** баг был в `bytecode.object` (creation) vs `deployedBytecode.object` (runtime). Теперь `aic_call` работает.
-- [x] AICID resolve("alice") = 0x0 (32 байта) -- EVM отвечает корректно
+### 🟡 В работе
+- [ ] InheritanceVault.deposit() = 1 AIC в казну
+- [ ] TimeCapsule.create() = 1 AIC в казну
+- [ ] Продление @name = 5 AIC в казну
 
-### 🔵 Не начато:
-- [ ] P2P (несколько нод)
+### 🔵 Не начато
+- [ ] **P2P (несколько нод, gossip блоков)** -- следующая веха после PQ
+- [ ] **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium)** -- следующая веха
 - [ ] Мастер-ноды, DPoS консенсус
 - [ ] RandomX PoW (анти-51%)
-- [ ] PQ-подписи (Schnorr + Dilithium)
-- [ ] Мост aCOIN с DKG
+- [ ] Мост aCOIN (DKG 7/10, карантин)
+- [ ] DEX-агрегатор (1inch/Jupiter/0x) в кошельке
 
-## 🔵 Фаза 3 — AIC-ID в AIC Chain
-- [ ] Register @name за AIC
-- [ ] Интеграция с Rust-ядром
+## 🟡 Фаза 3 — AIC-ID в AIC Chain (В РАБОТЕ)
+- [x] Register @name за AIC (10 AIC в казну)
+- [x] Resolve/reverse нативно
+- [ ] Социальное восстановление (3–5 хранителей, мультисиг)
+- [ ] Интеграция AIC-ID resolve в aic-core (Rust) через RPC ноды
 
 ## 🔵 Фаза 4 — UI + Мессенджер + VPN
-- [ ] Flutter/RN приложение
-- [ ] QR-код, DEX-агрегатор
-- [ ] Matrix-мессенджер, WireGuard VPN
+- [ ] Flutter или React Native приложение
+- [ ] QR-код приём/отправка
+- [ ] Matrix-мессенджер (sandbox)
+- [ ] WireGuard VPN (sandbox)
+- [ ] Proof of Luck (лотерея при проверке блоков)
 
-## 🔵 Фаза 5 — Публичный деплой
-- [ ] AICID на Base/Sepolia (если нужно)
-- [ ] Mainnet AIC Chain (когда аудит)
+## 🔵 Фаза 5 — Публичный запуск
+- [ ] Аудит консенсуса и PQ-подписей
+- [ ] 10+ мастер-нод
+- [ ] Airdrop 100 AIC первым 10 000 пользователей
+- [ ] Листинг на DEX (Uniswap/Sushi через aCOIN-мост)
 
 ## 📊 Метрики
-- Сетей: **150**
-- Rust-тестов: **71**
-- Solidity-тестов: **53**
-- Блоков AIC Chain: **~30** (за тест)
-- Транзакций: **1** (успешная)
-- Контрактов в genesis: **3**
-- **Токеномика:** 71 млрд AIC, старт $10, цель 2030 $120-150
+- **Сетей в кошельке:** 150 (EVM 80, UTXO 10, Cosmos 36, Other 24)
+- **Rust-тестов:** 70
+- **Solidity-тестов:** 51
+- **Всего тестов:** 121
+- **Chain ID AIC:** 2026
+- **Эмиссия AIC:** 71 000 000 000 (71 млрд)
+- **Стартовая цена:** $10
+- **Цель 2030:** $120–150
+- **Комиссии в казну (проверено):** 10 AIC/регистрация + газ
+- **Контрактов в genesis:** 3 (AICID, InheritanceVault, TimeCapsule)
 
-## 🎯 Приоритет
-1. **Добить EVM в AIC Chain** (сейчас в работе)
-2. P2P + DPoS
-3. PQ-подписи
-4. UI
+## 🎯 Ближайшие 3 приоритета
+1. **PQ-подписи (Schnorr + Dilithium)** -- квантовая устойчивость
+2. **P2P (несколько нод)** -- децентрализация
+3. **Монетизация** InheritanceVault/TimeCapsule (1 AIC в казну каждая)
 
-
-
+## 🏛️ Зафиксированные технические решения
+- Ядро: Rust (tokio, reqwest, k256, bip39, bip32)
+- Нода: axum + revm 43 + serde_json
+- Контракты: Solidity 0.8.24 + Foundry 1.9.0
+- **Монетизация на уровне ноды** (tx.value -> TREASURY), не через call в контракте
+- Комиссии в AIC, ни цента ETH (Принцип №1)
+- PQ: Schnorr (все tx) + Dilithium (критичные операции)
+- Мессенджер: Matrix, VPN: WireGuard (sandboxed)
+- DEX: агрегатор (1inch/Jupiter/0x)
