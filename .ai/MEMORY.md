@@ -226,3 +226,19 @@ text
   - B) Контракт Inheritance (Dead Man's Switch).
   - C) Контракт TimeCapsule.
   - D) Расширить мультичейн (BTC, SOL, TON провайдеры).
+
+### 2026-11-09 -- Сессия #17 (Block A: AIC-ID в Rust)
+- `aic-core` теперь умеет нативно работать с AIC-ID:
+  - `evm_abi::encode_string_arg` -- ABI-кодирование dynamic string (offset + length + padded).
+  - `evm_abi::decode_address` -- decode 32-byte ABI address (None если zero).
+  - `CoreError::Reverted` -- отдельный вариант для contract revert (важно для reverse_resolve).
+  - `ChainTraits::resolve_name(contract, name)` -- `@name -> Option<address>`.
+  - `ChainTraits::reverse_resolve(contract, address)` -- `address -> Option<name>`, revert = Ok(None).
+- `EvmProvider::rpc_call` теперь распознаёт "execution reverted" в JSON-RPC error и возвращает `CoreError::Reverted`.
+- **ВЕХА:** `aic_id_resolve` пример отработал на Anvil end-to-end:
+  - `@alice -> 0x7099...` (из реального mainnet-контракта)
+  - `reverse: 0x7099... -> @alice`
+  - **Отправка 1 wei на `@alice` по имени** -- tx hash `0x283d638a...` (broadcast OK)
+  - `@bob is free`, unknown address -> `no name`
+- 72 теста зелёные (56 + 16 в evm_abi).
+- **Следующее (Block B):** контракт Inheritance (Dead Man's Switch) -- бенефициары, ping, claim.

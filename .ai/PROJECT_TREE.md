@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 20:32:33
+> Generated: 2026-11-09 20:38:03
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -159,6 +159,7 @@ aic-os/
 |   |   \-- README.md
 |   |-- core
 |   |   |-- examples
+|   |   |   |-- aic_id_resolve.rs
 |   |   |   |-- broadcast_test.rs
 |   |   |   |-- erc20_balance.rs
 |   |   |   |-- erc20_metadata.rs

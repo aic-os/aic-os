@@ -11,6 +11,9 @@ pub enum CoreError {
     #[error("rpc error: {0}")]
     Rpc(String),
 
+    #[error("contract reverted: {0}")]
+    Reverted(String),
+
     #[error("invalid address: {0}")]
     InvalidAddress(String),
 

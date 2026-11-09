@@ -36,21 +36,26 @@ impl EvmProvider {
             return Err(CoreError::Rpc("no rpc urls configured".into()));
         }
         let body = serde_json::json!({
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": params,
-            "id": 1
+            "jsonrpc": "2.0", "method": method, "params": params, "id": 1
         });
+
         let mut errors = Vec::new();
+        let mut reverted: Option<String> = None;
         for url in &self.rpc_urls {
             match self.rpc_call_one(url, &body).await {
                 Ok(v) => return Ok(v),
+                Err(CoreError::Reverted(msg)) => {
+                    reverted = Some(msg);
+                    errors.push(format!("{url}: reverted"));
+                }
                 Err(e) => errors.push(format!("{url}: {e}")),
             }
         }
+        if let Some(msg) = reverted {
+            return Err(CoreError::Reverted(msg));
+        }
         Err(CoreError::Rpc(format!(
-            "all rpc endpoints failed for {method}: {}",
-            errors.join(" | ")
+            "all rpc endpoints failed for {method}: {}", errors.join(" | ")
         )))
     }
 
@@ -63,19 +68,22 @@ impl EvmProvider {
             let preview: String = text.chars().take(160).collect();
             CoreError::Rpc(format!("non-JSON (status {status}): {preview}"))
         })?;
+
         if let Some(err) = json.get("error") {
-            return Err(CoreError::Rpc(err.to_string()));
+            let msg = err.to_string();
+            let lower = msg.to_lowercase();
+            if lower.contains("revert") || lower.contains("execution reverted") {
+                return Err(CoreError::Reverted(msg));
+            }
+            return Err(CoreError::Rpc(msg));
         }
-        json.get("result").cloned()
-            .ok_or_else(|| CoreError::Rpc("missing result".into()))
+        json.get("result").cloned().ok_or_else(|| CoreError::Rpc("missing result".into()))
     }
 
-    /// Raw eth_call: {"to": contract, "data": 0x...}, "latest".
     async fn eth_call(&self, contract: &str, data_hex: &str) -> Result<String> {
         let tx = serde_json::json!({ "to": contract, "data": data_hex });
         let res = self.rpc_call("eth_call", serde_json::json!([tx, "latest"])).await?;
-        res.as_str()
-            .map(|s| s.to_string())
+        res.as_str().map(|s| s.to_string())
             .ok_or_else(|| CoreError::Rpc("eth_call: result is not a string".into()))
     }
 }
@@ -91,8 +99,7 @@ fn is_hex_string(s: &str) -> bool {
 fn parse_hex_u128(hex: &str) -> Result<u128> {
     let s = hex.trim_start_matches("0x");
     if s.is_empty() { return Ok(0); }
-    u128::from_str_radix(s, 16)
-        .map_err(|_| CoreError::Rpc(format!("invalid hex: {hex}")))
+    u128::from_str_radix(s, 16).map_err(|_| CoreError::Rpc(format!("invalid hex: {hex}")))
 }
 
 fn hex_result_u128(v: &serde_json::Value) -> Result<u128> {
@@ -106,9 +113,7 @@ impl ChainTraits for EvmProvider {
 
     async fn get_balance(&self, address: &str) -> Result<u128> {
         let addr = address.trim();
-        if !is_evm_address(addr) {
-            return Err(CoreError::InvalidAddress(address.to_string()));
-        }
+        if !is_evm_address(addr) { return Err(CoreError::InvalidAddress(address.to_string())); }
         let res = self.rpc_call("eth_getBalance", serde_json::json!([addr, "latest"])).await?;
         hex_result_u128(&res)
     }
@@ -122,18 +127,14 @@ impl ChainTraits for EvmProvider {
         let tx = serde_json::json!({ "from": from, "to": to, "value": format!("0x{:x}", amount) });
         let gas_res = self.rpc_call("eth_estimateGas", serde_json::json!([tx])).await?;
         let gas = hex_result_u128(&gas_res)?;
-        gas_price.checked_mul(gas)
-            .ok_or_else(|| CoreError::Rpc("fee overflow (u128)".into()))
+        gas_price.checked_mul(gas).ok_or_else(|| CoreError::Rpc("fee overflow (u128)".into()))
     }
 
     async fn get_nonce(&self, address: &str) -> Result<u64> {
         let addr = address.trim();
-        if !is_evm_address(addr) {
-            return Err(CoreError::InvalidAddress(address.to_string()));
-        }
+        if !is_evm_address(addr) { return Err(CoreError::InvalidAddress(address.to_string())); }
         let res = self.rpc_call("eth_getTransactionCount", serde_json::json!([addr, "pending"])).await?;
-        let n = hex_result_u128(&res)?;
-        Ok(n as u64)
+        Ok(hex_result_u128(&res)? as u64)
     }
 
     async fn get_gas_price(&self) -> Result<u128> {
@@ -145,53 +146,27 @@ impl ChainTraits for EvmProvider {
         let raw = raw_tx_hex.trim();
         if !is_hex_string(raw) {
             return Err(CoreError::Rpc(format!(
-                "invalid raw tx hex (expected 0x-prefixed even-length hex, got {} chars)",
-                raw.len()
+                "invalid raw tx hex (expected 0x-prefixed even-length hex, got {} chars)", raw.len()
             )));
         }
         if (raw.len() - 2) % 2 != 0 {
             return Err(CoreError::Rpc("invalid raw tx hex: odd number of hex chars".into()));
         }
         let res = self.rpc_call("eth_sendRawTransaction", serde_json::json!([raw])).await?;
-        let hash = res.as_str()
-            .ok_or_else(|| CoreError::Rpc("eth_sendRawTransaction: result is not a string".into()))?;
-        Ok(hash.to_string())
+        res.as_str().map(|s| s.to_string())
+            .ok_or_else(|| CoreError::Rpc("eth_sendRawTransaction: result is not a string".into()))
     }
 
     async fn health(&self) -> Result<bool> {
         let res = self.rpc_call("eth_blockNumber", serde_json::json!([])).await?;
         Ok(res.as_str().is_some())
     }
-    async fn get_base_fee(&self) -> Result<u128> {
-        let res = self
-            .rpc_call("eth_getBlockByNumber", serde_json::json!(["latest", false]))
-            .await?;
-        let base = res
-            .get("baseFeePerGas")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| CoreError::Rpc("baseFeePerGas missing in block".into()))?;
-        parse_hex_u128(base)
-    }
-
-    async fn get_max_priority_fee(&self) -> Result<u128> {
-        let res = self
-            .rpc_call("eth_maxPriorityFeePerGas", serde_json::json!([]))
-            .await?;
-        let s = res
-            .as_str()
-            .ok_or_else(|| CoreError::Rpc("maxPriorityFeePerGas not a string".into()))?;
-        parse_hex_u128(s)
-    }
 
     async fn get_erc20_balance(&self, contract: &str, holder: &str) -> Result<u128> {
         let contract = contract.trim();
         let holder = holder.trim();
-        if !is_evm_address(contract) {
-            return Err(CoreError::InvalidAddress(contract.to_string()));
-        }
-        if !is_evm_address(holder) {
-            return Err(CoreError::InvalidAddress(holder.to_string()));
-        }
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
+        if !is_evm_address(holder) { return Err(CoreError::InvalidAddress(holder.to_string())); }
         let sel = evm_abi::selector("balanceOf(address)");
         let arg = evm_abi::encode_address(holder)
             .map_err(|e| CoreError::Rpc(format!("encode address: {e}")))?;
@@ -200,41 +175,84 @@ impl ChainTraits for EvmProvider {
         data.extend_from_slice(&arg);
         let data_hex = format!("0x{}", hex::encode(&data));
         let ret = self.eth_call(contract, &data_hex).await?;
-        evm_abi::decode_u128(&ret)
-            .map_err(|e| CoreError::Rpc(format!("decode balanceOf: {e}")))
+        evm_abi::decode_u128(&ret).map_err(|e| CoreError::Rpc(format!("decode balanceOf: {e}")))
     }
 
     async fn get_erc20_decimals(&self, contract: &str) -> Result<u8> {
         let contract = contract.trim();
-        if !is_evm_address(contract) {
-            return Err(CoreError::InvalidAddress(contract.to_string()));
-        }
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
         let data_hex = format!("0x{}", hex::encode(evm_abi::selector("decimals()")));
         let ret = self.eth_call(contract, &data_hex).await?;
-        evm_abi::decode_uint8(&ret)
-            .map_err(|e| CoreError::Rpc(format!("decode decimals: {e}")))
+        evm_abi::decode_uint8(&ret).map_err(|e| CoreError::Rpc(format!("decode decimals: {e}")))
     }
 
     async fn get_erc20_symbol(&self, contract: &str) -> Result<String> {
         let contract = contract.trim();
-        if !is_evm_address(contract) {
-            return Err(CoreError::InvalidAddress(contract.to_string()));
-        }
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
         let data_hex = format!("0x{}", hex::encode(evm_abi::selector("symbol()")));
         let ret = self.eth_call(contract, &data_hex).await?;
-        evm_abi::decode_string(&ret)
-            .map_err(|e| CoreError::Rpc(format!("decode symbol: {e}")))
+        evm_abi::decode_string(&ret).map_err(|e| CoreError::Rpc(format!("decode symbol: {e}")))
     }
 
     async fn get_erc20_name(&self, contract: &str) -> Result<String> {
         let contract = contract.trim();
-        if !is_evm_address(contract) {
-            return Err(CoreError::InvalidAddress(contract.to_string()));
-        }
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
         let data_hex = format!("0x{}", hex::encode(evm_abi::selector("name()")));
         let ret = self.eth_call(contract, &data_hex).await?;
-        evm_abi::decode_string(&ret)
-            .map_err(|e| CoreError::Rpc(format!("decode name: {e}")))
+        evm_abi::decode_string(&ret).map_err(|e| CoreError::Rpc(format!("decode name: {e}")))
+    }
+
+    async fn get_base_fee(&self) -> Result<u128> {
+        let res = self.rpc_call("eth_getBlockByNumber", serde_json::json!(["latest", false])).await?;
+        let base = res.get("baseFeePerGas").and_then(|v| v.as_str())
+            .ok_or_else(|| CoreError::Rpc("baseFeePerGas missing in block".into()))?;
+        parse_hex_u128(base)
+    }
+
+    async fn get_max_priority_fee(&self) -> Result<u128> {
+        let res = self.rpc_call("eth_maxPriorityFeePerGas", serde_json::json!([])).await?;
+        let s = res.as_str().ok_or_else(|| CoreError::Rpc("maxPriorityFeePerGas not a string".into()))?;
+        parse_hex_u128(s)
+    }
+
+    async fn resolve_name(&self, contract: &str, name: &str) -> Result<Option<String>> {
+        let contract = contract.trim();
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
+        if name.is_empty() { return Err(CoreError::Wallet("empty name".into())); }
+
+        let sel = evm_abi::selector("resolve(string)");
+        let string_arg = evm_abi::encode_string_arg(name);
+        let mut data = Vec::with_capacity(4 + string_arg.len());
+        data.extend_from_slice(&sel);
+        data.extend_from_slice(&string_arg);
+        let data_hex = format!("0x{}", hex::encode(&data));
+
+        let ret = self.eth_call(contract, &data_hex).await?;
+        evm_abi::decode_address(&ret)
+            .map_err(|e| CoreError::Rpc(format!("decode resolve: {e}")))
+    }
+
+    async fn reverse_resolve(&self, contract: &str, address: &str) -> Result<Option<String>> {
+        let contract = contract.trim();
+        let address = address.trim();
+        if !is_evm_address(contract) { return Err(CoreError::InvalidAddress(contract.to_string())); }
+        if !is_evm_address(address) { return Err(CoreError::InvalidAddress(address.to_string())); }
+
+        let sel = evm_abi::selector("reverseResolve(address)");
+        let arg = evm_abi::encode_address(address)
+            .map_err(|e| CoreError::Rpc(format!("encode address: {e}")))?;
+        let mut data = Vec::with_capacity(4 + 32);
+        data.extend_from_slice(&sel);
+        data.extend_from_slice(&arg);
+        let data_hex = format!("0x{}", hex::encode(&data));
+
+        match self.eth_call(contract, &data_hex).await {
+            Ok(ret) => evm_abi::decode_string(&ret)
+                .map(Some)
+                .map_err(|e| CoreError::Rpc(format!("decode reverseResolve: {e}"))),
+            Err(CoreError::Reverted(_)) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -247,7 +265,6 @@ mod tests {
         assert!(is_hex_string("0xdeadbeef"));
         assert!(is_hex_string("0x00"));
     }
-
     #[test]
     fn hex_validation_rejects_invalid() {
         assert!(!is_hex_string(""));
@@ -255,7 +272,6 @@ mod tests {
         assert!(!is_hex_string("deadbeef"));
         assert!(!is_hex_string("0xzz"));
     }
-
     #[test]
     fn address_validation() {
         assert!(is_evm_address("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"));
@@ -263,5 +279,3 @@ mod tests {
         assert!(!is_evm_address("not_an_address"));
     }
 }
-
-

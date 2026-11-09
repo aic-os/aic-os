@@ -26,13 +26,19 @@ pub trait ChainTraits: Send + Sync {
     async fn get_erc20_name(&self, _c: &str) -> Result<String> {
         Err(CoreError::NotImplemented("ERC-20 name (non-EVM)"))
     }
-
-    /// EIP-1559 base fee per gas (latest block). EVM only.
     async fn get_base_fee(&self) -> Result<u128> {
         Err(CoreError::NotImplemented("base fee (non-EVM)"))
     }
-    /// EIP-1559 recommended priority fee (tip). EVM only.
     async fn get_max_priority_fee(&self) -> Result<u128> {
         Err(CoreError::NotImplemented("priority fee (non-EVM)"))
+    }
+
+    /// AICID: resolve `@name` -> address. Ok(None) if name is free.
+    async fn resolve_name(&self, _contract: &str, _name: &str) -> Result<Option<String>> {
+        Err(CoreError::NotImplemented("AIC-ID resolve (non-EVM)"))
+    }
+    /// AICID: reverse-resolve address -> name. Ok(None) if no name bound.
+    async fn reverse_resolve(&self, _contract: &str, _address: &str) -> Result<Option<String>> {
+        Err(CoreError::NotImplemented("AIC-ID reverse-resolve (non-EVM)"))
     }
 }
