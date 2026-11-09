@@ -9,6 +9,7 @@ name = "aic-node"
 path = "src/main.rs"
 
 [dependencies]
+revm = "43"
 aic-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -24,3 +25,4 @@ rlp.workspace = true
 thiserror.workspace = true
 axum = "0.7"
 tower-http = { version = "0.5", features = ["trace"] }
+

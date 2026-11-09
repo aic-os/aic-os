@@ -10,6 +10,13 @@ use crate::chain::Chain;
 use crate::mempool::Mempool;
 use crate::transaction::Transaction;
 
+use revm::{
+    context::{Context, TxEnv},
+    context_interface::result::{ExecutionResult, Output},
+    primitives::{Address, Bytes, TxKind, U256},
+    ExecuteEvm, MainBuilder, MainContext,
+};
+
 pub struct AppState {
     pub mempool: Mempool,
     pub chain: RwLock<Chain>,
@@ -35,28 +42,16 @@ fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
-pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
-    // ===== ЭМИССИЯ: 71 млрд AIC, 18 decimals =====
-    const AIC: u128 = 1_000_000_000_000_000_000; // 1 AIC в wei
-    let total: u128 = 71_000_000_000u128 * AIC; // 71 млрд AIC
+const TREASURY: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0F];
 
-    // Казна: 40% = 28.4 млрд AIC, адрес 0x...0F
-    let treasury: [u8; 20] = [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0F,
-    ];
-    // Airdrop: 30% = 21.3 млрд AIC, адрес 0x...0A
-    let airdrop: [u8; 20] = [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0A,
-    ];
-    // Стейкинг: 20% = 14.2 млрд AIC, адрес 0x...05
-    let staking: [u8; 20] = [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x05,
-    ];
-    // Foundation: 10% = 7.1 млрд AIC, адрес 0x...01
-    let team: [u8; 20] = [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x01,
-    ];
-    // Dev: Hardhat-0 (Alice), 1 000 000 AIC для тестов
+pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
+    const AIC: u128 = 1_000_000_000_000_000_000;
+    let total: u128 = 71_000_000_000u128 * AIC;
+
+    let treasury: [u8; 20] = TREASURY;
+    let airdrop: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0A];
+    let staking: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x05];
+    let team: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x01];
     let dev: [u8; 20] = [
         0xf3, 0x9F, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xF6,
         0xF4, 0xce, 0x6a, 0xB8, 0x82, 0x72, 0x79, 0xcf,
@@ -72,7 +67,6 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         (dev,      dev_balance),
     ];
 
-    // ===== Загрузка или создание genesis =====
     let data_dir = std::path::PathBuf::from("data");
     let chain_file = data_dir.join("chain.json");
 
@@ -80,21 +74,12 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         match Chain::load(&chain_file) {
             Ok(c) => {
                 println!("\n========= AIC CHAIN LOADED =========");
-                println!("Loaded from: {}", chain_file.display());
-                println!("Blocks:      {}", c.blocks.len());
-                println!("Head:        #{}", c.block_number());
-                println!("State root:  0x{}", hex::encode(c.head().header.state_root));
-                println!("Chain ID:    {}", c.chain_id);
-                if c.chain_id != chain_id {
-                    eprintln!("⚠ Chain ID mismatch: saved={}, arg={}. Перезапусти с --chain-id {}",
-                        c.chain_id, chain_id, c.chain_id);
-                    std::process::exit(1);
-                }
+                println!("Loaded: {}, Blocks: {}, Head: #{}", chain_file.display(), c.blocks.len(), c.block_number());
                 println!("====================================\n");
                 c
             }
             Err(e) => {
-                eprintln!("⚠ Не удалось загрузить chain: {e}. Создаём genesis заново.");
+                eprintln!("⚠ Load failed: {e}. Recreating genesis.");
                 std::fs::remove_file(&chain_file).ok();
                 let c = Chain::genesis(chain_id, &alloc);
                 c.save(&chain_file).ok();
@@ -105,22 +90,9 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         let c = Chain::genesis(chain_id, &alloc);
         c.save(&chain_file)?;
         println!("\n========= AIC CHAIN GENESIS =========");
-        println!("Chain ID:    {chain_id}");
-        println!("Block 0 hash: 0x{}", hex::encode(c.head().hash()));
-        println!("State root:  0x{}", hex::encode(c.head().header.state_root));
-        println!("--- Allocations ---");
-        for (a, bal) in &alloc {
-            println!("  {}  =>  {} wei ({} AIC)",
-                hex::encode(a), bal, bal / AIC);
-        }
-        println!("--- Verification ---");
-        for (a, expected) in &alloc {
-            let actual = c.state.get_account(a).balance;
-            let mark = if actual == *expected { "OK" } else { "MISMATCH" };
-            println!("  {}: {} (expected {})", hex::encode(a), mark, actual);
-        }
-        println!("Saved to: {}", chain_file.display());
-        println!("=====================================\n");
+        println!("Chain ID: {chain_id}, State root: 0x{}", hex::encode(c.head().header.state_root));
+        for (a, bal) in &alloc { println!("  {}  =>  {} AIC", hex::encode(a), bal / AIC); }
+        println!("====================================\n");
         c
     };
 
@@ -130,7 +102,6 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         chain_id,
     });
 
-    // Block producer
     let producer_state = state.clone();
     tokio::spawn(async move {
         let mut ticker = tokio::time::interval(std::time::Duration::from_secs(3));
@@ -144,11 +115,8 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
             let tx_count = block.transactions.len();
             let gas_used = block.header.gas_used;
             let hash_short = hex::encode(&block.hash()[..8]);
-            // Persist after every block
             let chain_file = std::path::PathBuf::from("data").join("chain.json");
-            if let Err(e) = chain.save(&chain_file) {
-                eprintln!("⚠ Save failed: {e}");
-            }
+            if let Err(e) = chain.save(&chain_file) { eprintln!("⚠ Save failed: {e}"); }
             println!("[BLOCK] #{} hash=0x{} txs={} gas={}", bn, hash_short, tx_count, gas_used);
         }
     });
@@ -164,6 +132,7 @@ async fn handle_rpc(
     axum::extract::State(st): axum::extract::State<Arc<AppState>>,
     Json(req): Json<RpcRequest>,
 ) -> Json<RpcResponse> {
+    let method_owned = req.method.clone();
     let result: Option<Value> = match req.method.as_str() {
         "aic_chainId" => Some(json!(st.chain_id)),
 
@@ -172,45 +141,30 @@ async fn handle_rpc(
             Some(json!(format!("0x{:x}", c.block_number())))
         }
 
-        "aic_mempoolSize" => {
-            let n = st.mempool.len().await;
-            Some(json!(n))
-        }
+        "aic_mempoolSize" => Some(json!(st.mempool.len().await)),
 
         "aic_getBalance" => {
             let addr = req.params.get(0).and_then(|v| v.as_str());
-            match addr.and_then(parse_addr) {
-                Some(a) => {
-                    let c = st.chain.read().unwrap();
-                    let acc = c.state.get_account(&a);
-                    Some(json!(format!("0x{:x}", acc.balance)))
-                }
-                None => None,
-            }
+            addr.and_then(parse_addr).map(|a| {
+                let c = st.chain.read().unwrap();
+                let acc = c.state.get_account(&a);
+                json!(format!("0x{:x}", acc.balance))
+            })
         }
 
         "aic_getAccount" => {
             let addr = req.params.get(0).and_then(|v| v.as_str());
-            match addr.and_then(parse_addr) {
-                Some(a) => {
-                    let c = st.chain.read().unwrap();
-                    let acc = c.state.get_account(&a);
-                    Some(json!({
-                        "balance": format!("0x{:x}", acc.balance),
-                        "nonce": acc.nonce,
-                    }))
-                }
-                None => None,
-            }
+            addr.and_then(parse_addr).map(|a| {
+                let c = st.chain.read().unwrap();
+                let acc = c.state.get_account(&a);
+                json!({"balance": format!("0x{:x}", acc.balance), "nonce": acc.nonce})
+            })
         }
 
         "aic_getBlockByNumber" => {
             let n = req.params.get(0).and_then(|v| v.as_str());
             let number = match n {
-                Some("latest") => {
-                    let c = st.chain.read().unwrap();
-                    c.block_number()
-                }
+                Some("latest") => st.chain.read().unwrap().block_number(),
                 Some("earliest") => 0,
                 Some(h) => u64::from_str_radix(h.trim_start_matches("0x"), 16).unwrap_or(u64::MAX),
                 None => 0,
@@ -226,6 +180,98 @@ async fn handle_rpc(
                 "gasLimit": format!("0x{:x}", b.header.gas_limit),
                 "txCount": b.transactions.len(),
             }))
+        }
+
+        "aic_call" => {
+            let to_str = req.params.get(0).and_then(|v| v.as_str());
+            let data_str = req.params.get(1).and_then(|v| v.as_str());
+
+            match (to_str.and_then(parse_addr), data_str) {
+                (Some(to_addr), Some(d)) => {
+                    let clean = d.trim_start_matches("0x").trim_start_matches("0X");
+                    let data_bytes = match hex::decode(clean) {
+                        Ok(b) => b,
+                        Err(e) => {
+                            eprintln!("[aic_call] INVALID DATA HEX: len={} err={}", clean.len(), e);
+                            return Json(RpcResponse {
+                                jsonrpc: "2.0", id: req.id, result: None,
+                                error: Some(json!({
+                                    "code": -32602,
+                                    "message": format!("aic_call: invalid data hex (len={}, err={}). data must be hex string, no spaces.", clean.len(), e)
+                                })),
+                            });
+                        }
+                    };
+                    eprintln!("[aic_call] to=0x{} data_len={} bytes", hex::encode(to_addr), data_bytes.len());
+                    let chain_guard = st.chain.read().unwrap();
+                    let db = chain_guard.state.to_inmemory();
+                    drop(chain_guard);
+
+                    // Проверка: есть ли код в нашем State
+                    {
+                        let guard = st.chain.read().unwrap();
+                        match guard.state.get_code(&to_addr) {
+                            Some(code) => eprintln!("[aic_call] state.get_code OK: len={}", code.len()),
+                            None => eprintln!("[aic_call] state.get_code: NO CODE at 0x{}", hex::encode(to_addr)),
+                        }
+                    }let mut evm = Context::mainnet().with_db(db).build_mainnet();
+
+                    let mut tx = TxEnv::default();
+                    tx.caller = Address::from(TREASURY);
+                    tx.gas_limit = 10_000_000;
+                    tx.gas_price = 0;
+                    tx.kind = TxKind::Call(Address::from(to_addr));
+                    tx.value = U256::ZERO;
+                    tx.data = Bytes::from(data_bytes.clone());
+                    tx.nonce = 0;
+                    eprintln!("[aic_call] BEFORE transact: tx.data.len()={}", tx.data.len());
+                    
+
+                    match evm.transact(tx) {
+                        Ok(res) => {
+                            eprintln!("[aic_call] EVM result = {:?}", res.result);
+                            match res.result {
+                            ExecutionResult::Success { output: Output::Call(b), .. } => {
+                                Some(json!(format!("0x{}", hex::encode(&b))))
+                            }
+                            ExecutionResult::Success { output: Output::Create(b, _), .. } => {
+                                Some(json!(format!("0x{}", hex::encode(&b))))
+                            }
+                            ExecutionResult::Revert { output, .. } => {
+                                return Json(RpcResponse {
+                                    jsonrpc: "2.0", id: req.id, result: None,
+                                    error: Some(json!({"code": -32000, "message": format!("revert: 0x{}", hex::encode(&output))})),
+                                });
+                            }
+                            ExecutionResult::Halt { reason, .. } => {
+                                return Json(RpcResponse {
+                                    jsonrpc: "2.0", id: req.id, result: None,
+                                    error: Some(json!({"code": -32000, "message": format!("halt: {:?}", reason)})),
+                                });
+                            }
+                            }
+                        },
+                        Err(e) => {
+                            return Json(RpcResponse {
+                                jsonrpc: "2.0", id: req.id, result: None,
+                                error: Some(json!({"code": -32000, "message": format!("evm error: {e:?}")})),
+                            });
+                        }
+                    }
+                }
+                (Some(_), None) => {
+                    return Json(RpcResponse {
+                        jsonrpc: "2.0", id: req.id, result: None,
+                        error: Some(json!({"code": -32602, "message": "aic_call: missing data"})),
+                    });
+                }
+                (None, _) => {
+                    return Json(RpcResponse {
+                        jsonrpc: "2.0", id: req.id, result: None,
+                        error: Some(json!({"code": -32602, "message": "aic_call: bad contract addr"})),
+                    });
+                }
+            }
         }
 
         "aic_sendRawTransaction" => {
@@ -244,7 +290,7 @@ async fn handle_rpc(
     };
 
     let error = if result.is_none() {
-        Some(json!({"code": -32601, "message": "method not found"}))
+        Some(json!({"code": -32651, "message": format!("method not found: {}", method_owned)}))
     } else { None };
 
     Json(RpcResponse { jsonrpc: "2.0", id: req.id, result, error })
@@ -256,5 +302,9 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
+
+
+
 
 

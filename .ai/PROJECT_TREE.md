@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 22:33:51
+> Generated: 2026-11-09 23:25:00
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -252,6 +252,8 @@ aic-os/
 |   |   |-- src
 |   |   |   |-- block.rs
 |   |   |   |-- chain.rs
+|   |   |   |-- evm.rs
+|   |   |   |-- genesis_contracts.rs
 |   |   |   |-- main.rs
 |   |   |   |-- mempool.rs
 |   |   |   |-- rpc.rs
@@ -273,8 +275,22 @@ aic-os/
 |-- node1.log
 |-- node2.err
 |-- node2.log
+|-- node-check.err
+|-- node-check.log
+|-- node-debug.err
+|-- node-debug.log
+|-- node-evm.err
+|-- node-evm.log
+|-- node-evm2.err
+|-- node-evm2.log
+|-- node-final.err
+|-- node-final.log
 |-- node-genesis.err
 |-- node-genesis.log
+|-- node-test.err
+|-- node-test.log
+|-- node-v03.err
+|-- node-v03.log
 |-- PRINCIPLES.md
 |-- README.md
 \-- ROADMAP.md

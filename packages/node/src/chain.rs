@@ -33,11 +33,23 @@ pub struct Chain {
 }
 
 impl Chain {
-    /// Создать genesis с аллокацией (адрес, баланс в wei).
+    /// Создать genesis с аллокацией (адрес, баланс в wei) + деплой контрактов.
     pub fn genesis(chain_id: u64, alloc: &[([u8; 20], u128)]) -> Self {
         let mut state = State::new();
         for (addr, balance) in alloc {
             state.credit(*addr, *balance);
+        }
+
+        // Деплой Solidity-контрактов в genesis (если артефакты Foundry есть)
+        let deployed = crate::genesis_contracts::deploy_genesis_contracts(&mut state);
+        if !deployed.is_empty() {
+            println!("--- Genesis contracts deployed ---");
+            for (name, addr, size) in &deployed {
+                println!("  {} => 0x{} ({} bytes)", name, hex::encode(addr), size);
+            }
+            println!("----------------------------------");
+        } else {
+            println!("--- No contracts deployed (Foundry artifacts not found) ---");
         }
 
         let header = BlockHeader {
@@ -173,3 +185,4 @@ impl Chain {
         Ok(chain)
     }
 }
+

@@ -521,3 +521,26 @@ text
   - Продолжил с 2 до 3 (не с нуля)
   - Alice balance сохранился: 1 000 000 AIC
 - **Следующее (Блок A):** EVM execution через revm -- AICID, InheritanceVault, TimeCapsule запускаются в AIC Chain, комиссии идут в AIC.
+
+### 2026-11-09 -- Сессия #29 (статус EVM, попытка интеграции)
+- **AIC Chain v0.3 работает:** блоки рожаются, persistence OK, транзакции AIC Alice→Bob обрабатываются, genesis 71 млрд AIC.
+- **AICID, InheritanceVault, TimeCapsule задеплоены в genesis AIC Chain:**
+  - AICID: `0x0000000000000000000000000000000000a1c1d0` (3805 байт)
+  - InheritanceVault: `0x000000000000000000000000000000000000dead` (2313 байт)
+  - TimeCapsule: `0x0000000000000000000000000000000000c4b5e0` (2713 байт)
+- **aic_call в ноде работает частично:**
+  - Принимает параметры (contract, data_hex) -- OK
+  - State.get_code(to) находит код -- OK (len=3805)
+  - tx.data.len()=100 -- OK (data дошла до EVM)
+  - **НО:** EVM возвращает `output: Call(0x6080604052...)` -- это runtime bytecode контракта, а не результат `resolve("alice")`.
+- **Гипотеза:** в revm 43 `TxKind::Call` не применяется как ожидалось, EVM выполняет CREATE вместо CALL. Нужен другой API-вызов или явный CfgEnv.
+- **Что пробовали:**
+  - `Context::mainnet().with_db(db).build_mainnet()` + `evm.transact(tx)` -- не работает (CREATE вместо CALL).
+  - `tx.data` vs `tx.input` -- поле `data` правильное в revm 43.
+  - `TxEnv::default()` + мутации полей (без `..Default::default()` внутри литерала) -- не помогло.
+- **Тестовая сеть не при чём:** мы работаем на своей локальной ноде (127.0.0.1:8545), не на Anvil/Sepolia.
+
+- **Следующее:**
+  1. Попробовать `evm.transact_commit(tx)` вместо `transact`.
+  2. Попробовать `Evm::builder()` напрямую, без `Context::mainnet()`.
+  3. Если не сработает -- откатиться на `evm` crate (rust-ethereum/evm) или отложить EVM, перейти к P2P.

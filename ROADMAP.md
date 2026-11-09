@@ -1,102 +1,75 @@
 # 🗺️ ROADMAP AIC-OS
 
-Актуально на: 2026-11-09 (Сессия #22)
+Актуально на: 2026-11-09 (Сессия #29)
 
 ## 🟢 Фаза 0 — Фундамент (ЗАВЕРШЕНО)
-- [x] Репозиторий на GitHub (aic-os/aic-os)
-- [x] Rust workspace (`packages/core`)
-- [x] Foundry для контрактов (`packages/contracts`)
-- [x] `.ai/MEMORY.md` + автогенерация `PROJECT_TREE.md`
-- [x] GitHub Actions CI (fmt + clippy + test на Linux/Win/Mac)
 
-## 🟢 Фаза 1 — Ядро кошелька (ЗАВЕРШЕНО ~85%)
-### Rust-core (`aic-core`)
-- [x] BIP-39 (12/24 слов, seed с passphrase, официальные BIP-39 spec vectors)
-- [x] BIP-32 derivation (m/44'/60'/0'/0/i)
-- [x] secp256k1 + EIP-55 checksum (Hardhat vectors проходят)
-- [x] Legacy ETH transaction (EIP-155, RLP-encode, sign, broadcast)
-- [x] EIP-1559 Type 2 (baseFee/maxPriority/maxFee, recovery test)
-- [x] ERC-20: balanceOf, decimals, symbol, name, transfer calldata
-- [x] AIC-ID: resolve(@name) / reverseResolve(addr) в Rust
-- [x] Мультичейн-абстракция (Chain / ChainType / ChainTraits / ProviderFactory)
-- [x] **107 сетей** — live balances + курсы USD/RUB через CoinGecko
-  - EVM: 66, UTXO: 10, Cosmos: 25, Other: 6
-- [x] RPC fallback (по списку endpoint'ов)
-- [x] 70 тестов
+## 🟢 Фаза 1 — Кошелёк (ЗАВЕРШЕНО ~90%)
+- [x] BIP-39, BIP-32, secp256k1, EIP-55
+- [x] Legacy ETH tx (EIP-155), EIP-1559
+- [x] ERC-20 (balanceOf, decimals, symbol, name, transfer)
+- [x] **150 сетей** с балансами и курсами USD/RUB
+- [x] AIC-ID resolve/reverseResolve в Rust
+- [x] 70 тестов Rust
 
-### Смарт-контракты (`packages/contracts`)
-- [x] **AICID.sol** — регистрация `@name`, resolve, reverse, transfer, renew (365 дней), валидация `[a-z0-9_-]{1,32}`
-- [x] **InheritanceVault.sol** — dead man's switch (deposit / ping / claim / withdraw / changeBeneficiary)
-- [x] **TimeCapsule.sol** — блокировка ETH до timestamp (create / topUp / claim / cancel)
-- [x] 53 теста (Foundry)
-- [x] Скрипт деплоя `DeployAICID.s.sol`
-- [x] End-to-end проверка на Anvil (все три контракта работают)
-- [x] Публичный deployer-кошелёк + keystore (план)
+## 🟢 Фаза 1.5 — Смарт-контракты (ЗАВЕРШЕНО)
+- [x] AICID.sol (register, resolve, reverse, transfer, renew, 365d)
+- [x] InheritanceVault.sol (dead man's switch)
+- [x] TimeCapsule.sol (lock ETH until timestamp)
+- [x] 53 теста Foundry
+- [x] Деплой-скрипты, DEPLOY.md runbook
+- [x] Dry-run mainnet (симуляция без broadcast)
 
-## 🟡 Фаза 1.5 — Добить до 150+ сетей (В РАБОТЕ)
-- [ ] +16 сетей Other: NEAR, ADA, ALGO, XLM, DOT, ICP, KAS, XMR, XTZ, EGLD, HBAR, FLOW, VET, THETA, XDC, BAND
-- [ ] Отправка BTC (PSBT + UTXO selection + SIGHASH)
-- [ ] Отправка SOL (ed25519 + recent blockhash)
-- [ ] Отправка TON (BOC + seqno)
-- [ ] Отправка TRX, SUI, XRP, APT
+## 🟡 Фаза 2 — AIC Chain (В РАБОТЕ, ~60%)
+### ✅ Работает:
+- [x] `packages/node` на Rust (axum + tokio)
+- [x] Block, Transaction, State, Mempool, Chain
+- [x] Block producer (3 сек)
+- [x] Genesis 71 млрд AIC (40/30/20/10 + dev)
+- [x] RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, sendRawTransaction
+- [x] Подпись EIP-155 (secp256k1), verify
+- [x] **Первая транзакция:** Alice→Bob 1000 AIC, блок #21, gas 21000
+- [x] Persistence (chain.json save/load)
+- [x] 71 тестов Rust
 
-## 🟡 Фаза 1.6 — Публичный деплой (В РАБОТЕ)
-- [ ] Деплой AICID + InheritanceVault + TimeCapsule на Sepolia
-- [ ] Верификация на Etherscan
-- [ ] Деплой на Ethereum mainnet (~0.002 ETH на газ, ждём бюджет)
-- [ ] Деплой на Polygon, BSC, Base, Arbitrum (мультичейн-контракты)
+### 🟡 EVM (в процессе):
+- [x] revm 43 в dependencies
+- [x] AICID, InheritanceVault, TimeCapsule деплой в genesis
+- [x] `aic_call` принимает данные, code находится
+- [ ] **ПРОБЛЕМА:** `evm.transact(tx)` в revm 43 возвращает CREATE-output вместо CALL-output
+- [ ] Ищем правильный API-вызов (transact_commit, Evm::builder, ...)
 
-## 🔵 Фаза 2 — AIC Chain (ЗАПЛАНИРОВАНО)
-- [ ] `packages/node` — нода на Rust
-- [ ] Genesis-блок + генезис-аллокация
-- [ ] Гибридный консенсус: DPoS мастер-ноды + RandomX PoW
-- [ ] PQ-подписи (Schnorr + ML-DSA-65 / Dilithium)
-- [ ] Mempool, storage, RPC
-- [ ] Мост aCOIN с DKG (7/10 мультисиг) + карантин
-- [ ] Лотерея «Proof of Luck» (1 AIC случайно при проверке блоков)
+### 🔵 Не начато:
+- [ ] P2P (несколько нод, gossip блоков)
+- [ ] Мастер-ноды, DPoS консенсус
+- [ ] RandomX PoW (анти-51%)
+- [ ] PQ-подписи (Schnorr + Dilithium)
+- [ ] Мост aCOIN с DKG
 
-## 🔵 Фаза 3 — AIC-ID в AIC Chain (ЗАПЛАНИРОВАНО)
-- [ ] AICID контракт деплой в AIC Chain (тот же код, новая сеть)
-- [ ] Регистрация `@name` с оплатой в AIC
-- [ ] Интеграция резолва в кошелёк (Rust)
-- [ ] Социальное восстановление (3–5 хранителей, мультисиг)
+## 🔵 Фаза 3 — AIC-ID в AIC Chain
+- [ ] Register @name за AIC
+- [ ] Интеграция с Rust-ядром
 
-## 🔵 Фаза 4 — UI + Мессенджер + VPN (ЗАПЛАНИРОВАНО)
-- [ ] Flutter или React Native приложение
-- [ ] Интеграция `aic-core` через FFI
-- [ ] QR-код приём/отправка
-- [ ] DEX-агрегатор (1inch / Jupiter / 0x)
-- [ ] Matrix-мессенджер (sandboxed)
-- [ ] WireGuard VPN (sandboxed, не имеет доступа к ключам)
+## 🔵 Фаза 4 — UI + Мессенджер + VPN
+- [ ] Flutter/RN приложение
+- [ ] QR-код, DEX-агрегатор
+- [ ] Matrix-мессенджер, WireGuard VPN
 
-## 🔵 Фаза 5 — CoinGecko + fiat (ЧАСТИЧНО)
-- [x] Курсы USD/RUB для всех 100+ сетей
-- [ ] Fiat-онрамп (MoonPay / Ramp) — покупка AIC за карту
-- [ ] Отображение портфеля в USD/RUB
+## 🔵 Фаза 5 — Публичный деплой
+- [ ] AICID на Base/Sepolia (если нужно)
+- [ ] Mainnet AIC Chain (когда аудит)
 
-## 📊 Метрики текущего состояния
-- Сетей: **107**
-- Rust-тестов: **70**
+## 📊 Метрики
+- Сетей: **150**
+- Rust-тестов: **71**
 - Solidity-тестов: **53**
-- Контрактов задеплоено (Anvil): **3**
-- Контрактов задеплоено (публично): **0**
-- Строк кода (Rust+Solidity): ~4500
+- Блоков AIC Chain: **~30** (за тест)
+- Транзакций: **1** (успешная)
+- Контрактов в genesis: **3**
+- **Токеномика:** 71 млрд AIC, старт $10, цель 2030 $120-150
 
-## 🎯 Ближайшие 3 приоритета
-1. **Добить до 150 сетей** + отправка BTC/SOL (полный цикл non-EVM)
-2. **Публичный деплой** контрактов на Sepolia (публичная веха)
-3. **AIC Chain scaffold** — genesis, block struct, mempool (Фаза 2)
-
-## 🏛️ Технические решения (зафиксированы)
-- Ядро: Rust (tokio async, reqwest, k256, bip39, bip32)
-- Контракты: Solidity 0.8.24 + Foundry 1.9.0
-- Гибридный консенсус AIC Chain: DPoS + RandomX PoW (Фаза 2)
-- Квантовая защита: Schnorr (все tx) + ML-DSA-65 (критичные операции)
-- AIC-ID: ENS-подобный контракт, `@name -> address`
-- Наследство: Dead Man's Switch (InheritanceVault), 30d–10y
-- TimeCapsule: блокировка ETH до timestamp, 1h–100y
-- Курсы: CoinGecko simple/price (USD+RUB одним запросом)
-- Мессенджер: Matrix (не Telegram API) — sandbox
-- VPN: WireGuard — sandbox, без доступа к ключам
-- Майнинг в кошельке: Proof of Luck (не настоящий PoW)
-- DEX: агрегатор (1inch/Jupiter/0x), не свой AMM
+## 🎯 Приоритет
+1. **Добить EVM в AIC Chain** (сейчас в работе)
+2. P2P + DPoS
+3. PQ-подписи
+4. UI

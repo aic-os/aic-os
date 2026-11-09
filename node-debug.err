@@ -1,0 +1,2 @@
+[aic_call] to=0x0000000000000000000000000000000000a1c1d0 data_len=100 bytes
+[aic_call] BEFORE transact: tx.data.len()=100
