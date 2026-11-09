@@ -172,20 +172,49 @@ impl ChainTraits for EvmProvider {
         if !is_evm_address(holder) {
             return Err(CoreError::InvalidAddress(holder.to_string()));
         }
-
-        // data = selector("balanceOf(address)") ++ encode_address(holder)
         let sel = evm_abi::selector("balanceOf(address)");
         let arg = evm_abi::encode_address(holder)
             .map_err(|e| CoreError::Rpc(format!("encode address: {e}")))?;
-
         let mut data = Vec::with_capacity(4 + 32);
         data.extend_from_slice(&sel);
         data.extend_from_slice(&arg);
         let data_hex = format!("0x{}", hex::encode(&data));
-
         let ret = self.eth_call(contract, &data_hex).await?;
         evm_abi::decode_u128(&ret)
             .map_err(|e| CoreError::Rpc(format!("decode balanceOf: {e}")))
+    }
+
+    async fn get_erc20_decimals(&self, contract: &str) -> Result<u8> {
+        let contract = contract.trim();
+        if !is_evm_address(contract) {
+            return Err(CoreError::InvalidAddress(contract.to_string()));
+        }
+        let data_hex = format!("0x{}", hex::encode(evm_abi::selector("decimals()")));
+        let ret = self.eth_call(contract, &data_hex).await?;
+        evm_abi::decode_uint8(&ret)
+            .map_err(|e| CoreError::Rpc(format!("decode decimals: {e}")))
+    }
+
+    async fn get_erc20_symbol(&self, contract: &str) -> Result<String> {
+        let contract = contract.trim();
+        if !is_evm_address(contract) {
+            return Err(CoreError::InvalidAddress(contract.to_string()));
+        }
+        let data_hex = format!("0x{}", hex::encode(evm_abi::selector("symbol()")));
+        let ret = self.eth_call(contract, &data_hex).await?;
+        evm_abi::decode_string(&ret)
+            .map_err(|e| CoreError::Rpc(format!("decode symbol: {e}")))
+    }
+
+    async fn get_erc20_name(&self, contract: &str) -> Result<String> {
+        let contract = contract.trim();
+        if !is_evm_address(contract) {
+            return Err(CoreError::InvalidAddress(contract.to_string()));
+        }
+        let data_hex = format!("0x{}", hex::encode(evm_abi::selector("name()")));
+        let ret = self.eth_call(contract, &data_hex).await?;
+        evm_abi::decode_string(&ret)
+            .map_err(|e| CoreError::Rpc(format!("decode name: {e}")))
     }
 }
 
@@ -214,3 +243,4 @@ mod tests {
         assert!(!is_evm_address("not_an_address"));
     }
 }
+

@@ -163,3 +163,11 @@ text
 - Селекторы сверены с известными: balanceOf=0x70a08231, transfer=0xa9059cbb, decimals=0x313ce567, symbol=0x95d89b41.
 - Всего тестов: **45**.
 - **Следующее (Session #12, Block B-2):** ERC-20 metadata (`decimals`, `symbol`, `name`) + построение `transfer(address,uint256)` calldata. Потом Block A (EIP-1559) и Block C (AIC-ID).
+
+### 2026-11-09 -- Сессия #12 (Block B-2: ERC-20 metadata + transfer calldata)
+- `evm_abi` расширен: `decode_uint8`, `decode_string` (ABI-string с offset+length), `encode_transfer_calldata`.
+- `ChainTraits`: `get_erc20_decimals`, `get_erc20_symbol`, `get_erc20_name` (default NotImplemented, EVM -- реальные).
+- `wallet::erc20::build_transfer_tx` -- собирает unsigned LegacyTransaction для `transfer(address,uint256)` (value=0, data=calldata).
+- **ВЕХА:** живая metadata USDC mainnet: name="USD Coin", symbol="USDC", decimals=6.
+- 51 тест зелёный.
+- **Следующее -- Block A (EIP-1559):** Type 2 транзакции (`maxFeePerGas`, `maxPriorityFeePerGas`), MetaMask-совместимый формат.

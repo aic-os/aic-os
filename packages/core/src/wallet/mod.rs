@@ -1,7 +1,9 @@
+pub mod erc20;
 pub mod eth;
 pub mod eth_tx;
 pub mod mnemonic;
 
+pub use erc20::build_transfer_tx;
 pub use eth::{derive_account, pubkey_to_eip55, to_eip55, EthAccount, ETH_DEFAULT_PATH};
 pub use eth_tx::{LegacyTransaction, SignedTransaction};
 pub use mnemonic::{Mnemonic, WordCount};

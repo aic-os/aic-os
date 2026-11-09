@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 19:57:59
+> Generated: 2026-11-09 20:00:31
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -19,6 +19,7 @@ aic-os/
 |   |   |-- examples
 |   |   |   |-- broadcast_test.rs
 |   |   |   |-- erc20_balance.rs
+|   |   |   |-- erc20_metadata.rs
 |   |   |   |-- get_balance.rs
 |   |   |   \-- send_eth.rs
 |   |   |-- src
@@ -28,6 +29,7 @@ aic-os/
 |   |   |   |   |-- factory.rs
 |   |   |   |   \-- mod.rs
 |   |   |   |-- wallet
+|   |   |   |   |-- erc20.rs
 |   |   |   |   |-- eth.rs
 |   |   |   |   |-- eth_tx.rs
 |   |   |   |   |-- mnemonic.rs
