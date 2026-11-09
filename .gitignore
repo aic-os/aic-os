@@ -1,0 +1,40 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+flutter_*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# AI session
+.ai/private/
