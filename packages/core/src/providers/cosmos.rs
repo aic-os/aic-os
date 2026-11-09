@@ -27,6 +27,28 @@ impl CosmosProvider {
             Chain::CosmosHub => "uatom",
             Chain::Osmosis => "uosmo",
             Chain::Celestia => "utia",
+            Chain::Injective => "inj",
+            Chain::Kava => "ukava",
+            Chain::Sei => "usei",
+            Chain::Akash => "uakt",
+            Chain::Juno => "ujuno",
+            Chain::Stargaze => "ustars",
+            Chain::Kujira => "ukuji",
+            Chain::Stride => "ustrd",
+            Chain::Neutron => "untrn",
+            Chain::Archway => "aarchway",
+            Chain::Persistence => "uxprt",
+            Chain::Umee => "uumee",
+            Chain::Comdex => "ucmdx",
+            Chain::Crescent => "ucre",
+            Chain::Regen => "uregen",
+            Chain::Sentinel => "udvpn",
+            Chain::Sifchain => "rowan",
+            Chain::Chihuahua => "uhuahua",
+            Chain::Bitsong => "ubtsg",
+            Chain::Desmos => "udsm",
+            Chain::Emoney => "ungm",
+            Chain::Medibloc => "umed",
             _ => "uatom",
         }
     }
@@ -65,7 +87,7 @@ impl ChainTraits for CosmosProvider {
                                     }
                                 }
                             }
-                            return Ok(0); // address has balances but not in our denom
+                            return Ok(0);
                         }
                         None => { errors.push(format!("{url}: no balances")); continue; }
                     }
@@ -77,7 +99,7 @@ impl ChainTraits for CosmosProvider {
     }
 
     async fn estimate_fee(&self, _f: &str, _t: &str, _a: u128) -> Result<u128> { Err(CoreError::NotImplemented("Cosmos estimate_fee")) }
-    async fn get_nonce(&self, _a: &str) -> Result<u64> { Err(CoreError::NotImplemented("Cosmos get_nonce (account_number)")) }
+    async fn get_nonce(&self, _a: &str) -> Result<u64> { Err(CoreError::NotImplemented("Cosmos get_nonce")) }
     async fn get_gas_price(&self) -> Result<u128> { Err(CoreError::NotImplemented("Cosmos get_gas_price")) }
     async fn broadcast(&self, _r: &str) -> Result<String> { Err(CoreError::NotImplemented("Cosmos broadcast")) }
 

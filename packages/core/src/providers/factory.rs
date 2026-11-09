@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
+use crate::providers::aptos::AptosProvider;
 use crate::providers::bitcoin::BitcoinProvider;
 use crate::providers::cosmos::CosmosProvider;
 use crate::providers::evm::EvmProvider;
@@ -27,19 +28,11 @@ pub struct ProviderFactory {
 
 impl ProviderFactory {
     pub fn new() -> Self { Self::default() }
-
     pub fn with_settings(settings: HashMap<Chain, ChainSettings>) -> Self { Self { settings } }
 
     pub fn from_settings(settings: &Settings) -> Self {
         let mut map = HashMap::new();
-        let all = [
-            Chain::Ethereum, Chain::Bsc, Chain::Polygon, Chain::Arbitrum,
-            Chain::Optimism, Chain::Base, Chain::Avalanche,
-            Chain::Bitcoin, Chain::Litecoin, Chain::Dogecoin,
-            Chain::CosmosHub, Chain::Osmosis, Chain::Celestia,
-            Chain::Solana, Chain::Tron, Chain::Ton, Chain::Sui, Chain::Aptos, Chain::Ripple,
-        ];
-        for chain in all {
+        for &chain in Chain::ALL {
             if let Some(rpc_urls) = settings.rpc_urls_for(chain) {
                 if !rpc_urls.is_empty() {
                     map.insert(chain, ChainSettings {
@@ -72,7 +65,7 @@ impl ProviderFactory {
                 Chain::Tron => Ok(Arc::new(TronProvider::new(chain, settings))),
                 Chain::Sui => Ok(Arc::new(SuiProvider::new(chain, settings))),
                 Chain::Ripple => Ok(Arc::new(XrpProvider::new(chain, settings))),
-                Chain::Aptos => Err(CoreError::NotImplemented("Aptos provider (Phase 1.5)")),
+                Chain::Aptos => Ok(Arc::new(AptosProvider::new(chain, settings))),
                 _ => Err(CoreError::NotImplemented("Other-chain provider")),
             },
         }

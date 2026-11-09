@@ -1,3 +1,4 @@
+pub mod aptos;
 pub mod bitcoin;
 pub mod cosmos;
 pub mod evm;

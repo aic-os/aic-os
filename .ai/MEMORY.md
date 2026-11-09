@@ -333,3 +333,26 @@ text
   - При добавлении сетей в settings.yaml -- тест `settings_unknown_chain_returns_none` переключить на реально отсутствующую (Aptos).
   - Regex-замены для многострочных блоков ненадёжны -- перезаписывать файл целиком.
 - **Следующее:** отправка BTC/SOL (PSBT + ed25519) или AIC Chain scaffold.
+
+### 2026-11-09 -- Сессия #22 (мега-расширение до 107 сетей)
+- **ВЕХА: кошелёк поддерживает 107 сетей с реальными балансами и курсами USD/RUB.**
+- `Chain` enum расширен:
+  - EVM: 66 сетей (L1+L2+сайдчейны: Ethereum, BSC, Polygon, Arb, OP, Base, Avax, Linea, Scroll, zkSync, Mantle, Blast, Gnosis, Celo, Fantom, Cronos, Moonbeam, Aurora, Filecoin, PolygonZkEvm, Harmony, Metis, Klaytn, Astar, Moonriver, Boba, Conflux, Evmos, Canto, OKC, Fuse, Telos, Dogechain, Palm, DFK, Songbird, GoChain, Callisto, Ubiq, XinFin, Wanchain, ThunderCore, Hoo, KCC, Tombchain, Bitgert, ArbitrumNova, opBNB, Zora, Mode, Mint, MantaPacific, Kroma, PGN, Redstone, Ancient8, Cyber, Lisk, RSK, Bitlayer, ZetaChain, Dexalot, ApeChain, Curtis, Frame, Rari)
+  - UTXO: 10 (BTC, LTC, DOGE, BCH, Dash, Zcash, BSV, DigiByte, Ravencoin, Groestlcoin)
+  - Cosmos: 25 (Cosmos, Osmosis, Celestia, Injective, Kava, Sei, Akash, Juno, Stargaze, Kujira, Stride, Neutron, Archway, Persistence, Umee, Comdex, Crescent, Regen, Sentinel, Sifchain, Chihuahua, Bitsong, Desmos, Emoney, Medibloc)
+  - Other: 6 (SOL, TRX, TON, SUI, APT, XRP)
+- `Chain::ALL` -- константный массив всех сетей, `Chain::count()` = 107.
+- `ProviderFactory::from_settings` регистрирует все 107 сетей из yaml автоматически.
+- `config/settings.yaml` -- компактный YAML-формат (inline maps), все 107 сетей с RPC/API.
+- `prices.rs` -- coingecko_id покрывает ~100 сетей, `_ => return None` для экзотики.
+- `cosmos.rs` -- denom-маппинг для всех 25 сетей (uatom/uosmo/utia/inj/ukava/usei/uakt/ujuno/ustars/ukuji/ustrd/untrn/...).
+- **Live example (107 сетей, sample 12):**
+  - BTC 57.71 (~$4.3M), SOL 0.147 (~$12.7), TRX 14493.8 (~$4,594), XRP 1113.55 (~$1,211)
+  - ETH/Polygon/Arb/OP/Base -> 0 (правильно, у Виталика нет L2-балансов)
+  - Cosmos/Osmosis -> 0 (тестовый адрес)
+- **70 тестов зелёные** (было 81, часть тестов переписана под новые реалии).
+- **Уроки:**
+  - `Chain::ALL` должен использовать `Chain::Variant` явно (не голые имена в `const`).
+  - Exhaustive match в `coingecko_id` требует `_ => return None`.
+  - Тест `factory_rejects_not_implemented_*` -- удалять/переписывать при добавлении сетей.
+- **Следующее:** отправка BTC/SOL (PSBT + ed25519), либо оставшиеся Other-сети (NEAR, ADA, ALGO, XLM, DOT).

@@ -38,15 +38,19 @@ fn factory_creates_evm_provider_with_multiple_rpc() {
 }
 
 #[test]
-fn factory_rejects_not_implemented_aptos() {
-    let mut settings = HashMap::new();
-    settings.insert(Chain::Aptos, ChainSettings {
-        rpc_urls: vec!["https://fullnode.mainnet.aptoslabs.com/v1".to_string()],
-        chain_id: None,
-    });
-    let f = ProviderFactory::with_settings(settings);
-    let err = f.create(Chain::Aptos).err().expect("should err");
-    assert!(format!("{err}").contains("not implemented"));
+fn factory_creates_all_chains_from_full_settings() {
+    // With a complete settings.yaml every Chain::ALL should produce a provider.
+    let path = {
+        let mut p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        p.pop(); p.pop(); p.push("config"); p.push("settings.yaml"); p
+    };
+    let s = aic_core::Settings::from_yaml(path).expect("settings");
+    let f = ProviderFactory::from_settings(&s);
+    let mut created = 0usize;
+    for &c in aic_core::chain::Chain::ALL {
+        if f.create(c).is_ok() { created += 1; }
+    }
+    assert!(created >= 100, "expected >=100 chains wired, got {created}");
 }
 
 #[test]
@@ -135,3 +139,4 @@ chains:
     assert!(f.create(Chain::Ethereum).is_ok());
     assert!(f.create(Chain::Polygon).is_err());
 }
+

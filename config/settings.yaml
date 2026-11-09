@@ -2,74 +2,117 @@
 # Order of rpc items matters: first = primary, rest = fallback.
 
 chains:
-  ethereum:
-    chain_id: 1
-    rpc:
-      - https://ethereum-rpc.publicnode.com
-      - https://eth.drpc.org
+  # ===== EVM =====
+  ethereum: { chain_id: 1, rpc: [https://ethereum-rpc.publicnode.com, https://eth.drpc.org] }
+  bsc: { chain_id: 56, rpc: [https://bsc-rpc.publicnode.com, https://binance.llamarpc.com] }
+  polygon: { chain_id: 137, rpc: [https://polygon-bor-rpc.publicnode.com, https://polygon.llamarpc.com] }
+  arbitrum: { chain_id: 42161, rpc: [https://arbitrum-one-rpc.publicnode.com, https://arb1.arbitrum.io/rpc] }
+  optimism: { chain_id: 10, rpc: [https://optimism-rpc.publicnode.com, https://mainnet.optimism.io] }
+  base: { chain_id: 8453, rpc: [https://base-rpc.publicnode.com, https://mainnet.base.org] }
+  avalanche: { chain_id: 43114, rpc: [https://avalanche-c-chain-rpc.publicnode.com, https://api.avax.network/ext/bc/C/rpc] }
+  linea: { chain_id: 59144, rpc: [https://rpc.linea.build] }
+  scroll: { chain_id: 534352, rpc: [https://rpc.scroll.io] }
+  zksync: { chain_id: 324, rpc: [https://mainnet.era.zksync.io] }
+  mantle: { chain_id: 5000, rpc: [https://rpc.mantle.xyz] }
+  blast: { chain_id: 81457, rpc: [https://rpc.blast.io] }
+  gnosis: { chain_id: 100, rpc: [https://rpc.gnosischain.com] }
+  celo: { chain_id: 42220, rpc: [https://forno.celo.org] }
+  fantom: { chain_id: 250, rpc: [https://rpc.ftm.tools] }
+  cronos: { chain_id: 25, rpc: [https://evm.cronos.org] }
+  moonbeam: { chain_id: 1284, rpc: [https://rpc.api.moonbeam.network] }
+  aurora: { chain_id: 1313161554, rpc: [https://mainnet.aurora.dev] }
+  filecoin: { chain_id: 314, rpc: [https://rpc.ankr.com/filecoin] }
+  polygon-zkevm: { chain_id: 1101, rpc: [https://zkevm-rpc.com] }
+  harmony: { chain_id: 1666600000, rpc: [https://api.harmony.one] }
+  metis: { chain_id: 1088, rpc: [https://andromeda.metis.io/?owner=1088] }
+  klaytn: { chain_id: 8217, rpc: [https://public-en-cypress.klaytn.net] }
+  astar: { chain_id: 592, rpc: [https://rpc.astar.network] }
+  moonriver: { chain_id: 1285, rpc: [https://rpc.api.moonriver.moonbeam.network] }
+  boba: { chain_id: 288, rpc: [https://mainnet.boba.network] }
+  conflux: { chain_id: 1030, rpc: [https://evm.confluxrpc.com] }
+  evmos: { chain_id: 9001, rpc: [https://eth.bd.evmos.org:8545] }
+  canto: { chain_id: 7700, rpc: [https://canto.slingshot.finance] }
+  okc: { chain_id: 66, rpc: [https://exchainrpc.okex.org] }
+  fuse: { chain_id: 122, rpc: [https://rpc.fuse.io] }
+  telos: { chain_id: 40, rpc: [https://mainnet.telos.net/evm] }
+  dogechain: { chain_id: 2000, rpc: [https://rpc.dogechain.dog] }
+  palm: { chain_id: 11297108109, rpc: [https://palm-mainnet.public.blastapi.io] }
+  dfk: { chain_id: 53935, rpc: [https://subnets.avax.network/defi-kingdoms/dfk-chain/rpc] }
+  songbird: { chain_id: 19, rpc: [https://songbird-api.flare.network/ext/C/rpc] }
+  gochain: { chain_id: 60, rpc: [https://rpc.gochain.io] }
+  callisto: { chain_id: 820, rpc: [https://rpc.callistodao.org] }
+  ubiq: { chain_id: 8, rpc: [https://rpc.ubiqsmart.com] }
+  xinfin: { chain_id: 50, rpc: [https://erpc.xinfin.network] }
+  wanchain: { chain_id: 888, rpc: [https://gwan-ssl.wandevs.org:56891] }
+  thundercore: { chain_id: 108, rpc: [https://mainnet-rpc.thundercore.com] }
+  hoo: { chain_id: 70, rpc: [https://http-mainnet.hoosmartchain.com] }
+  kcc: { chain_id: 321, rpc: [https://rpc-mainnet.kcc.network] }
+  tombchain: { chain_id: 6969, rpc: [https://rpc.tombchain.com] }
+  bitgert: { chain_id: 32520, rpc: [https://mainnet-rpc.brisescan.com] }
+  arbitrum-nova: { chain_id: 42170, rpc: [https://nova.arbitrum.io/rpc] }
+  opbnb: { chain_id: 204, rpc: [https://opbnb-mainnet-rpc.bnbchain.org] }
+  zora: { chain_id: 7777777, rpc: [https://rpc.zora.energy] }
+  mode: { chain_id: 34443, rpc: [https://mainnet.mode.network] }
+  mint: { chain_id: 185, rpc: [https://rpc.mintchain.io] }
+  manta-pacific: { chain_id: 169, rpc: [https://pacific-rpc.manta.network/http] }
+  kroma: { chain_id: 255, rpc: [https://api.kroma.network] }
+  pgn: { chain_id: 424, rpc: [https://rpc.publicgoods.network] }
+  redstone: { chain_id: 690, rpc: [https://rpc.redstonechain.com] }
+  ancient8: { chain_id: 888888888, rpc: [https://rpc.ancient8.gg] }
+  cyber: { chain_id: 7560, rpc: [https://cyber.alt.technology] }
+  lisk: { chain_id: 1135, rpc: [https://rpc.api.lisk.com] }
+  rsk: { chain_id: 30, rpc: [https://public-node.rsk.co] }
+  bitlayer: { chain_id: 200901, rpc: [https://rpc.bitlayer.org] }
+  zetachain: { chain_id: 7000, rpc: [https://zetachain-evm.blockpi.network/v1/rpc/public] }
+  dexalot: { chain_id: 432204, rpc: [https://subnets.avax.network/dexalot/mainnet/rpc] }
+  apechain: { chain_id: 33139, rpc: [https://apechain.calderachain.xyz/http] }
+  curtis: { chain_id: 33111, rpc: [https://cronos-testnet.calderachain.xyz/http] }
+  frame: { chain_id: 5453, rpc: [https://rpc.frame.xyz] }
+  rari: { chain_id: 1380012617, rpc: [https://rari.calderachain.xyz/http] }
 
-  bsc:
-    chain_id: 56
-    rpc:
-      - https://bsc-rpc.publicnode.com
-      - https://binance.llamarpc.com
+  # ===== UTXO =====
+  bitcoin: { rpc: [https://blockstream.info/api, https://mempool.space/api] }
+  litecoin: { rpc: [https://litecoinspace.org/api] }
+  dogecoin: { rpc: [https://dogechain.info/api/v1] }
+  bitcoin-cash: { rpc: [https://bch-chain.api.btc.com/v3] }
+  dash: { rpc: [https://insight.dash.org/insight-api] }
+  zcash: { rpc: [https://api.zcha.in/v2/mainnet] }
+  bitcoin-sv: { rpc: [https://api.whatsonchain.com/v1/bsv/main] }
+  digibyte: { rpc: [https://digiexplorer.info/api] }
+  ravencoin: { rpc: [https://ravencoin.network/api] }
+  groestlcoin: { rpc: [https://chainz.cryptoid.info/grs/api.dws] }
 
-  polygon:
-    chain_id: 137
-    rpc:
-      - https://polygon-bor-rpc.publicnode.com
-      - https://polygon.llamarpc.com
+  # ===== Cosmos =====
+  cosmos: { rpc: [https://cosmos-rest.publicnode.com] }
+  osmosis: { rpc: [https://osmosis-rest.publicnode.com] }
+  celestia: { rpc: [https://celestia-rest.publicnode.com] }
+  injective: { rpc: [https://injective-rest.publicnode.com] }
+  kava: { rpc: [https://kava-rest.publicnode.com] }
+  sei: { rpc: [https://sei-rest.publicnode.com] }
+  akash: { rpc: [https://akash-rest.publicnode.com] }
+  juno: { rpc: [https://juno-rest.publicnode.com] }
+  stargaze: { rpc: [https://stargaze-rest.publicnode.com] }
+  kujira: { rpc: [https://kujira-rest.publicnode.com] }
+  stride: { rpc: [https://stride-rest.publicnode.com] }
+  neutron: { rpc: [https://neutron-rest.publicnode.com] }
+  archway: { rpc: [https://archway-rest.publicnode.com] }
+  persistence: { rpc: [https://persistence-rest.publicnode.com] }
+  umee: { rpc: [https://umee-rest.publicnode.com] }
+  comdex: { rpc: [https://comdex-rest.publicnode.com] }
+  crescent: { rpc: [https://crescent-rest.publicnode.com] }
+  regen: { rpc: [https://regen-rest.publicnode.com] }
+  sentinel: { rpc: [https://sentinel-rest.publicnode.com] }
+  sifchain: { rpc: [https://sifchain-rest.publicnode.com] }
+  chihuahua: { rpc: [https://chihuahua-rest.publicnode.com] }
+  bitsong: { rpc: [https://bitsong-rest.publicnode.com] }
+  desmos: { rpc: [https://desmos-rest.publicnode.com] }
+  emoney: { rpc: [https://emoney-rest.publicnode.com] }
+  medibloc: { rpc: [https://medibloc-rest.publicnode.com] }
 
-  arbitrum:
-    chain_id: 42161
-    rpc:
-      - https://arbitrum-one-rpc.publicnode.com
-      - https://arb1.arbitrum.io/rpc
-
-  optimism:
-    chain_id: 10
-    rpc:
-      - https://optimism-rpc.publicnode.com
-      - https://mainnet.optimism.io
-
-  base:
-    chain_id: 8453
-    rpc:
-      - https://base-rpc.publicnode.com
-      - https://mainnet.base.org
-
-  avalanche:
-    chain_id: 43114
-    rpc:
-      - https://avalanche-c-chain-rpc.publicnode.com
-      - https://api.avax.network/ext/bc/C/rpc
-
-  bitcoin:
-    rpc:
-      - https://blockstream.info/api
-      - https://mempool.space/api
-
-  solana:
-    rpc:
-      - https://api.mainnet-beta.solana.com
-
-  ton:
-    rpc:
-      - https://toncenter.com/api/v2
-
-  tron:
-    rpc:
-      - https://api.trongrid.io
-
-  ripple:
-    rpc:
-      - https://xrplcluster.com
-      - https://s1.ripple.com:51234
-
-  cosmos:
-    rpc:
-      - https://cosmos-rest.publicnode.com
-
-  sui:
-    rpc:
-      - https://fullnode.mainnet.sui.io:443
+  # ===== Other =====
+  solana: { rpc: [https://api.mainnet-beta.solana.com] }
+  tron: { rpc: [https://api.trongrid.io] }
+  ton: { rpc: [https://toncenter.com/api/v2] }
+  sui: { rpc: [https://fullnode.mainnet.sui.io:443] }
+  aptos: { rpc: [https://fullnode.mainnet.aptoslabs.com/v1] }
+  ripple: { rpc: [https://xrplcluster.com, https://s1.ripple.com:51234] }
