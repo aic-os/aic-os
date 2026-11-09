@@ -196,3 +196,11 @@ text
 - Foundry `[lint]` -- отключён `block-timestamp` (манипуляция ~12s vs окно 365 дней).
 - **14/14 тестов зелёные**, включая expiry через `vm.warp` и reverse-map consistency после transfer.
 - **Следующее:** деплой-скрипт (`script/DeployAICID.s.sol`) + реальный деплой (Anvil -> mainnet).
+
+### 2026-11-09 -- Сессия #15 (deploy script + dry-run)
+- `packages/contracts/script/DeployAICID.s.sol` -- Foundry Script, деплоит AICID.
+- **Dry-run на форке mainnet прошёл:** `Script ran successfully`, `REGISTRATION_PERIOD = 31536000`, estimated gas 1,130,945, cost ~0.0006 ETH.
+- Реальный деплой откладывается до готовности deployer-кошелька (keystore через `cast wallet import`).
+- Убрано из git: `foundry-install.ps1`, `packages/contracts/lib/forge-std/` (deps через `forge install`).
+- Добавлено в `.gitignore`: `packages/contracts/lib/`.
+- **Следующее:** создать deployer keystore, пополнить его ETH, реальный деплой на mainnet + верификация на Etherscan.

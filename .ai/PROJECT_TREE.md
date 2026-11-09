@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-09 20:19:02
+> Generated: 2026-11-09 20:25:33
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -15,7 +15,14 @@ aic-os/
 |   \-- GLOSSARY.md
 |-- packages
 |   |-- contracts
+|   |   |-- broadcast
+|   |   |   \-- DeployAICID.s.sol
+|   |   |       \-- 1
+|   |   |           \-- dry-run
 |   |   |-- cache
+|   |   |   |-- DeployAICID.s.sol
+|   |   |   |   \-- 1
+|   |   |   |       \-- dry-run
 |   |   |   \-- solidity-files-cache.json
 |   |   |-- lib
 |   |   |   \-- forge-std
@@ -90,13 +97,18 @@ aic-os/
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
 |   |   |   |   |-- 70fc5cb483860830.json
-|   |   |   |   \-- 865f837d761249bc.json
+|   |   |   |   |-- 865f837d761249bc.json
+|   |   |   |   \-- ac6e27ad2032786e.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
+|   |   |   |-- DeployAICID.s.sol
+|   |   |   |   \-- DeployAICID.json
 |   |   |   |-- IMulticall3.sol
 |   |   |   |   \-- IMulticall3.json
 |   |   |   |-- safeconsole.sol
 |   |   |   |   \-- safeconsole.json
+|   |   |   |-- Script.sol
+|   |   |   |   \-- Script.json
 |   |   |   |-- StdAssertions.sol
 |   |   |   |   \-- StdAssertions.json
 |   |   |   |-- StdChains.sol
@@ -129,6 +141,7 @@ aic-os/
 |   |   |       |-- Vm.json
 |   |   |       \-- VmSafe.json
 |   |   |-- script
+|   |   |   \-- DeployAICID.s.sol
 |   |   |-- src
 |   |   |   \-- AICID.sol
 |   |   |-- test
@@ -178,7 +191,6 @@ aic-os/
 |-- .gitignore
 |-- Cargo.lock
 |-- Cargo.toml
-|-- foundry-install.ps1
 |-- README.md
 \-- ROADMAP.md
 ```
