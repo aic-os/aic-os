@@ -74,6 +74,11 @@ impl Chain {
         for tx in txs {
             if gas_used + BASE_TX_GAS > BLOCK_GAS_LIMIT { break; }
 
+            if !tx.verify() {
+                // Невалидная подпись -- пропускаем
+                continue;
+            }
+
             let tx_hash = tx.hash();
             let mut from_acc = self.state.get_account(&tx.from);
 
@@ -148,4 +153,5 @@ impl Chain {
         block
     }
 }
+
 

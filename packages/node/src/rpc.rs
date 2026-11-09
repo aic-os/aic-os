@@ -36,29 +36,61 @@ fn now_unix() -> u64 {
 }
 
 pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
-    // Genesis allocation (1 млрд AIC = 1e27 wei, 18 decimals)
-    let total: u128 = 1_000_000_000_000_000_000_000_000_000; // 1e27
-    let treasury: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xF];
-    let airdrop:  [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xA];
-    let staking:  [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x5];
-    let team:     [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x1];
+    // ===== ЭМИССИЯ: 71 млрд AIC, 18 decimals =====
+    const AIC: u128 = 1_000_000_000_000_000_000; // 1 AIC в wei
+    let total: u128 = 71_000_000_000u128 * AIC; // 71 млрд AIC
 
-    let alloc = vec![
-        (treasury, total * 40 / 100),
-        (airdrop,  total * 30 / 100),
-        (staking,  total * 20 / 100),
-        (team,     total * 10 / 100),
+    // Казна: 40% = 28.4 млрд AIC, адрес 0x...0F
+    let treasury: [u8; 20] = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0F,
+    ];
+    // Airdrop: 30% = 21.3 млрд AIC, адрес 0x...0A
+    let airdrop: [u8; 20] = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0A,
+    ];
+    // Стейкинг: 20% = 14.2 млрд AIC, адрес 0x...05
+    let staking: [u8; 20] = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x05,
+    ];
+    // Foundation: 10% = 7.1 млрд AIC, адрес 0x...01
+    let team: [u8; 20] = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x01,
+    ];
+    // Dev: Hardhat-0 (Alice), 1 000 000 AIC для тестов
+    let dev: [u8; 20] = [
+        0xf3, 0x9F, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xF6,
+        0xF4, 0xce, 0x6a, 0xB8, 0x82, 0x72, 0x79, 0xcf,
+        0xff, 0xb9, 0x22, 0x66,
+    ];
+    let dev_balance: u128 = 1_000_000u128 * AIC;
+
+    let alloc: Vec<([u8; 20], u128)> = vec![
+        (treasury, total / 100 * 40),
+        (airdrop,  total / 100 * 30),
+        (staking,  total / 100 * 20),
+        (team,     total / 100 * 10),
+        (dev,      dev_balance),
     ];
 
     let chain = Chain::genesis(chain_id, &alloc);
-    println!("=== GENESIS ===");
-    println!("Chain ID: {chain_id}");
+
+    // ===== GENESIS LOG =====
+    println!("\n========= AIC CHAIN GENESIS =========");
+    println!("Chain ID:    {chain_id}");
     println!("Block 0 hash: 0x{}", hex::encode(chain.head().hash()));
-    println!("State root:   0x{}", hex::encode(chain.head().header.state_root));
-    for (addr, bal) in &alloc {
-        println!("  alloc 0x{}: {} wei ({} AIC)",
-            hex::encode(addr), bal, bal / 1_000_000_000_000_000_000u128);
+    println!("State root:  0x{}", hex::encode(chain.head().header.state_root));
+    println!("--- Allocations ---");
+    for (a, bal) in &alloc {
+        println!("  {}  =>  {} wei ({} AIC)",
+            hex::encode(a), bal, bal / AIC);
     }
+    println!("--- Verification ---");
+    for (a, expected) in &alloc {
+        let actual = chain.state.get_account(a).balance;
+        let mark = if actual == *expected { "OK" } else { "MISMATCH" };
+        println!("  {}: {} (expected {})", hex::encode(a), mark, actual);
+    }
+    println!("=====================================\n");
 
     let state = Arc::new(AppState {
         mempool: Mempool::new(),
@@ -66,27 +98,26 @@ pub async fn run_rpc(addr: &str, chain_id: u64) -> Result<(), Box<dyn std::error
         chain_id,
     });
 
-    // Запускаем block producer
+    // Block producer
     let producer_state = state.clone();
     tokio::spawn(async move {
         let mut ticker = tokio::time::interval(std::time::Duration::from_secs(3));
-        ticker.tick().await; // первый тик сразу -- пропускаем
+        ticker.tick().await;
         loop {
             ticker.tick().await;
             let txs = producer_state.mempool.drain(100).await;
             let mut chain = producer_state.chain.write().unwrap();
             let bn = chain.block_number() + 1;
             let block = chain.produce_block(txs, now_unix());
-            println!("[BLOCK] #{bn} hash=0x{} txs={} gas={}",
-                hex::encode(&block.hash()[..8]),
-                block.transactions.len(),
-                block.header.gas_used);
+            println!("[BLOCK] #{} hash=0x{} txs={} gas={}",
+                bn, hex::encode(&block.hash()[..8]),
+                block.transactions.len(), block.header.gas_used);
         }
     });
 
     let app = Router::new().route("/", post(handle_rpc)).with_state(state);
     let listener = TcpListener::bind(addr).await?;
-    println!("\nAIC Node RPC listening on http://{addr}");
+    println!("AIC Node RPC listening on http://{addr}");
     axum::serve(listener, app).await?;
     Ok(())
 }
@@ -160,14 +191,14 @@ async fn handle_rpc(
         }
 
         "aic_sendRawTransaction" => {
-            let tx_json = req.params.get(0);
-            match tx_json.and_then(Transaction::from_json) {
-                Some(tx) => {
+            let raw = req.params.get(0).and_then(|v| v.as_str());
+            match raw.and_then(Transaction::from_raw_hex) {
+                Some(tx) if tx.verify() => {
                     let hash = tx.hash();
                     st.mempool.add(tx).await;
                     Some(json!(format!("0x{}", hex::encode(hash))))
                 }
-                None => None,
+                _ => None,
             }
         }
 
@@ -182,7 +213,9 @@ async fn handle_rpc(
 }
 
 fn parse_addr(s: &str) -> Option<[u8; 20]> {
-    let b = hex::decode(s.trim_start_matches("0x")).ok()?;
+    let clean = s.trim_start_matches("0x").trim_start_matches("0X");
+    let b = hex::decode(clean).ok()?;
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+

@@ -1,15 +1,12 @@
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
+use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 
-fn parse_addr(s: &str) -> Option<[u8; 20]> {
-    let b = hex::decode(s.trim_start_matches("0x")).ok()?;
-    if b.len() != 20 { return None; }
-    let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
-}
-
-fn parse_u128(s: &str) -> Option<u128> {
-    if let Some(h) = s.strip_prefix("0x") { u128::from_str_radix(h, 16).ok() }
-    else { s.parse().ok() }
+fn be_bytes_to_u128(b: &[u8]) -> u128 {
+    if b.len() > 16 { return 0; }
+    let mut buf = [0u8; 16];
+    buf[16 - b.len()..].copy_from_slice(b);
+    u128::from_be_bytes(buf)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,51 +19,109 @@ pub struct Transaction {
     pub gas_limit: u64,
     pub data: Vec<u8>,
     pub chain_id: u64,
+    /// 65 байт: r(32) || s(32) || rec_id(1). rec_id 0 или 1.
     pub signature: Vec<u8>,
 }
 
 impl Transaction {
-    pub fn from_json(v: &serde_json::Value) -> Option<Self> {
-        let nonce = v.get("nonce")?.as_u64()?;
-        let from = parse_addr(v.get("from")?.as_str()?)?;
-        let to = v.get("to").and_then(|t| t.as_str()).and_then(parse_addr);
-        let value = parse_u128(v.get("value")?.as_str()?)?;
-        let gas_price = parse_u128(v.get("gas_price")?.as_str()?)?;
-        let gas_limit = v.get("gas_limit")?.as_u64()?;
-        let data = hex::decode(v.get("data")?.as_str()?.trim_start_matches("0x")).ok()?;
-        let chain_id = v.get("chain_id")?.as_u64()?;
-        let signature = hex::decode(v.get("signature")?.as_str()?.trim_start_matches("0x")).ok()?;
-        Some(Transaction { nonce, from, to, value, gas_price, gas_limit, data, chain_id, signature })
+    /// RLP-парсинг raw hex (EIP-155 формат: [nonce, gasPrice, gasLimit, to, value, data, v, r, s]).
+    /// Восстанавливает `from` из подписи.
+    pub fn from_raw_hex(hex_str: &str) -> Option<Self> {
+        let bytes = hex::decode(hex_str.trim_start_matches("0x")).ok()?;
+        let rlp = rlp::Rlp::new(&bytes);
+        if rlp.item_count().ok()? != 9 { return None; }
+
+        let nonce: u64 = rlp.val_at(0).ok()?;
+        let gas_price_b: Vec<u8> = rlp.val_at(1).ok()?;
+        let gas_price = be_bytes_to_u128(&gas_price_b);
+        let gas_limit: u64 = rlp.val_at(2).ok()?;
+        let to_b: Vec<u8> = rlp.val_at(3).ok()?;
+        let to = if to_b.is_empty() {
+            None
+        } else if to_b.len() == 20 {
+            let mut a = [0u8; 20]; a.copy_from_slice(&to_b); Some(a)
+        } else { return None };
+        let value_b: Vec<u8> = rlp.val_at(4).ok()?;
+        let value = be_bytes_to_u128(&value_b);
+        let data: Vec<u8> = rlp.val_at(5).ok()?;
+        let v_b: Vec<u8> = rlp.val_at(6).ok()?;
+        let v = be_bytes_to_u128(&v_b);
+        let r_b: Vec<u8> = rlp.val_at(7).ok()?;
+        let s_b: Vec<u8> = rlp.val_at(8).ok()?;
+
+        if v < 35 { return None; }
+        let rec_id = ((v - 35) % 2) as u8;
+        let chain_id = ((v - 35 - rec_id as u128) / 2) as u64;
+
+        if r_b.len() > 32 || s_b.len() > 32 { return None; }
+        let mut r = [0u8; 32];
+        let mut s = [0u8; 32];
+        r[32 - r_b.len()..].copy_from_slice(&r_b);
+        s[32 - s_b.len()..].copy_from_slice(&s_b);
+
+        let mut signature = Vec::with_capacity(65);
+        signature.extend_from_slice(&r);
+        signature.extend_from_slice(&s);
+        signature.push(rec_id);
+
+        let tmp = Transaction {
+            nonce, from: [0u8; 20], to, value, gas_price, gas_limit, data, chain_id, signature,
+        };
+        let hash = tmp.signing_hash();
+        let from = recover_from(&hash, &tmp.signature)?;
+        Some(Transaction { from, ..tmp })
     }
 
+    /// EIP-155 signing hash: keccak256(rlp([nonce, gasPrice, gasLimit, to, value, data, chain_id, 0, 0]))
     pub fn signing_hash(&self) -> [u8; 32] {
         let mut stream = rlp::RlpStream::new_list(9);
         stream.append(&self.nonce);
-        stream.append(&self.from.as_slice());
-        stream.append(&self.to.map(|t| t.to_vec()));
-        stream.append(&self.value.to_be_bytes().as_slice());
-        stream.append(&self.gas_price.to_be_bytes().as_slice());
+        let gp = self.gas_price.to_be_bytes();
+        let gp_trim = gp.iter().position(|&b| b != 0).map(|i| &gp[i..]).unwrap_or(&[]);
+        stream.append(&gp_trim);
         stream.append(&self.gas_limit);
+        match self.to {
+            Some(t) => { stream.append(&t.as_slice()); }
+            None => { stream.append_empty_data(); }
+        }
+        let v = self.value.to_be_bytes();
+        let v_trim = v.iter().position(|&b| b != 0).map(|i| &v[i..]).unwrap_or(&[]);
+        stream.append(&v_trim);
         stream.append(&self.data);
         stream.append(&self.chain_id);
         stream.append(&0u8);
         stream.append(&0u8);
-        let encoded = stream.out();
-        Keccak256::digest(&encoded).into()
+        Keccak256::digest(&stream.out()).into()
     }
 
+    /// Хеш всей транзакции (включая подпись).
     pub fn hash(&self) -> [u8; 32] {
-        let mut stream = rlp::RlpStream::new_list(10);
-        stream.append(&self.nonce);
-        stream.append(&self.from.as_slice());
-        stream.append(&self.to.map(|t| t.to_vec()));
-        stream.append(&self.value.to_be_bytes().as_slice());
-        stream.append(&self.gas_price.to_be_bytes().as_slice());
-        stream.append(&self.gas_limit);
-        stream.append(&self.data);
-        stream.append(&self.chain_id);
-        stream.append(&self.signature.as_slice());
-        let encoded = stream.out();
-        Keccak256::digest(&encoded).into()
+        let mut buf = self.signing_hash().to_vec();
+        buf.extend_from_slice(&self.signature);
+        Keccak256::digest(&buf).into()
     }
+
+    /// Проверка: from совпадает с восстановленным из подписи.
+    pub fn verify(&self) -> bool {
+        let hash = self.signing_hash();
+        recover_from(&hash, &self.signature)
+            .map(|a| a == self.from)
+            .unwrap_or(false)
+    }
+}
+
+fn recover_from(signing_hash: &[u8; 32], signature_65: &[u8]) -> Option<[u8; 20]> {
+    if signature_65.len() != 65 { return None; }
+    let mut sig_bytes = [0u8; 64];
+    sig_bytes.copy_from_slice(&signature_65[..64]);
+    let sig = Signature::from_slice(&sig_bytes).ok()?;
+    let rec_id = RecoveryId::from_byte(signature_65[64])?;
+
+    let vk = VerifyingKey::recover_from_prehash(signing_hash, &sig, rec_id).ok()?;
+    let point = vk.to_encoded_point(false);
+    let uncompressed = &point.as_bytes()[1..];
+    let h = Keccak256::digest(uncompressed);
+    let mut addr = [0u8; 20];
+    addr.copy_from_slice(&h[12..]);
+    Some(addr)
 }
