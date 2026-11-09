@@ -5,12 +5,14 @@ pub mod error;
 pub mod providers;
 pub mod settings;
 pub mod traits;
+pub mod wallet;
 
 pub use chain::{Chain, ChainType};
 pub use error::{CoreError, Result};
 pub use providers::ProviderFactory;
 pub use settings::Settings;
 pub use traits::ChainTraits;
+pub use wallet::{Mnemonic, WordCount};
 
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")

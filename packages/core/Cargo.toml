@@ -12,6 +12,9 @@ thiserror.workspace = true
 async-trait.workspace = true
 reqwest.workspace = true
 tokio.workspace = true
+bip39.workspace = true
+rand.workspace = true
+zeroize.workspace = true
 
 [dev-dependencies]
 serde_yaml_ng.workspace = true

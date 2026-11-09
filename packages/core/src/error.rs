@@ -17,6 +17,9 @@ pub enum CoreError {
     #[error("settings error: {0}")]
     Settings(String),
 
+    #[error("wallet error: {0}")]
+    Wallet(String),
+
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 

@@ -105,3 +105,11 @@ text
 - **14 тестов зелёные** (3 unit в evm.rs + 5 factory + 6 settings).
 - Проверка на реальной сети: `broadcast("0xdeadbeef")` -- оба RPC корректно отвергли, газ не потрачен.
 - **Следующее:** Wallet-модуль. Block A: BIP-39 (генерация сид-фразы, валидация, восстановление). Block B: secp256k1 + Ethereum-адрес. Block C: подпись ETH-транзакции (RLP + EIP-155).
+
+### 2026-11-09 -- Сессия #7 (Block A: BIP-39)
+- `wallet::Mnemonic` + `WordCount` (12 / 24).
+- Методы: `generate`, `from_phrase`, `validate`, `phrase`, `word_count`, `to_seed`.
+- Нормализация: case-insensitive, коллапс пробелов (как в MetaMask/Ledger).
+- 12 новых тестов, включая ОФИЦИАЛЬНЫЙ BIP-39 test vector: `to_seed("TREZOR")` == hex из spec.
+- Всего тестов в проекте: **26** (3 evm + 5 factory + 6 settings + 12 mnemonic).
+- **Следующее:** Block B -- secp256k1 + Ethereum адрес (BIP-32 derivation m/44'/60'/0'/0/i, EIP-55 checksum).
