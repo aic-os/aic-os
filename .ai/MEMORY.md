@@ -460,3 +460,19 @@ text
 - **ПРИНЦИП №1 зафиксирован:** AIC Chain -- независимая сеть, зарабатываем мы, не платим другим. Записан в `.ai/MEMORY.md` и `PRINCIPLES.md`.
 - **Токеномика зафиксирована** в `docs/TOKENOMICS.md`: все комиссии -- в AIC, все потоки -- в казну AIC-OS, airdrop 100 AIC первым 10k пользователям.
 - **Следующее:** genesis + первый блок + эмиссия AIC + transfer tx. Нода должна РОДИТЬ блоки, а не только отдавать пустой ответ.
+
+### 2026-11-09 -- Сессия #26 (AIC Chain v0.2 -- СЕТЬ РОЖАЕТ БЛОКИ)
+- **ВЕХА: AIC Chain производит блоки каждые 3 секунды.**
+- `chain.rs`: Chain (blocks, state, receipts), TxReceipt, produce_block (валидация nonce+balance, gas 21000/tx, gas limit 30M/блок).
+- `rpc.rs` переписан:
+  - Genesis при старте: аллокация 1 млрд AIC по адресам 0x..0F/0A/05/01.
+  - Block producer (tokio::spawn, interval 3s) -- забирает tx из mempool, рожает блок, печатает `[BLOCK] #N`.
+  - RPC: aic_chainId, aic_blockNumber (hex), aic_mempoolSize, aic_getBalance, aic_getAccount, aic_getBlockByNumber (latest/earliest/hex), aic_sendRawTransaction (принимает tx в mempool).
+- `transaction.rs` переписан: Serialize/Deserialize derive, from_json helper.
+- **Проверено на живой ноде:**
+  - Genesis: `0x9eaed36d...`, alloc 400M/300M/200M/100M = 1B AIC
+  - Блоки #1..#24 за ~72 сек (ровно 1 блок / 3 сек)
+  - chainId = 2026, blockNumber растёт, getBalance(казна) = 400000000 AIC
+  - latest block: number=0x18 (24), txCount=0, gasUsed=0
+- **Принцип №1 соблюдается:** весь газ и эмиссия -- в AIC, не платим никому.
+- **Следующее (v0.3):** подписанные транзакции -- отправка AIC между адресами, включение в блок, изменение state root, списание комиссии.
