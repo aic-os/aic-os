@@ -3,45 +3,40 @@ use std::sync::Arc;
 
 use crate::chain::{Chain, ChainType};
 use crate::error::{CoreError, Result};
+use crate::providers::bitcoin::BitcoinProvider;
 use crate::providers::evm::EvmProvider;
+use crate::providers::solana::SolanaProvider;
+use crate::providers::ton::TonProvider;
 use crate::settings::Settings;
 use crate::traits::ChainTraits;
 
-/// Per-chain settings. rpc_urls: first = primary, rest = fallback.
 #[derive(Debug, Clone)]
 pub struct ChainSettings {
     pub rpc_urls: Vec<String>,
     pub chain_id: Option<u64>,
 }
 
-/// Central factory: given a chain and its settings, returns a working provider.
 #[derive(Debug, Clone, Default)]
 pub struct ProviderFactory {
     settings: HashMap<Chain, ChainSettings>,
 }
 
 impl ProviderFactory {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     pub fn with_settings(settings: HashMap<Chain, ChainSettings>) -> Self {
         Self { settings }
     }
 
-    /// Build a factory from a loaded Settings (Settings.yaml).
-    /// Registers every chain that has at least one RPC URL.
     pub fn from_settings(settings: &Settings) -> Self {
         let mut map = HashMap::new();
-        for chain in [
-            Chain::Ethereum,
-            Chain::Bsc,
-            Chain::Polygon,
-            Chain::Arbitrum,
-            Chain::Optimism,
-            Chain::Base,
-            Chain::Avalanche,
-        ] {
+        let all = [
+            Chain::Ethereum, Chain::Bsc, Chain::Polygon, Chain::Arbitrum,
+            Chain::Optimism, Chain::Base, Chain::Avalanche,
+            Chain::Bitcoin, Chain::Litecoin, Chain::Dogecoin,
+            Chain::Solana, Chain::Ton,
+        ];
+        for chain in all {
             if let Some(rpc_urls) = settings.rpc_urls_for(chain) {
                 if !rpc_urls.is_empty() {
                     map.insert(chain, ChainSettings {
@@ -59,17 +54,20 @@ impl ProviderFactory {
     }
 
     pub fn create(&self, chain: Chain) -> Result<Arc<dyn ChainTraits>> {
-        let settings = self
-            .settings
+        let settings = self.settings
             .get(&chain)
             .ok_or_else(|| CoreError::ChainNotSupported(chain.as_str().to_string()))?
             .clone();
 
         match chain.chain_type() {
             ChainType::Evm => Ok(Arc::new(EvmProvider::new(chain, settings))),
-            ChainType::Utxo => Err(CoreError::NotImplemented("UTXO provider (Phase 1.2)")),
+            ChainType::Utxo => Ok(Arc::new(BitcoinProvider::new(chain, settings))),
+            ChainType::Other => match chain {
+                Chain::Solana => Ok(Arc::new(SolanaProvider::new(chain, settings))),
+                Chain::Ton => Ok(Arc::new(TonProvider::new(chain, settings))),
+                _ => Err(CoreError::NotImplemented("Other-chain provider")),
+            },
             ChainType::Cosmos => Err(CoreError::NotImplemented("Cosmos provider (Phase 1.3)")),
-            ChainType::Other => Err(CoreError::NotImplemented("Other-chain provider (Phase 1.4)")),
         }
     }
 }

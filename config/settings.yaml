@@ -43,3 +43,16 @@ chains:
     rpc:
       - https://avalanche-c-chain-rpc.publicnode.com
       - https://api.avax.network/ext/bc/C/rpc
+
+  bitcoin:
+    rpc:
+      - https://blockstream.info/api
+      - https://mempool.space/api
+
+  solana:
+    rpc:
+      - https://api.mainnet-beta.solana.com
+
+  ton:
+    rpc:
+      - https://toncenter.com/api/v2

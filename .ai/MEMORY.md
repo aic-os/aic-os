@@ -283,3 +283,27 @@ text
   - Между чтением timestamp и выполнением tx проходит >=1 блок -- всегда оставлять буфер (>=1h для MIN_LOCK=1h).
 - Всего тестов: 53 contracts + 72 core = 125.
 - **Следующее (Block D):** мультичейн в `aic-core` -- провайдеры для Bitcoin (UTXO), Solana (Other), TON (Other).
+
+### 2026-11-09 -- Сессия #20 (Block D: мультичейн BTC + SOL + TON)
+- **ВЕХА: кошелёк читает балансы из Bitcoin, Solana, TON с реальных mainnet.**
+- Новые провайдеры в `aic-core`:
+  - `BitcoinProvider` -- Blockstream Esplora API (fallback: mempool.space), `chain_stats.funded_txo_sum - spent_txo_sum`.
+  - `SolanaProvider` -- JSON-RPC `getBalance`, base58-адрес (32..44 символа).
+  - `TonProvider` -- toncenter `getAddressBalance`, нанотоны как u128.
+- `ProviderFactory::from_settings` теперь регистрирует BTC, LTC, DOGE (UTXO), SOL, TON (Other).
+- `ProviderFactory::create`:
+  - `ChainType::Utxo` -> `BitcoinProvider` (для всех UTXO-сетей).
+  - `ChainType::Other`: `Solana` -> `SolanaProvider`, `Ton` -> `TonProvider`.
+- `config/settings.yaml` расширен: `bitcoin` (blockstream + mempool.space fallback), `solana` (public mainnet RPC), `ton` (toncenter).
+- **Живые балансы (mainnet):**
+  - BTC `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa` (genesis Satoshi) = 57.70904748 BTC
+  - SOL `7cVfgArCheMR6Cs4t6vz5rfnqd56vZq4ndaBrY5xkxXy` = 0.147298879 SOL
+  - TON `EQDk2...` = 0.114061498 TON
+- **73 теста зелёные** (72 + 1 тест про Bitcoin provider).
+- **Уроки:**
+  - При добавлении сетей в `settings.yaml` -- проверять тест `settings_unknown_chain_returns_none` (там должен быть реально unknown chain, теперь CosmosHub).
+- **Следующее (варианты):**
+  - A) Дальше провайдеры: TRON, SUI, APTOS, XRP.
+  - B) CoinGecko integration -- курсы всех монет к USD/RUB (фишка из исходной задумки).
+  - C) Отправка BTC/SOL (подпись + broadcast) -- самый сложный шаг.
+  - D) AIC Chain scaffold -- `packages/node` на Rust (Фаза 2).

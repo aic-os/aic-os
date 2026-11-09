@@ -48,7 +48,7 @@ fn settings_loads_from_yaml() {
 #[test]
 fn settings_unknown_chain_returns_none() {
     let s = Settings::from_yaml(settings_path()).expect("load settings.yaml");
-    assert_eq!(s.rpc_urls_for(Chain::Solana), None);
+    assert_eq!(s.rpc_urls_for(Chain::CosmosHub), None);
 }
 
 #[test]
@@ -66,3 +66,4 @@ chains:
     assert_eq!(rpc.len(), 2);
     assert_eq!(rpc[0], "https://a.example");
 }
+

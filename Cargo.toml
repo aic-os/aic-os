@@ -26,3 +26,5 @@ sha3 = "0.10"
 hex = "0.4"
 rlp = "0.5"
 primitive-types = { version = "0.12", features = ["rlp"] }
+bs58 = "0.5"
+base64 = "0.22"
