@@ -113,3 +113,14 @@ text
 - 12 новых тестов, включая ОФИЦИАЛЬНЫЙ BIP-39 test vector: `to_seed("TREZOR")` == hex из spec.
 - Всего тестов в проекте: **26** (3 evm + 5 factory + 6 settings + 12 mnemonic).
 - **Следующее:** Block B -- secp256k1 + Ethereum адрес (BIP-32 derivation m/44'/60'/0'/0/i, EIP-55 checksum).
+
+### 2026-11-09 -- Сессия #8 (Block B: secp256k1 + ETH-адрес)
+- `wallet::EthAccount` + `derive_account(mnemonic, index)`.
+- Путь: `m/44'/60'/0'/0/{index}` (BIP-44, стандарт MetaMask).
+- Приватный ключ zeroized на Drop.
+- EIP-55 checksum реализован вручную (Keccak256 + mixed-case по нибблам хеша).
+- **8 новых тестов, все зелёные, включая:**
+  - Hardhat test mnemonic -- адрес и privkey совпадают с известным вектором (`0xf39Fd...`).
+  - 3 официальных EIP-55 spec vector.
+- Всего в проекте: **34 теста**.
+- **Следующее:** Block C -- подпись ETH-транзакции (RLP-encode + EIP-155 chain_id) → broadcast на mainnet.
