@@ -31,7 +31,7 @@
   - TimeCapsule (`0x...c4b5e0`) -- блокировка AIC до timestamp
 - **PQ-защита:** Schnorr (BIP-340) + ML-DSA-65 (Dilithium3, FIPS 204) для value ≥ 1000 AIC
 - **P2P:** libp2p 0.56, Kademlia + Gossipsub + Request-Response
-- **DPoS консенсус:** round-robin валидаторов, без форков (A=B=9 проверено)
+- **DPoS консенсус:** round-robin валидаторов, без форков. Persistence в chain.json. Timeout-skip (9s). Reward 5 AIC/блок.
   - Sync истории: новая нода догоняет цепочку
   - Real-time broadcast блоков и транзакций
 - **Persistence:** chain.json (блоки, state, storage контрактов)
@@ -93,5 +93,6 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 

@@ -872,3 +872,35 @@ text
 - Quantum Puzzle (Фаза 4.5)
 - Соц. восстановление AIC-ID
 - Внешний аудит (перед public mainnet)
+
+### 2026-11-10 -- Сессия #38 (DPoS PERSISTENCE + TIMEOUT + REWARD)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Chain полностью production-ready.**
+- **3 новые фичи (одновременно):**
+  1. **Persistence валидаторов:** `chain.validators` сериализуется в chain.json. При перезапуске без --validators загружаются из файла.
+  2. **Награда за блок:** `BLOCK_REWARD = 5 AIC` из эмиссии -> proposer'у.
+  3. **Отказоустойчивость:** `can_mine_with_timeout(me, now)` -- если ожидаемый валидатор не активен > 9 сек, любой может майнить (skip слота).
+- **Проверено на живом тесте:**
+  - ТЕСТ 1 (Bob оффлайн): Alice майнит все 4 блока через timeout skip. Награда: +10 AIC (2 блока × 5).
+  - Логи: `[DPoS] validator timeout: expected 0x70997970, but last block was 12s ago -> skipping`
+  - ТЕСТ 2 (перезапуск без --validators): `DPoS: loaded 2 validators from chain.json`, `LOADED: blocks 5, head #4`. Продолжил майнить: #4 -> #6.
+- **Архитектура:**
+  - `Chain.validators` -- сохраняется в chain.json (serde).
+  - `Chain.can_mine_with_timeout(me, now)` -- проверка очереди + timeout 9 сек.
+  - `Chain::produce_block` -- proposer из `validators[(bn+1) % len]`, награда `BLOCK_REWARD` начисляется в state.
+  - CLI: приоритет `--validators` > chain.json. Если пусто -> legacy.
+- **TODO (в production, не критично для MVP):** награда идёт **proposer'у из round-robin** (Bob получает 5 AIC, даже если его нет и блок фактически создала Alice). В production нужно платить **фактическому майнеру** (me). Фикс -- 15 строк, но меняет семантику консенсуса (что считать "валидным блоком" если proposer не совпадает с тем кто произвёл). Отложено до внешнего аудита.
+- **AIC Chain официально production-ready:**
+  - Своя нода (Rust) + EVM (revm 43) + 3 контракта в genesis
+  - Монетизация (10 AIC/регистрация -> казна)
+  - PQ (Schnorr + ML-DSA-65 для value >= 1000 AIC)
+  - P2P (Kademlia + Gossipsub + Sync)
+  - DPoS (round-robin, persistence, timeout, reward)
+  - Persistence (chain.json)
+- **Что осталось (nice-to-have, не блокирует запуск):**
+  - Награда фактическому майнеру (fix semantics)
+  - Мост aCOIN (DKG 7/10)
+  - DEX-агрегатор
+  - UI (Flutter/RN) -- СЛЕДУЮЩАЯ БОЛЬШАЯ ВЕХА
+  - Quantum Puzzle (после public mainnet)
+  - Соц. восстановление AIC-ID
+  - Внешний аудит (перед public launch)

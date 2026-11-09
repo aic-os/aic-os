@@ -84,48 +84,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("P2P: port {}", args.p2p_port);
     tracing::info!("Mining: {}", if args.no_mine { "disabled" } else { "enabled" });
 
-    // === Chain: создаём/загружаем ОДИН РАЗ ===
-    let alloc = build_alloc(args.chain_id);
-    std::fs::create_dir_all("data").ok();
-    let chain_path = std::path::PathBuf::from("data").join("chain.json");
-    let chain = chain::init_or_genesis(args.chain_id, &alloc, &chain_path)?;
-    let chain_arc = Arc::new(RwLock::new(chain));
+    // === Парсим валидаторов ДО создания chain ===
+    let parsed_validators: Vec<[u8; 20]> = args.validators.iter().filter_map(|s| {
+        let clean = s.trim().trim_start_matches("0x");
+        if clean.len() != 40 { return None; }
+        hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
+            let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
+        } else { None })
+    }).collect();
 
-    // === DPoS: устанавливаем валидаторов ===
-    {
-        let mut c = chain_arc.write().unwrap();
-        c.validators = args.validators.iter().filter_map(|s| {
-            let clean = s.trim().trim_start_matches("0x");
-            if clean.len() != 40 { return None; }
-            hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
-                let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
-            } else { None })
-        }).collect();
-
-        let my_addr = {
-            let clean = args.my_address.trim().trim_start_matches("0x");
-            if clean.len() == 40 {
-                hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
-                    let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
-                } else { None })
-            } else { None }
-        };
-
-        if !c.validators.is_empty() {
-            tracing::info!("DPoS: {} validators, round-robin", c.validators.len());
-            for (i, v) in c.validators.iter().enumerate() {
-                tracing::info!("  [{}] 0x{}", i, hex::encode(v));
-            }
-            if let Some(me) = my_addr {
-                tracing::info!("My validator address: 0x{}", hex::encode(me));
-            }
-        } else {
-            tracing::warn!("DPoS: no validators configured, ALL nodes can mine (legacy mode)");
-        }
-    }
-
-    // Запоминаем my_address для block producer (через AppState)
-    let my_addr_for_state = {
+    let my_addr_parsed: Option<[u8; 20]> = {
         let clean = args.my_address.trim().trim_start_matches("0x");
         if clean.len() == 40 {
             hex::decode(clean).ok().and_then(|b| if b.len() == 20 {
@@ -134,6 +102,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else { None }
     };
 
+    // === Chain: создаём/загружаем ОДИН РАЗ ===
+    let alloc = build_alloc(args.chain_id);
+    std::fs::create_dir_all("data").ok();
+    let chain_path = std::path::PathBuf::from("data").join("chain.json");
+    let mut chain = chain::init_or_genesis(args.chain_id, &alloc, &chain_path)?;
+
+    // === DPoS: применяем валидаторов ===
+    if !parsed_validators.is_empty() {
+        // Приоритет: CLI --validators перезаписывает chain.validators
+        chain.validators = parsed_validators.clone();
+        chain.save(&chain_path)?;
+        tracing::info!("DPoS: {} validators (from CLI), round-robin", chain.validators.len());
+        for (i, v) in chain.validators.iter().enumerate() {
+            tracing::info!("  [{}] 0x{}", i, hex::encode(v));
+        }
+        if let Some(me) = my_addr_parsed {
+            tracing::info!("My validator address: 0x{}", hex::encode(me));
+        }
+    } else if !chain.validators.is_empty() {
+        // Из chain.json (после перезапуска)
+        tracing::info!("DPoS: loaded {} validators from chain.json", chain.validators.len());
+        for (i, v) in chain.validators.iter().enumerate() {
+            tracing::info!("  [{}] 0x{}", i, hex::encode(v));
+        }
+    } else {
+        tracing::warn!("DPoS: no validators, ALL nodes can mine (legacy mode)");
+    }
+
+    let chain_arc = Arc::new(RwLock::new(chain));
+    let my_addr_for_state = my_addr_parsed;
+
     // === P2P (получает shared chain) ===
     let p2p_handles = p2p::start_p2p(args.p2p_port, args.bootnodes, chain_arc.clone()).await?;
 
@@ -141,4 +140,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     rpc::run_rpc(&rpc_addr, args.chain_id, p2p_handles, args.no_mine, chain_arc, my_addr_for_state).await?;
     Ok(())
 }
+
 

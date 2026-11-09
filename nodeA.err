@@ -1,16 +1,6 @@
-[P2P] Connected to 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi
-[P2P] Requesting sync from 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi: from_block=1
-[P2P] peer connected: 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi
-[P2P] Sync request from 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi: from_block=1, max=100
-[P2P] Sync response sent to 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi: 0 blocks
-[P2P] Sync response from 12D3KooWDawdVDikWDjYQPZqeAnhnZrnggzEdJvrHz3zt453KGCi: 0 blocks
-[P2P] Gossip: new block #1
-[chain] peer block #1 accepted (txs=0)
-[P2P] Gossip: new block #3
-[chain] peer block #3 accepted (txs=0)
-[P2P] Gossip: new block #5
-[chain] peer block #5 accepted (txs=0)
-[P2P] Gossip: new block #7
-[chain] peer block #7 accepted (txs=0)
-[P2P] Gossip: new block #9
-[chain] peer block #9 accepted (txs=0)
+[DPoS] validator timeout: expected 0x70997970, but last block was 28263366s ago -> skipping
+[produce_block] block #1 proposer=0x70997970 reward=5 AIC
+[produce_block] block #2 proposer=0xf39fd6e5 reward=5 AIC
+[DPoS] validator timeout: expected 0x70997970, but last block was 12s ago -> skipping
+[produce_block] block #3 proposer=0x70997970 reward=5 AIC
+[produce_block] block #4 proposer=0xf39fd6e5 reward=5 AIC

@@ -104,14 +104,14 @@ let p2p_tx = p2p_handles.command_tx.clone();
         loop {
             ticker.tick().await;
 
-            // DPoS: проверяем, наша ли очередь
+            // DPoS: проверяем, наша ли очередь (с таймаутом для отказоустойчивости)
             if let Some(me) = my_addr {
                 let chain_guard = producer_state.chain.read().unwrap();
-                if !chain_guard.can_mine(&me) {
-                    let next = chain_guard.next_validator().map(|v| hex::encode(&v[..4])).unwrap_or_default();
+                if !chain_guard.can_mine_with_timeout(&me, now_unix()) {
                     drop(chain_guard);
-                    continue; // ждём, пока следующий валидатор создаст блок
+                    continue;
                 }
+                drop(chain_guard);
             }
 
             let txs = producer_state.mempool.drain(100).await;
@@ -311,6 +311,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 

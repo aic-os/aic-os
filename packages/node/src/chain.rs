@@ -17,6 +17,7 @@ pub const GENESIS_TIMESTAMP: u64 = 1_766_000_000;
 pub const DEFAULT_BLOCK_TIME_SECS: u64 = 3;
 pub const BLOCK_GAS_LIMIT: u64 = 30_000_000;
 pub const BASE_TX_GAS: u64 = 21_000;
+pub const BLOCK_REWARD: u128 = 5_000_000_000_000_000_000; // 5 AIC за блок
 
 pub const TREASURY_ADDR: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0F];
 
@@ -233,7 +234,21 @@ impl Chain {
         let mut applied = Vec::new();
         if !txs.is_empty() {
             eprintln!("[produce_block] received {} tx from mempool", txs.len());
-        }for tx in txs {
+        }
+
+        // DPoS: определяем proposer'а (кто майнит этот блок)
+        let next_bn = self.block_number() + 1;
+        let proposer: [u8; 20] = if self.validators.is_empty() {
+            [0xF0; 20] // legacy
+        } else {
+            let idx = (next_bn as usize) % self.validators.len();
+            self.validators[idx]
+        };
+
+        // Награда за блок из эмиссии: 5 AIC
+        self.state.credit(proposer, BLOCK_REWARD);
+        eprintln!("[produce_block] block #{} proposer=0x{} reward=5 AIC",
+            next_bn, hex::encode(&proposer[..4]));for tx in txs {
             if gas_used + 21_000 > BLOCK_GAS_LIMIT { break; }
 
             let tx_hash = tx.hash();
@@ -280,7 +295,7 @@ impl Chain {
             tx_root,
             gas_used,
             gas_limit: BLOCK_GAS_LIMIT,
-            proposer: [0xF0; 20],
+            proposer,
             extra_data: vec![],
         };
 
@@ -315,13 +330,24 @@ impl Chain {
 
     /// Может ли адрес `me` майнить следующий блок?
     /// Правило: блок #N майнит validators[N % len].
-    pub fn can_mine(&self, me: &[u8; 20]) -> bool {
+    /// Таймаут: если следующий валидатор не активен (last block > 9 сек), пропускаем его.
+    pub fn can_mine_with_timeout(&self, me: &[u8; 20], now: u64) -> bool {
         if self.validators.is_empty() {
-            return true; // нет списка -- все могут (legacy mode)
+            return true; // нет списка -- все могут
         }
         let next_block = self.block_number() + 1;
         let idx = (next_block as usize) % self.validators.len();
-        &self.validators[idx] == me
+        if &self.validators[idx] == me {
+            return true; // наша очередь
+        }
+        // Таймаут: если последний блок был давно, разрешаем майнить любому валидатору
+        let last_ts = self.head().header.timestamp;
+        if now.saturating_sub(last_ts) > 9 {
+            eprintln!("[DPoS] validator timeout: expected 0x{}, but last block was {}s ago -> skipping",
+                hex::encode(&self.validators[idx][..4]), now - last_ts);
+            return true;
+        }
+        false
     }
 
     /// Валидатор, который должен майнить следующий блок.
@@ -375,5 +401,7 @@ pub fn init_or_genesis(
     println!("====================================\n");
     Ok(c)
 }
+
+
 
 
