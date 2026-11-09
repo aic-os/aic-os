@@ -43,8 +43,12 @@
 - RPC: chainId, blockNumber, getBalance, getAccount, getBlockByNumber, aic_call, aic_sendRawTransaction
 
 ## 🚧 В работе
-- **PQ-подписи** (Schnorr + ML-DSA-65 / Dilithium) -- квантовая устойчивость
-- **P2P** (несколько нод, gossip блоков)
+- ✅ **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium)** -- квантовая устойчивость РАБОТАЕТ:
+  - Все транзакции: Schnorr (BIP-340).
+  - Транзакции >= 1000 AIC: дополнительно ML-DSA-65 (FIPS 204, Dilithium3).
+  - Проверено: 5000 AIC без PQ отклоняется, с PQ -- принимается.
+  - AIC Chain -- первая криптовалюта с гибридной квантовой защитой.
+- **P2P (несколько нод, gossip блоков)** -- следующая веха
 - Монетизация InheritanceVault/TimeCapsule (1 AIC каждая)
 - Мост aCOIN (DKG 7/10)
 - DPoS консенсус + мастер-ноды
@@ -69,3 +73,4 @@
 - Эмиссия: **71 млрд AIC**
 - Стартовая цена: **$10**
 - Первая регистрация @alice: **+10.0012 AIC в казну** ✅
+

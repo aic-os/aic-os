@@ -50,7 +50,7 @@
 
 ### 🔵 Не начато
 - [ ] **P2P (несколько нод, gossip блоков)** -- следующая веха после PQ
-- [ ] **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium)** -- следующая веха
+- [x] **PQ-подписи (Schnorr + ML-DSA-65 / Dilithium) -- РАБОТАЕТ** (проверено: 5000 AIC без PQ отклоняется, с PQ -- принимается)
 - [ ] Мастер-ноды, DPoS консенсус
 - [ ] RandomX PoW (анти-51%)
 - [ ] Мост aCOIN (DKG 7/10, карантин)
@@ -101,3 +101,4 @@
 - PQ: Schnorr (все tx) + Dilithium (критичные операции)
 - Мессенджер: Matrix, VPN: WireGuard (sandboxed)
 - DEX: агрегатор (1inch/Jupiter/0x)
+

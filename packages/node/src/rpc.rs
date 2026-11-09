@@ -275,11 +275,45 @@ async fn handle_rpc(
         }
 
         "aic_sendRawTransaction" => {
+            // params: [raw_hex, pq_pubkey_hex?, pq_signature_hex?]
             let raw = req.params.get(0).and_then(|v| v.as_str());
+            let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
+            let pq_sig_hex = req.params.get(2).and_then(|v| v.as_str());
+
             match raw.and_then(Transaction::from_raw_hex) {
-                Some(tx) if tx.verify() => {
+                Some(mut tx) => {
+                    // Подключаем PQ-поля, если пришли
+                    if let Some(pk) = pq_pk_hex {
+                        if let Ok(bytes) = hex::decode(pk.trim_start_matches("0x")) {
+                            if !bytes.is_empty() { tx.pq_pubkey = Some(bytes); }
+                        }
+                    }
+                    if let Some(sig) = pq_sig_hex {
+                        if let Ok(bytes) = hex::decode(sig.trim_start_matches("0x")) {
+                            if !bytes.is_empty() { tx.pq_signature = Some(bytes); }
+                        }
+                    }
+
+                    if !tx.verify() {
+                        return Json(RpcResponse {
+                            jsonrpc: "2.0", id: req.id, result: None,
+                            error: Some(json!({"code": -32000, "message": "ECDSA signature invalid"})),
+                        });
+                    }
+                    if !tx.verify_pq() {
+                        return Json(RpcResponse {
+                            jsonrpc: "2.0", id: req.id, result: None,
+                            error: Some(json!({"code": -32000,
+                                "message": "PQ signature required for value >= 1000 AIC, or invalid Dilithium"})),
+                        });
+                    }
+
                     let hash = tx.hash();
+                    let value_aic = tx.value / 1_000_000_000_000_000_000;
+                    let has_pq = tx.pq_pubkey.is_some();
                     st.mempool.add(tx).await;
+                    eprintln!("[mempool] accepted tx hash=0x{} value={} AIC pq={}",
+                        hex::encode(&hash[..8]), value_aic, has_pq);
                     Some(json!(format!("0x{}", hex::encode(hash))))
                 }
                 _ => None,
@@ -302,6 +336,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 

@@ -1,0 +1,4 @@
+[mempool] accepted tx hash=0xba98ab947c6c6d56 value=500 AIC pq=false
+[produce_block] received 1 tx from mempool
+[mempool] accepted tx hash=0xde216f0b203aca9f value=5000 AIC pq=true
+[produce_block] received 1 tx from mempool

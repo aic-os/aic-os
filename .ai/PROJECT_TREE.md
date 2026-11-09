@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 00:07:11
+> Generated: 2026-11-10 00:30:54
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -199,8 +199,12 @@ aic-os/
 |   |   |   |-- register_aicid.rs
 |   |   |   |-- send_aic.rs
 |   |   |   |-- send_eth.rs
-|   |   |   \-- send_eth_1559.rs
+|   |   |   |-- send_eth_1559.rs
+|   |   |   \-- test_pq.rs
 |   |   |-- src
+|   |   |   |-- crypto
+|   |   |   |   |-- mod.rs
+|   |   |   |   \-- pq_crypto.rs
 |   |   |   |-- providers
 |   |   |   |   |-- algorand.rs
 |   |   |   |   |-- aptos.rs
@@ -306,6 +310,8 @@ aic-os/
 |-- node-persist1.log
 |-- node-persist2.err
 |-- node-persist2.log
+|-- node-pq.err
+|-- node-pq.log
 |-- node-reg.err
 |-- node-reg.log
 |-- node-test.err

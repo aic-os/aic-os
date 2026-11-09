@@ -1,6 +1,7 @@
 //! AIC-OS core library.
 
 pub mod chain;
+pub mod crypto;
 pub mod error;
 pub mod providers;
 pub mod settings;
@@ -20,3 +21,4 @@ pub use wallet::{
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
+

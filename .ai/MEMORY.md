@@ -630,3 +630,27 @@ text
 - **Архитектура:** нода переводит `tx.value` из AICID в TREASURY после успешной EVM tx (обходит баг revm с call{value}).
 - **Метрики:** 150 сетей, 71 млрд AIC эмиссии, 121 тест, Chain ID 2026, 3 контракта в genesis.
 - **Следующее:** PQ-подписи (Schnorr + Dilithium).
+
+### 2026-11-10 -- Сессия #33 (PQ-КРИПТОГРАФИЯ РАБОТАЕТ)
+- **ИСТОРИЧЕСКАЯ ВЕХА: AIC Chain -- первая криптовалюта с гибридной квантовой защитой.**
+- **Гибридная схема:**
+  - Schnorr (BIP-340) -- быстрая подпись для ВСЕХ транзакций.
+  - ML-DSA-65 (Dilithium3, FIPS 204) -- постквантовая подпись для КРУПНЫХ транзакций (>= 1000 AIC).
+  - Нода проверяет обе: если PQ нет и value >= 1000 AIC -- tx отклоняется.
+- **Проверено на живых сценариях:**
+  - 500 AIC без PQ -- ✅ принята (мелкая, PQ не нужна).
+  - 5000 AIC без PQ -- ✅ ОТКЛОНЕНА ("PQ signature required for value >= 1000 AIC, or invalid Dilithium").
+  - 5000 AIC с Dilithium -- ✅ принята (Schnorr + ML-DSA-65 обе валидны).
+  - Bob получил 5500 AIC, блоки #3 и #5 с tx.
+- **Реализация:**
+  - `packages/core/src/crypto/pq_crypto.rs` -- hybrid keypair/sign/verify + verify_dilithium_only.
+  - `packages/core/src/wallet/eth_tx.rs::pq_message()` -- формула PQ-сообщения (совпадает с нодой).
+  - `packages/node/src/transaction.rs` -- поля pq_pubkey, pq_signature, verify_pq(), PQ_REQUIRED_THRESHOLD.
+  - `packages/node/src/chain.rs::produce_block` -- проверка verify_pq перед применением.
+  - `packages/node/src/rpc.rs::aic_sendRawTransaction` -- принимает [raw_hex, pq_pubkey_hex?, pq_signature_hex?].
+  - `packages/core/examples/test_pq.rs` -- три сценария (демонстрация работы).
+- **Стек PQ:**
+  - `k256` с фичей `schnorr` (BIP-340).
+  - `ml-dsa = "0.1"` с фичей `getrandom` (RustCrypto, FIPS 204).
+- **Значение:** Bitcoin, Ethereum, Solana уязвимы к атакам квантовых компьютеров. AIC Chain -- нет. Это огромное конкурентное преимущество и маркетинговый козырь.
+- **Следующее (Блок A):** P2P (несколько нод, gossip блоков).

@@ -85,6 +85,26 @@ impl LegacyTransaction {
         st.append(&s);
         st.out().to_vec()
     }
+
+    /// PQ-сообщение для Dilithium-подписи.
+    /// Должно совпадать с формулой в ноде (aic-node/src/transaction.rs::pq_message).
+    /// keccak256(rlp([b"AIC-PQ-v1", chain_id, nonce, from, to, value, data]))
+    pub fn pq_message(&self, from: [u8; 20]) -> [u8; 32] {
+        use sha3::{Digest, Keccak256};
+        let mut stream = RlpStream::new_list(7);
+        stream.append(&b"AIC-PQ-v1".as_slice());
+        stream.append(&self.chain_id);
+        stream.append(&self.nonce);
+        stream.append(&from.as_slice());
+        stream.append(&self.to.as_bytes());
+        let mut v = [0u8; 32];
+        self.value.to_big_endian(&mut v);
+        let start = v.iter().position(|&b| b != 0).unwrap_or(32);
+        let v_trim: &[u8] = &v[start..];
+        stream.append(&v_trim);
+        stream.append(&self.data);
+        Keccak256::digest(&stream.out()).into()
+    }
 }
 
 impl SignedTransaction {
@@ -99,3 +119,5 @@ impl SignedTransaction {
         format!("0x{}", hex::encode(self.hash))
     }
 }
+
+

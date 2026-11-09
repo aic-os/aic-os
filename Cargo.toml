@@ -11,6 +11,7 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
+ml-dsa = { version = "0.1", features = ["getrandom"] }
 aic-core = { path = "packages/core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -30,5 +31,10 @@ rlp = "0.5"
 primitive-types = { version = "0.12", features = ["rlp"] }
 bs58 = "0.5"
 base64 = "0.22"
+
+
+
+
+
 
 
