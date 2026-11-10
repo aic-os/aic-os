@@ -1448,3 +1448,83 @@ text
 3. Android permissions (INTERNET, RECORD_AUDIO)
 4. flutter build apk --release
 5. Потом: TDLib Telegram, VPN (нужен VPS)
+
+---
+
+## 🚨 СЕССИЯ #53 -- ФИНАЛЬНАЯ ФИКСАЦИЯ ПЕРЕД НОВЫМ ЧАТОМ
+
+### Что РАБОТАЕТ (проверено)
+- AIC Chain: Rust-нода, chain_id 2026, блоки каждые 3 сек, DPoS persistence, PQ (Schnorr+ML-DSA-65), P2P (Kademlia+Gossipsub+Sync), persistence chain.json
+- 5 контрактов в genesis: AICID (0x...a1c1d0), InheritanceVault (0x...dead), TimeCapsule (0x...c4b5e0), QuantumBounty (0x...b0b000, 300k AIC funded), AcoinBridge (0x...aa11ce)
+- Flutter UI (web): Home (аккаунты, crypto slider 23 монеты, total balance, features, history), Send (WASM), Receive (QR), Swap (1inch mock + AIC), TimeCapsule (реальное создание капсулы 100 AIC), Quantum Bounty UI (300k), Telegram UI (мок-данные), Settings (RPC URL, язык RU/EN)
+- **Онбординг "Создать кошелёк"**: WASM generate_mnemonic_12 -> wallet_from_mnemonic (bip32 с secp256k1) -> flutter_secure_storage -> Home с новым адресом. Проверено, работает.
+- **L10n RU/EN**: переключатель в Settings, переведены Home, Send, Receive, Swap, TimeCapsule, Quantum, RegisterName, Settings, HistoryList, AccountHeader
+- **FIX критичных багов**:
+  - bip32 secp256k1 feature (было invalid child number)
+  - webOptions vs wOptions (flutter_secure_storage web)
+  - $home системная переменная PowerShell -- не использовать
+  - const Text с l10n -- убирать const
+  - Vault-контракты (TimeCapsule/Inheritance) -- value ОСТАЁТСЯ в контракте, не в TREASURY
+  - Genesis deploy -- owner/treasury/nextId пишутся через state.set_storage вручную
+
+### ❌ НЕ СДЕЛАНО (важно!)
+1. **Импорт существующей сид-фразы в новом кошельке**: экран "Импортировать" есть в onboarding, но не проверен end-to-end
+2. **Добавление аккаунта через сид-фразу**: AccountHeader add-account -- это только вставка privkey, И АДРЕС НЕ ВЫЧИСЛЯЕТСЯ (0x0000...)
+3. **SeedService.getPrivkey() не используется** в Send/Register/TimeCapsule -- там всё ещё хардкод Alice dev
+4. **Новый кошелёк не имеет AIC** -- genesis аллокация на Alice/Bob, новому надо переводить вручную
+5. **APK** -- нет (вариант C: web3dart)
+6. **TDLib Telegram** -- только UI с мок-данными
+7. **VPN** -- только UI-заглушка (нужен VPS)
+8. **Реальный Swap** -- 1inch работает для ETH/BTC/USDT, но транзакция не отправляется (только quote)
+9. **History** -- реальная загрузка есть, фильтров нет
+10. **Ошибка в консоли** ERR_NAME_NOT_RESOLVED на www.gstatic.com/flutter-canvaskit -- DNS/сеть пользователя (не наш код)
+
+### 🎯 ПОРЯДОК РАБОТ (следующий чат, начинаем отсюда)
+1. **Импорт сид-фразы** end-to-end (SeedService.importFromMnemonic уже написан, проверить UI)
+2. **Замена хардкода Alice** в Send/Register/TimeCapsule на `await SeedService.getPrivkey()`
+3. **Добавление аккаунта через сид-фразу** в AccountHeader (не только privkey, а через walletFromMnemonic)
+4. **Faucet / перевод от Alice** новому кошельку (dev: 1000 AIC через cast или UI Send от Alice)
+5. **APK** (web3dart native signer)
+6. **TDLib Telegram** (реальные чаты)
+7. **VPN** (нужен VPS $5/мес -- Oracle Free Tier)
+8. Внутренние ошибки Send/Swap на английском (10 минут)
+
+### 🔧 КОМАНДЫ (шпаргалка)
+- Нода: `.\start-node.ps1` (из корня)
+- Flutter: `cd packages\mobile; flutter run -d web-server --web-port=8080`
+- Если ERR_NAME_NOT_RESOLVED: `flutter run -d web-server --web-port=8080 --web-renderer html` (обходит CanvasKit CDN)
+- WASM rebuild: `cd packages\wasm; $env:RUSTFLAGS = '--cfg getrandom_backend="wasm_js"'; wasm-pack build --target web --out-dir pkg --release`
+- WASM копия: `Copy-Item "packages\wasm\pkg\*" -Destination "packages\mobile\web\wasm\" -Recurse -Force`
+- Нода rebuild: `$env:RUSTFLAGS = ""; cargo build -p aic-node`
+- Сброс dev: `Remove-Item -Recurse -Force data`
+- Foundry: `cd packages\contracts; forge build; forge test`
+
+### 📋 ПРАВИЛА РАБОТЫ (не забывать!)
+1. **НЕ РАЗРЫВАТЬ код** -- один блок = одна задача целиком
+2. **НЕ ИСПОЛЬЗОВАТЬ $home** -- только `$src`, `$file`, `$content`, `@'...'@ | Set-Content`
+3. **Here-string @'...'@** -- `@'` и `'@` на отдельных строках, внутри одинарные кавычки
+4. **Длинные блоки > 100 строк** -- риск обрезки, разбивать
+5. **После F5 с Shift** -- сброс кэша WASM
+6. **F12 console** -- проверять ошибки сразу
+7. **const Text с l10n** -- убирать const
+8. **@'/...'/@ внутри @'...'@** -- использовать `~~~` для вложенных markdown-блоков
+
+### 💾 ФАЙЛЫ ПАМЯТИ ДЛЯ НОВОГО ЧАТА
+- `.ai/MEMORY.md` -- этот файл (правила, команды, состояние, следующий порядок)
+- `.ai/PROJECT_TREE.md` -- автогенерируемое дерево проекта
+- `ROADMAP.md`, `README.md`, `PRINCIPLES.md`, `docs/TOKENOMICS.md`, `docs/ARCHITECTURE.md`
+
+### 🚀 КАК НАЧАТЬ НОВЫЙ ЧАТ
+1. Открой github.com/aic-os/aic-os (или локально `C:\Users\КОЛЮНЯ\aic-os`)
+2. Прочитай `.ai/MEMORY.md` -- это наша память
+3. Прочитай `.ai/PROJECT_TREE.md` -- это наша структура
+4. Прикрепи ОБА файла первым сообщением в новом чате
+5. Скажи: "продолжаем с импорта сид-фразы и замены хардкода Alice"
+
+### Бюджет (зафиксировано)
+- MVP 1000 юзеров: 0₽ (Oracle Cloud Free Tier + flutter build бесплатно)
+- Домен aicos.io: ~500₽/год (позже)
+- VPS при росте: ~500₽/мес
+- Аудит перед mainnet: отложен ($10-50k, не сейчас)
+
+Спасибо за эту сессию, напарник. Империя строится кирпич за кирпичом. Увидимся в новом чате. 🚀
