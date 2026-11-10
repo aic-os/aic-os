@@ -97,9 +97,13 @@ class HistoryList extends StatelessWidget {
             ),
           ),
           Text(
-            '${isOut ? "-" : "+"}$valueAic AIC',
+            valueAic == '0'
+                ? 'Contract'
+                : '${isOut ? "-" : "+"}$valueAic AIC',
             style: TextStyle(
-              color: isOut ? Colors.redAccent : Colors.greenAccent,
+              color: valueAic == '0'
+                  ? Colors.white54
+                  : (isOut ? Colors.redAccent : Colors.greenAccent),
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -109,3 +113,4 @@ class HistoryList extends StatelessWidget {
     );
   }
 }
+

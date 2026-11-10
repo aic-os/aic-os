@@ -1261,3 +1261,21 @@ text
   - PowerShell $HOME -- системная переменная, НИКОГДА не использовать. Только @'...'@ | Set-Content.
   - Here-string @" должен быть на отдельной строке (после него не должно быть символов).
 - **Следующее:** APK (web3dart native signer, Android permissions, build).
+
+### 2026-11-10 -- Сессия #50 (Telegram UI в нашем дизайне)
+- **Экран Telegram в фирменном стиле AIC-OS:**
+  - Список чатов: Alice, Bob, AIC News (channel), Crypto Chat RU (group)
+  - Градиентные аватары, онлайн-индикаторы, счётчики непрочитанных, verified-галочки
+  - Тап на чат -> ChatDetailScreen
+- **ChatDetailScreen:**
+  - Пузыри сообщений (синие -- мои, тёмные -- чужие), сгруппированы по времени
+  - Шапка с именем, аватаром, "online" статусом
+  - Поле ввода с кнопкой отправки
+  - Эмодзи-панель: 16 эмодзи, вставляются в поле
+  - **Уникальная фишка AIC:** кнопка "Send AIC" под полем -> модалка "Send AIC to {name}" -> ввод суммы
+- **Интеграция:** Features -> Telegram -> TelegramScreen -> ChatDetailScreen
+- **Мок-данные** (реальный TDLib -- следующая сессия)
+- **Следующее:**
+  1. TDLib (реальный Telegram): вход по номеру, чаты, сообщения -- 2-3 сессии
+  2. VPN (WireGuard + VLESS): сервер + flutter_vpnengine + on-chain подписка -- 2-3 сессии
+  3. APK вариант С (web3dart native signer) -- 2-3 сессии

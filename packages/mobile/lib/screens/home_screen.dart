@@ -16,6 +16,7 @@ import 'send_screen.dart';
 import 'receive_screen.dart';
 import 'register_name_screen.dart';
 import 'quantum_bounty_screen.dart';
+import 'telegram_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,22 +33,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final settings = context.watch<SettingsService>();
-    final wallet = context.read<WalletService>();
-    if (wallet.rpc.rpcUrl != settings.rpcUrl) {
-      wallet.updateRpcUrl(settings.rpcUrl);
-    }
 
-    final acc = context.watch<AccountService>().current;
-    if (acc != null && acc.address != _lastAddress) {
-      _lastAddress = acc.address;
-      wallet.updateAddress(acc.address);
-      _coinService = CoinService(
-        rpc: AicRpc(rpcUrl: settings.rpcUrl),
-        address: acc.address,
-      );
-      _coinService!.loadSelected().then((_) => _coinService!.refresh());
-    }
+    // Откладываем notifyListeners до post-frame, чтобы избежать
+    // "setState/markNeedsBuild called during build"
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final settings = context.read<SettingsService>();
+      final wallet = context.read<WalletService>();
+      if (wallet.rpc.rpcUrl != settings.rpcUrl) {
+        wallet.updateRpcUrl(settings.rpcUrl);
+      }
+
+      final acc = context.read<AccountService>().current;
+      if (acc != null && acc.address != _lastAddress) {
+        _lastAddress = acc.address;
+        wallet.updateAddress(acc.address);
+        setState(() {
+          _coinService = CoinService(
+            rpc: AicRpc(rpcUrl: settings.rpcUrl),
+            address: acc.address,
+          );
+        });
+        _coinService!.loadSelected().then((_) => _coinService!.refresh());
+      }
+    });
   }
 
   void _showFeature(String name) {
@@ -219,6 +229,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (f.id == 'quantum') {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const QuantumBountyScreen()));
+                  } else if (f.id == 'telegram') {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const TelegramScreen()));
                   } else if (f.id == 'aicid') {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const RegisterNameScreen()));
@@ -253,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (_, __) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: HistoryList(
-                      transactions: const [],
+                      transactions: _coinService!.transactions,
                     ),
                   ),
                 ),
@@ -389,3 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
+

@@ -69,6 +69,16 @@
 - 12/12 тестов Foundry
 - TODO: DKG (распределённый ключ) + bridge node (Rust)
 
+## 📱 AIC Wallet (полный UI)
+
+- **Home:** аккаунты, crypto slider, total balance, features, history
+- **Send:** с WASM-подписью (web) + Voice (APK)
+- **Receive:** QR-код
+- **AIC-ID:** регистрация @name за 10 AIC
+- **Quantum Bounty:** 300k AIC приз
+- **Telegram UI:** список чатов, переписка, эмодзи, **Send AIC в чате**
+- **Settings:** RPC URL, тема
+
 ## 🧩 Quantum Bounty (работает)
 
 - **Total Prize Pool: 300 000 AIC**
@@ -106,6 +116,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 

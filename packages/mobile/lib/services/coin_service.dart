@@ -6,9 +6,6 @@ import '../models/coin.dart';
 import '../models/coin_catalog.dart';
 import 'aic_rpc.dart';
 
-/// Список монет в кошельке. AIC -- реальный баланс из RPC.
-/// Остальные -- из каталога (баланс 0, пока не подключены к RPC).
-/// Пользователь может добавлять/удалять монеты из слайдера.
 class CoinService extends ChangeNotifier {
   static const _keySelected = 'aic_selected_coins_v1';
   static const _defaults = ['AIC', 'ETH', 'USDT', 'BTC'];
@@ -17,14 +14,15 @@ class CoinService extends ChangeNotifier {
   final String address;
 
   List<Coin> _coins = [];
+  List<Map<String, dynamic>> _transactions = [];
   bool _loading = false;
   String? _error;
   List<String> _selectedSymbols = List.from(_defaults);
 
-  CoinService({AicRpc? rpc, required this.address})
-      : rpc = rpc ?? AicRpc();
+  CoinService({AicRpc? rpc, required this.address}) : rpc = rpc ?? AicRpc();
 
   List<Coin> get coins => List.unmodifiable(_coins);
+  List<Map<String, dynamic>> get transactions => List.unmodifiable(_transactions);
   bool get loading => _loading;
   String? get error => _error;
   List<String> get selectedSymbols => List.unmodifiable(_selectedSymbols);
@@ -32,10 +30,8 @@ class CoinService extends ChangeNotifier {
   double get totalUsd => _coins.fold(0.0, (sum, c) => sum + c.valueUsd);
   double get totalRub => _coins.fold(0.0, (sum, c) => sum + c.valueRub);
 
-  /// Монеты, которых ещё нет в слайдере (для модалки каталога).
-  List<Coin> get availableToAdd {
-    return kCoinCatalog.where((c) => !_selectedSymbols.contains(c.symbol)).toList();
-  }
+  List<Coin> get availableToAdd =>
+      kCoinCatalog.where((c) => !_selectedSymbols.contains(c.symbol)).toList();
 
   Future<void> loadSelected() async {
     final prefs = await SharedPreferences.getInstance();
@@ -61,7 +57,6 @@ class CoinService extends ChangeNotifier {
   }
 
   Future<void> removeCoin(String symbol) async {
-    // AIC нельзя удалить
     if (symbol == 'AIC') return;
     _selectedSymbols.remove(symbol);
     await _saveSelected();
@@ -72,33 +67,33 @@ class CoinService extends ChangeNotifier {
     _loading = true;
     _error = null;
     notifyListeners();
-
     try {
       final addr = newAddress ?? address;
-      // Реальные балансы через RPC
+
+      // 1) Баланс AIC
       final aicWei = await rpc.getBalance(addr);
       final aic = AicRpc.weiToAic(aicWei);
 
+      // 2) Монеты из каталога
       final list = <Coin>[];
       for (final symbol in _selectedSymbols) {
-        final template = findCoin(symbol);
-        if (template == null) continue;
-
-        // Для AIC -- реальный баланс, для остальных пока 0
-        final balance = symbol == 'AIC' ? aic : template.balance;
-
+        final t = findCoin(symbol);
+        if (t == null) continue;
         list.add(Coin(
-          symbol: template.symbol,
-          name: template.name,
-          balance: balance,
-          usdPrice: template.usdPrice,
-          rubPrice: template.rubPrice,
-          decimals: template.decimals,
-          tokenAddress: template.tokenAddress,
-          color: template.color,
+          symbol: t.symbol,
+          name: t.name,
+          balance: symbol == 'AIC' ? aic : t.balance,
+          usdPrice: t.usdPrice,
+          rubPrice: t.rubPrice,
+          decimals: t.decimals,
+          tokenAddress: t.tokenAddress,
+          color: t.color,
         ));
       }
       _coins = list;
+
+      // 3) История транзакций
+      _transactions = await rpc.getAccountTransactions(addr, limit: 20);
     } catch (e) {
       _error = e.toString();
     } finally {
