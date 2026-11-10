@@ -126,7 +126,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
                           width: 20, height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text(
+                      : Text(
                           context.watch<L10nService>().t('register_10'),
                           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
@@ -147,4 +147,6 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
     );
   }
 }
+
+
 
