@@ -72,20 +72,17 @@
 - [ ] Faucet 0.1 AIC/сутки
 - [ ] Листинг aCOIN на внешних DEX (через наш мост)
 
-## 🔵 Фаза 4.5 — Quantum Puzzle (квантовая головоломка)
+## 🟢 Фаза 4.5 — Quantum Puzzle MVP (готово)
+- [x] **QuantumBounty.sol** -- контракт в AIC Chain (13/13 тестов)
+- [x] **Режим A (классический ECDSA):** solveClassic, 1M AIC
+- [x] **Режим B (PQ, multisig):** votePQSolved + claimPQ, 2M AIC
+- [x] fund(), setClassicChallenge, addValidator, setPQThreshold
+- [x] Replay protection, access control
+- [ ] Скрипт генерации challenge (Rust: создать ключ, уничтожить)
+- [ ] UI Quantum Bounty в кошельке (приз, дни, статус)
+- [ ] Deploy в mainnet (когда AIC Chain стабилен)
 
-**Публичная головоломка с наградой за разгадку -- доказательство квантовой устойчивости AIC Chain.**
-
-- [ ] **QuantumBounty.sol** -- смарт-контракт в AIC Chain (НЕ в чужих сетях)
-- [ ] **Режим A (наш вызов):** приз 1 000 000 AIC защищён классическим ECDSA (secp256k1). Кто первым восстановит приватный ключ (квантовым ПК) -- забирает.
-- [ ] **Режим B (защита AIC):** приз 2 000 000 AIC защищён PQ (Schnorr + ML-DSA-65). Кто взломает PQ -- забирает двойной приз. Через 10 лет без взлома -- приз в казну.
-- [ ] Публичный счётчик: "День N: 2M AIC в безопасности".
-- [ ] Еженедельные отчёты в Twitter/X.
-- [ ] Публичный вызов научному сообществу.
-- **Зачем:** маркетинг, доверие, PR-событие мирового масштаба, стимул для исследователей квантовых вычислений.
-- **Когда:** после DPoS консенсуса (нужен стабильный mainnet AIC Chain).
-
-## 📊 Метрики
+## 📊 Метрики## 📊 Метрики
 - **Сетей в кошельке:** 150 (EVM 80, UTXO 10, Cosmos 36, Other 24)
 - **Rust-тестов:** 74
 - **Solidity-тестов:** 51
@@ -112,6 +109,7 @@
 - **P2P:** libp2p (Kademlia + Gossipsub + Request-Response)
 - **Мессенджер:** Matrix (sandbox)
 - **VPN:** WireGuard (sandbox)
+
 
 
 

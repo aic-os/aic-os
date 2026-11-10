@@ -1098,3 +1098,30 @@ text
   - Верификация Ethereum-транзакции (Merkle proof, light client).
 - **Уроки:** ecrecover с префиксом "\x19Ethereum Signed Message:\n32" работает корректно; threshold считает уникальных подписантов (защита от дублирования).
 - **Следующее:** Quantum Puzzle (Фаза 4.5) -- головоломка с наградой за взлом.
+
+### 2026-11-10 -- Сессия #45 (QuantumBounty MVP)
+- **Готов контракт QuantumBounty.sol. 13/13 тестов зелёные.**
+- **Режим A (классический ECDSA, on-chain):**
+  - Owner публикует classicTarget (адрес скрытого ключа) + messageHash + reward (1M AIC).
+  - Любой вызывает solveClassic(signature) с подписью от classicTarget'а -- получает reward.
+  - ecrecover (встроен в EVM) -- работает для классического вызова.
+  - Приватный ключ classicTarget уничтожается после публикации -- никто не подпишет, кроме квантового ПК.
+- **Режим B (PQ, off-chain multisig):**
+  - Валидаторы голосуют votePQSolved(solver), когда PQ взломан (проверка off-chain).
+  - claimPQ() при pqVoteCount >= threshold -- solver получает 2M AIC.
+  - Техническое ограничение: ML-DSA-65 нельзя верифицировать on-chain (10M+ газа), поэтому multisig.
+- **Что работает:**
+  - fund() -- пополнение приза.
+  - setClassicChallenge / solveClassic -- классический вызов.
+  - addValidator / setPQThreshold / votePQSolved / claimPQ -- PQ-вызов.
+  - Replay protection: classicSolved / pqSolved.
+  - Access control: onlyOwner для admin, validators для vote.
+- **Тесты:**
+  - constructor, fund, admin (3)
+  - classic: solve_success, wrong_sig, double_solve, bad_sig_length, insufficient_pool (5)
+  - PQ: solve_with_threshold, non_validator, double_vote, claim_before_threshold, double_claim (5)
+- **Урок:** в тестах solver должен быть EOA (vm.prank), не тестовый контракт (у него нет receive()).
+- **Что НЕ в контракте (следующие шаги):**
+  - Скрипт для генерации challenge (Rust: создать ключ, опубликовать адрес, уничтожить ключ).
+  - UI-страница Quantum Bounty в кошельке (приз, дни, статус).
+- **Следующее:** внутренний аудит контрактов + Rust-кода, потом APK (вариант С).
