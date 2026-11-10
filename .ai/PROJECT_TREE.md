@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 12:49:46
+> Generated: 2026-11-10 12:54:31
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -15,6 +15,7 @@ aic-os/
 |-- docs
 |   |-- ARCHITECTURE.md
 |   |-- GLOSSARY.md
+|   |-- SECURITY_AUDIT.md
 |   \-- TOKENOMICS.md
 |-- packages
 |   |-- contracts

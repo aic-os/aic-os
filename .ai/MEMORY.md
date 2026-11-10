@@ -1125,3 +1125,25 @@ text
   - Скрипт для генерации challenge (Rust: создать ключ, опубликовать адрес, уничтожить ключ).
   - UI-страница Quantum Bounty в кошельке (приз, дни, статус).
 - **Следующее:** внутренний аудит контрактов + Rust-кода, потом APK (вариант С).
+
+### 2026-11-10 -- Сессия #45.5 (Внутренний аудит контрактов)
+- **Проведён внутренний аудит 5 контрактов** (AICID, InheritanceVault, TimeCapsule, AcoinBridge, QuantumBounty).
+- **Отчёт:** docs/SECURITY_AUDIT.md
+- **Итог:**
+  - 0 критичных, 0 высоких, 0 средних, 0 низких уязвимостей
+  - 5 информационных рекомендаций
+- **Проверено:**
+  - Reentrancy: все 5 контрактов соблюдают CEI (effects до interactions) -- безопасно
+  - Access control: onlyOwner / onlyNameOwner / onlyValidator на всех критичных функциях
+  - Integer overflow/underflow: Solidity 0.8.24 + нет unchecked
+  - Replay protection: EIP-155 chain_id, processedExternalTxs, classicSolved/pqSolved, claimed/cancelled
+  - tx.origin, delegatecall, selfdestruct, assembly -- не используются
+  - Квантовая защита: Schnorr + ML-DSA-65 (value >= 1000 AIC)
+- **Рекомендации перед public mainnet:**
+  1. ReentrancyGuard (OpenZeppelin) в InheritanceVault, TimeCapsule, QuantumBounty
+  2. Owner -> multisig (Gnosis Safe)
+  3. Commit-reveal для AIC-ID (защита от front-running)
+  4. Bug bounty (Immunefi)
+  5. Внешний аудит (CertiK/Trail of Bits) -- когда бюджет
+  6. Формальная верификация DPoS консенсуса
+- **Следующее:** APK вариант C (нативный Dart, web3dart/pointycastle для подписи вместо WASM).
