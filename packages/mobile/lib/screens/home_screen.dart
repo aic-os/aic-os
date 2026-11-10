@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../services/wallet_service.dart';
 import '../widgets/history_list.dart';
 import 'send_screen.dart';
+import 'register_name_screen.dart';
+import 'receive_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,6 +42,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   _networkInfo(wallet),
                   const SizedBox(height: 20),
                   _sendButton(),
+                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterNameScreen()),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2D4D),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF9C6AFF), width: 1),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Register AIC-ID (10 AIC)',
+                          style: TextStyle(
+                            color: Color(0xFF9C6AFF),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   HistoryList(transactions: wallet.transactions),
                 ],
@@ -78,6 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _balance(WalletService w) {
+    final usd = w.balanceUsd.toStringAsFixed(2);
+    final rub = w.balanceRub.toStringAsFixed(0);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -91,12 +121,25 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const Text('Balance', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 8),
-          Text(w.balanceAic, style: const TextStyle(
-            color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold,
-          )),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(w.balanceAic, style: const TextStyle(
+                color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold,
+              )),
+              const SizedBox(width: 8),
+              const Text('AIC', style: TextStyle(
+                color: Colors.white70, fontSize: 18,
+              )),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('\$' + usd + '  ·  RUB ' + rub,
+              style: const TextStyle(color: Colors.white70, fontSize: 15)),
           const SizedBox(height: 4),
-          Text('Chain ID ' + w.chainId.toString(),
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          Text('1 AIC = \$' + w.priceUsd.toStringAsFixed(2) + '  ·  RUB ' + w.priceRub.toStringAsFixed(0),
+              style: const TextStyle(color: Colors.white38, fontSize: 12)),
         ],
       ),
     );
@@ -134,29 +177,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _sendButton() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SendScreen()),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: const Color(0xFF4A9EFF),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: Text(
-            'Send AIC',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SendScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4A9EFF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Text(
+                  'Send',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ReceiveScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D2D4D),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF4A9EFF), width: 1),
+              ),
+              child: const Center(
+                child: Text(
+                  'Receive',
+                  style: TextStyle(
+                    color: Color(0xFF4A9EFF),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
+
+
