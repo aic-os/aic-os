@@ -1410,3 +1410,22 @@ text
 - Скрипты деплоя в чужие сети УДАЛЕНЫ
 
 Спасибо за сессию. 🚀
+
+### 2026-11-10 -- ФИКСАЦИЯ РАБОЧЕГО СОСТОЯНИЯ
+- **ОНБОРДИНГ С СИД-ФРАЗОЙ РАБОТАЕТ.** Проверено визуально:
+  - Экран "AIC-OS" с кнопками "Создать кошелёк" / "Импортировать"
+  - Создание → WASM генерирует 12 слов → flutter_secure_storage
+  - После "Я сохранил фразу" → Home с именем "Мой кошелёк", адресом 0xAA49...C009, баланс 0
+  - **FIX:** `bip32 = { version = "0.5", features = ["secp256k1"] }` в packages/wasm/Cargo.toml -- решило ошибку `invalid child number`
+  - **FIX:** `webOptions` вместо `wOptions` в flutter_secure_storage
+- **L10n RU/EN:** работает, переключение в Settings
+  - Переведены: Home, Send, Receive, Swap, TimeCapsule, Quantum, RegisterName, Settings, HistoryList, AccountHeader
+- **Что осталось перевести:** Telegram мок, внутренние ошибки Send/Swap
+- **Ошибка в консоли** `ERR_NAME_NOT_RESOLVED` на www.gstatic.com/flutter-canvaskit -- **DNS/сеть пользователя**, не наш код. Обход: `flutter run --web-renderer html` или другой интернет/VPN или сменить DNS на 1.1.1.1
+
+### Для нового чата: НАЧАТЬ С APK
+1. web3dart native signer (замена WASM для Android)
+2. Замена хардкода _alicePrivkey в Send/Register/TimeCapsule на SeedService.getPrivkey()
+3. Android permissions (INTERNET, RECORD_AUDIO)
+4. flutter build apk --release
+5. Потом: TDLib Telegram, VPN (нужен VPS)
