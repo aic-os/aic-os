@@ -3,17 +3,13 @@ import 'dart:js_interop_unsafe';
 import 'dart:async';
 import 'dart:convert';
 
-/// Мост между Dart и WASM. Все крипто-операции (подпись, работа с ключами) -- в WASM.
-/// Ключи НЕ покидают браузер.
 class WasmBridge {
   static bool _ready = false;
 
-  /// Дождаться загрузки WASM (index.html грузит его асинхронно).
   static Future<void> ensureReady() async {
     if (_ready) return;
     final completer = Completer<void>();
 
-    // Проверяем, не загружен ли уже
     final global = globalContext;
     final wasm = global['_aicWasm'];
     if (wasm != null && !wasm.isUndefinedOrNull) {
@@ -22,7 +18,6 @@ class WasmBridge {
       return;
     }
 
-    // Слушаем событие от index.html
     final listener = (JSAny? event) {
       if (!completer.isCompleted) {
         _ready = true;
@@ -36,7 +31,6 @@ class WasmBridge {
       listener,
     );
 
-    // Таймаут через 10 сек
     Future.delayed(const Duration(seconds: 10)).then((_) {
       if (!completer.isCompleted) {
         completer.completeError(Exception('WASM не загрузился за 10 сек'));
@@ -54,14 +48,12 @@ class WasmBridge {
     return w as JSObject;
   }
 
-  /// Сгенерировать 12-словную мнемонику.
   static Future<String> generateMnemonic12() async {
     await ensureReady();
     final result = _aic.callMethod('generate_mnemonic_12'.toJS);
     return (result as JSString).toDart;
   }
 
-  /// Восстановить кошелёк из мнемоники, получить адрес.
   static Future<Map<String, dynamic>> walletFromMnemonic(
     String mnemonic,
     int index,
@@ -77,7 +69,6 @@ class WasmBridge {
         : jsonEncode(result.dartify()));
   }
 
-  /// Адрес из приватного ключа.
   static Future<String> addressFromPrivkey(String privkeyHex) async {
     await ensureReady();
     final result = _aic.callMethod(
@@ -87,7 +78,6 @@ class WasmBridge {
     return (result as JSString).toDart;
   }
 
-  /// ABI-encode для register(string,address) в AICID.
   static Future<String> encodeAicidRegister(String name, String owner) async {
     await ensureReady();
     final result = _aic.callMethod(
@@ -98,7 +88,6 @@ class WasmBridge {
     return (result as JSString).toDart;
   }
 
-  /// ABI-encode для resolve(string).
   static Future<String> encodeResolveCall(String name) async {
     await ensureReady();
     final result = _aic.callMethod(
@@ -138,20 +127,14 @@ class WasmBridge {
     if (json is Map) {
       return Map<String, dynamic>.from(json);
     }
-    // serde-wasm-bindgen может вернуть объект -- конвертируем через JSON
     return Map<String, dynamic>.from(
       jsonDecode(jsonEncode(json)) as Map,
     );
   }
 
-  /// Версия WASM (для диагностики).
   static Future<String> version() async {
     await ensureReady();
     final result = _aic.callMethod('version'.toJS);
     return (result as JSString).toDart;
   }
 }
-
-
-
-

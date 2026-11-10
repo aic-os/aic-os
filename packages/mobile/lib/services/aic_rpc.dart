@@ -121,6 +121,17 @@ class AicRpc {
     final n = BigInt.parse(clean, radix: 16);
     return weiToAic(n);
   }
+  Future<List<Map<String, dynamic>>> timeCapsuleList(String address) async {
+    final result = await _call('aic_timeCapsuleList', [address]) as List<dynamic>;
+    return result.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<int> timeCapsuleNextId() async {
+    final result = await _call('aic_timeCapsuleNextId', []) as String;
+    final clean = result.replaceFirst('0x', '');
+    if (clean.isEmpty) return 0;
+    return int.parse(clean, radix: 16);
+  }
   static String weiToAic(BigInt wei, {int decimals = 18, int precision = 4}) {
     final divisor = BigInt.from(10).pow(decimals);
     final whole = wei ~/ divisor;
@@ -132,6 +143,7 @@ class AicRpc {
     return '$whole.$trimmed';
   }
 }
+
 
 
 

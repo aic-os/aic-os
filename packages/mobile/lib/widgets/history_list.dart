@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../l10n/l10n_service.dart';
 
 class HistoryList extends StatelessWidget {
   final List<Map<String, dynamic>> transactions;
@@ -7,6 +10,8 @@ class HistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.watch<L10nService>();
+
     if (transactions.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -14,10 +19,10 @@ class HistoryList extends StatelessWidget {
           color: const Color(0xFF1A1A2D),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'No transactions yet',
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+            l10n.t('no_transactions'),
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
         ),
       );
@@ -31,24 +36,24 @@ class HistoryList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              'History',
-              style: TextStyle(
+              l10n.t('history'),
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          ...transactions.map((tx) => _buildRow(tx)).toList(),
+          ...transactions.map((tx) => _buildRow(tx, l10n)).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildRow(Map<String, dynamic> tx) {
+  Widget _buildRow(Map<String, dynamic> tx, L10nService l10n) {
     final isOut = tx['direction'] == 'out';
     final valueAic = tx['valueAic'] as String? ?? '0';
     final blockNum = tx['blockNumber'] as int? ?? 0;
@@ -79,7 +84,7 @@ class HistoryList extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isOut ? 'Sent' : 'Received',
+                  isOut ? l10n.t('sent') : l10n.t('received'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -98,7 +103,7 @@ class HistoryList extends StatelessWidget {
           ),
           Text(
             valueAic == '0'
-                ? 'Contract'
+                ? l10n.t('contract_call')
                 : '${isOut ? "-" : "+"}$valueAic AIC',
             style: TextStyle(
               color: valueAic == '0'
@@ -113,4 +118,3 @@ class HistoryList extends StatelessWidget {
     );
   }
 }
-

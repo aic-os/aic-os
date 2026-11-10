@@ -146,6 +146,35 @@ let p2p_tx = p2p_handles.command_tx.clone();
     Ok(())
 }
 
+/// Read-only EVM call (eth_call equivalent).
+fn evm_read(
+    chain: &crate::chain::Chain,
+    chain_id: u64,
+    contract: [u8; 20],
+    calldata: Vec<u8>,
+) -> Option<Vec<u8>> {
+    let db = chain.state.to_inmemory();
+    let mut cfg: revm::context::CfgEnv<revm::primitives::hardfork::SpecId> = Default::default();
+    cfg.chain_id = chain_id;
+    let mut evm = Context::mainnet().with_db(db).with_cfg(cfg).build_mainnet();
+    let mut tx = TxEnv::default();
+    tx.caller = Address::from(TREASURY);
+    tx.gas_limit = 10_000_000;
+    tx.gas_price = 0;
+    tx.kind = TxKind::Call(Address::from(contract));
+    tx.value = U256::ZERO;
+    tx.data = Bytes::from(calldata);
+    tx.nonce = 0;
+    tx.chain_id = Some(chain_id);
+    match evm.transact(tx) {
+        Ok(res) => match res.result {
+            ExecutionResult::Success { output: Output::Call(b), .. } => Some(b.to_vec()),
+            _ => None,
+        },
+        Err(_) => None,
+    }
+}
+
 async fn handle_rpc(
     axum::extract::State(st): axum::extract::State<Arc<AppState>>,
     Json(req): Json<RpcRequest>,
@@ -455,6 +484,109 @@ async fn handle_rpc(
                 "totalPrizePool": total_pool_hex,
             }))
         }
+        "aic_timeCapsuleNextId" => {
+            use sha3::{Digest, Keccak256};
+            const C: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xC4,0xB5,0xE0];
+            let h = Keccak256::digest(b"nextId()");
+            let sel = [h[0], h[1], h[2], h[3]];
+            let chain_guard = st.chain.read().unwrap();
+            evm_read(&chain_guard, st.chain_id, C, sel.to_vec()).and_then(|out| {
+                if out.len() >= 32 {
+                    let mut b = [0u8; 32];
+                    b.copy_from_slice(&out[..32]);
+                    Some(json!(format!("0x{}", hex::encode(b))))
+                } else { None }
+            })
+        }
+
+        "aic_timeCapsuleGet" => {
+            use sha3::{Digest, Keccak256};
+            const C: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xC4,0xB5,0xE0];
+            let id = req.params.get(0).and_then(|v| v.as_u64()).unwrap_or(0);
+            let h = Keccak256::digest(b"capsules(uint256)");
+            let sel = [h[0], h[1], h[2], h[3]];
+            let mut cd = Vec::with_capacity(36);
+            cd.extend_from_slice(&sel);
+            let mut idb = [0u8; 32];
+            idb[24..32].copy_from_slice(&id.to_be_bytes());
+            cd.extend_from_slice(&idb);
+            let chain_guard = st.chain.read().unwrap();
+            match evm_read(&chain_guard, st.chain_id, C, cd) {
+                Some(out) if out.len() >= 192 => {
+                    let sender_hex = hex::encode(&out[12..32]);
+                    let recip_hex = hex::encode(&out[44..64]);
+                    let unlock_at = u64::from_be_bytes(out[88..96].try_into().unwrap_or([0u8; 8]));
+                    let balance_hex = hex::encode(&out[96..128]);
+                    let claimed = out[159] != 0;
+                    let cancelled = out[191] != 0;
+                    Some(json!({
+                        "id": id,
+                        "sender": format!("0x{}", sender_hex),
+                        "recipient": format!("0x{}", recip_hex),
+                        "unlockAt": unlock_at,
+                        "balance": format!("0x{}", balance_hex),
+                        "claimed": claimed,
+                        "cancelled": cancelled,
+                    }))
+                }
+                _ => None,
+            }
+        }
+
+        "aic_timeCapsuleList" => {
+            use sha3::{Digest, Keccak256};
+            const C: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xC4,0xB5,0xE0];
+            let me = req.params.get(0).and_then(|v| v.as_str()).and_then(parse_addr);
+            match me {
+                Some(me_addr) => {
+                    let me_hex = hex::encode(me_addr);
+                    let chain_guard = st.chain.read().unwrap();
+                    let h1 = Keccak256::digest(b"nextId()");
+                    let sel1 = [h1[0], h1[1], h1[2], h1[3]];
+                    let next_id = evm_read(&chain_guard, st.chain_id, C, sel1.to_vec())
+                        .and_then(|out| if out.len() >= 32 {
+                            let mut b = [0u8; 32]; b.copy_from_slice(&out[..32]); Some(b)
+                        } else { None })
+                        .map(|b| u64::from_be_bytes(b[24..32].try_into().unwrap_or([0u8; 8])))
+                        .unwrap_or(1);
+                    let h2 = Keccak256::digest(b"capsules(uint256)");
+                    let sel2 = [h2[0], h2[1], h2[2], h2[3]];
+                    let mut result: Vec<serde_json::Value> = Vec::new();
+                    let max_id = next_id.min(200);
+                    for id in 1..max_id {
+                        let mut cd = Vec::with_capacity(36);
+                        cd.extend_from_slice(&sel2);
+                        let mut idb = [0u8; 32];
+                        idb[24..32].copy_from_slice(&id.to_be_bytes());
+                        cd.extend_from_slice(&idb);
+                        if let Some(out) = evm_read(&chain_guard, st.chain_id, C, cd) {
+                            if out.len() >= 192 {
+                                let sender_hex = hex::encode(&out[12..32]);
+                                let recip_hex = hex::encode(&out[44..64]);
+                                if sender_hex == me_hex || recip_hex == me_hex {
+                                    let unlock_at = u64::from_be_bytes(out[88..96].try_into().unwrap_or([0u8; 8]));
+                                    let balance_hex = hex::encode(&out[96..128]);
+                                    let claimed = out[159] != 0;
+                                    let cancelled = out[191] != 0;
+                                    result.push(json!({
+                                        "id": id,
+                                        "sender": format!("0x{}", sender_hex),
+                                        "recipient": format!("0x{}", recip_hex),
+                                        "unlockAt": unlock_at,
+                                        "balance": format!("0x{}", balance_hex),
+                                        "claimed": claimed,
+                                        "cancelled": cancelled,
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                    result.reverse();
+                    Some(json!(result))
+                }
+                None => None,
+            }
+        }
         "aic_sendRawTransaction" | "eth_sendRawTransaction" => {
             let raw = req.params.get(0).and_then(|v| v.as_str());
             let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
@@ -515,6 +647,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 

@@ -3,19 +3,23 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../services/wallet_service.dart';
+import '../l10n/l10n_service.dart';
+import '../services/account_service.dart';
 
 class ReceiveScreen extends StatelessWidget {
   const ReceiveScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final address = context.watch<WalletService>().address;
+    final l10n = context.watch<L10nService>();
+    final acc = context.watch<AccountService>().current;
+    final address = acc?.address ?? '';
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0F),
-        title: const Text('Receive AIC'),
+        title: Text(l10n.t('receive_aic')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -35,17 +39,13 @@ class ReceiveScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            const Text(
-              'Your AIC address',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
-            ),
+            Text(l10n.t('your_address'),
+                style: const TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 8),
             SelectableText(
               address,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'monospace',
+                color: Colors.white, fontSize: 14, fontFamily: 'monospace',
               ),
               textAlign: TextAlign.center,
             ),
@@ -54,9 +54,9 @@ class ReceiveScreen extends StatelessWidget {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: address));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Address copied'),
-                    backgroundColor: Color(0xFF4A9EFF),
+                  SnackBar(
+                    content: Text(l10n.t('address_copied')),
+                    backgroundColor: const Color(0xFF4A9EFF),
                   ),
                 );
               },
@@ -66,13 +66,8 @@ class ReceiveScreen extends StatelessWidget {
                   color: const Color(0xFF4A9EFF),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Copy address',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(l10n.t('copy_address'),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

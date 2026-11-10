@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/wallet_service.dart';
 import '../services/wasm_bridge.dart';
+import '../l10n/l10n_service.dart';
 
 class RegisterNameScreen extends StatefulWidget {
   const RegisterNameScreen({super.key});
@@ -85,15 +86,15 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
       backgroundColor: const Color(0xFF0A0A0F),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0F),
-        title: const Text('Register AIC-ID'),
+        title: Text(context.watch<L10nService>().t('register_aicid')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Your name (without @):',
+            Text(
+              context.watch<L10nService>().t('your_name'),
               style: TextStyle(color: Colors.white70, fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -106,8 +107,8 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Cost: 10 AIC (goes to treasury)',
+            Text(
+              context.watch<L10nService>().t('cost_10_aic'),
               style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
             const SizedBox(height: 24),
@@ -126,7 +127,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Text(
-                          'Register (10 AIC)',
+                          context.watch<L10nService>().t('register_10'),
                           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -146,3 +147,4 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
     );
   }
 }
+

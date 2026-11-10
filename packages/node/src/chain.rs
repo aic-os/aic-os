@@ -210,18 +210,24 @@ impl Chain {
         let gas_fee = gas_price.saturating_mul(actual_gas as u128);
         self.state.credit(TREASURY_ADDR, gas_fee);
 
-        // ВАЖНО: если tx.value > 0 (регистрация @name), переводим в TREASURY.
-        // Контракт AICID просто принимает value на свой баланс, но по Принципу №1
-        // все комиссии идут в казну AIC-OS. Нода делает это на уровне state.
+        // Монетизация: fee-контракты (AICID, QuantumBounty) -> TREASURY.
+        // Vault-контракты (TimeCapsule, InheritanceVault) -- value ОСТАЁТСЯ в контракте
+        // (иначе claim невозможен).
         if success && tx.value > 0 {
             if let Some(to_addr) = tx.to {
-                // Списываем с контракта, начисляем в казну
-                let mut contract_acc = self.state.get_account(&to_addr);
-                if contract_acc.balance >= tx.value {
-                    contract_acc.balance = contract_acc.balance.saturating_sub(tx.value);
-                    self.state.set_account(to_addr, contract_acc);
-                    self.state.credit(TREASURY_ADDR, tx.value);
+                const TIMECAPSULE: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xC4,0xB5,0xE0];
+                const INHERITANCE: [u8; 20] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xDE,0xAD];
+
+                if to_addr != TIMECAPSULE && to_addr != INHERITANCE {
+                    // Fee-контракт: списываем с контракта, начисляем в казну
+                    let mut contract_acc = self.state.get_account(&to_addr);
+                    if contract_acc.balance >= tx.value {
+                        contract_acc.balance = contract_acc.balance.saturating_sub(tx.value);
+                        self.state.set_account(to_addr, contract_acc);
+                        self.state.credit(TREASURY_ADDR, tx.value);
+                    }
                 }
+                // Vault-контракт: value остаётся на контракте (не трогаем)
             }
         }
 
@@ -401,6 +407,7 @@ pub fn init_or_genesis(
     println!("====================================\n");
     Ok(c)
 }
+
 
 
 

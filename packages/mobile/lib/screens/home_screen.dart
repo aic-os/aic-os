@@ -7,6 +7,7 @@ import '../services/settings_service.dart';
 import '../services/wallet_service.dart';
 import '../services/coin_service.dart';
 import '../services/aic_rpc.dart';
+import '../l10n/l10n_service.dart';
 import '../widgets/account_header.dart';
 import '../widgets/crypto_slider.dart';
 import '../widgets/features_slider.dart';
@@ -16,8 +17,9 @@ import 'send_screen.dart';
 import 'receive_screen.dart';
 import 'register_name_screen.dart';
 import 'quantum_bounty_screen.dart';
-import 'telegram_screen.dart';
 import 'settings_screen.dart';
+import 'telegram_screen.dart';
+import 'time_capsule_screen.dart';
 import 'swap_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,18 +36,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // Откладываем notifyListeners до post-frame, чтобы избежать
-    // "setState/markNeedsBuild called during build"
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
       final settings = context.read<SettingsService>();
       final wallet = context.read<WalletService>();
       if (wallet.rpc.rpcUrl != settings.rpcUrl) {
         wallet.updateRpcUrl(settings.rpcUrl);
       }
-
       final acc = context.read<AccountService>().current;
       if (acc != null && acc.address != _lastAddress) {
         _lastAddress = acc.address;
@@ -62,9 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFeature(String name) {
+    final l10n = context.read<L10nService>();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$name -- coming soon'),
+        content: Text('$name -- ${l10n.t('coming_soon')}'),
         backgroundColor: const Color(0xFF4A9EFF),
       ),
     );
@@ -85,9 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showRemoveCoin(Coin coin) {
     if (_coinService == null) return;
+    final l10n = context.read<L10nService>();
     if (coin.symbol == 'AIC') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('AIC cannot be removed')),
+        SnackBar(content: Text(l10n.t('aic_cannot_remove'))),
       );
       return;
     }
@@ -95,23 +94,24 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2D),
-        title: Text('Remove ' + coin.symbol + '?',
+        title: Text('${l10n.t('remove_coin_q')} ${coin.symbol}?',
             style: const TextStyle(color: Colors.white)),
         content: const Text(
-          'Removed from slider (balance preserved on-chain).',
+          'Removed from slider. Balance preserved on-chain.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.t('cancel')),
           ),
           TextButton(
             onPressed: () {
               _coinService!.removeCoin(coin.symbol);
               Navigator.pop(ctx);
             },
-            child: const Text('Remove', style: TextStyle(color: Colors.redAccent)),
+            child: Text(l10n.t('remove_coin'),
+                style: const TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -132,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final acc = context.watch<AccountService>().current;
+    final l10n = context.watch<L10nService>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
@@ -170,13 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
               if (_coinService != null)
                 AnimatedBuilder(
                   animation: _coinService!,
-                  builder: (_, __) => _totalBalanceCard(_coinService!),
+                  builder: (_, __) => _totalBalanceCard(_coinService!, l10n),
                 ),
               const SizedBox(height: 24),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text('Features',
-                    style: TextStyle(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(l10n.t('features'),
+                    style: const TextStyle(
                       color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600,
                     )),
               ),
@@ -185,43 +186,43 @@ class _HomeScreenState extends State<HomeScreen> {
                 features: [
                   FeatureItem(
                     id: 'quantum',
-                    title: 'Quantum Bounty',
-                    subtitle: '300k AIC prize',
+                    title: l10n.t('feat_quantum'),
+                    subtitle: l10n.t('feat_quantum_sub'),
                     icon: Icons.emoji_events,
                     color: Colors.amber,
                   ),
                   FeatureItem(
                     id: 'aicid',
-                    title: 'AIC-ID',
-                    subtitle: 'Register @name',
+                    title: l10n.t('feat_aicid'),
+                    subtitle: l10n.t('feat_aicid_sub'),
                     icon: Icons.alternate_email,
                     color: const Color(0xFF9C6AFF),
                   ),
                   FeatureItem(
                     id: 'telegram',
-                    title: 'Telegram',
-                    subtitle: 'Built-in messenger',
+                    title: l10n.t('feat_telegram'),
+                    subtitle: l10n.t('feat_telegram_sub'),
                     icon: Icons.send,
                     color: const Color(0xFF29A9EB),
                   ),
                   FeatureItem(
                     id: 'vpn',
-                    title: 'VPN',
-                    subtitle: '1 AIC/month',
+                    title: l10n.t('feat_vpn'),
+                    subtitle: l10n.t('feat_vpn_sub'),
                     icon: Icons.shield,
                     color: const Color(0xFF4CAF50),
                   ),
                   FeatureItem(
                     id: 'capsule',
-                    title: 'TimeCapsule',
-                    subtitle: 'Lock AIC',
+                    title: l10n.t('feat_capsule'),
+                    subtitle: l10n.t('feat_capsule_sub'),
                     icon: Icons.lock_clock,
                     color: const Color(0xFF4A9EFF),
                   ),
                   FeatureItem(
                     id: 'inherit',
-                    title: 'Inheritance',
-                    subtitle: 'Dead man switch',
+                    title: l10n.t('feat_inherit'),
+                    subtitle: l10n.t('feat_inherit_sub'),
                     icon: Icons.family_restroom,
                     color: const Color(0xFFE91E63),
                   ),
@@ -230,12 +231,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (f.id == 'quantum') {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const QuantumBountyScreen()));
-                  } else if (f.id == 'telegram') {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const TelegramScreen()));
                   } else if (f.id == 'aicid') {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const RegisterNameScreen()));
+                  } else if (f.id == 'capsule') {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const TimeCapsuleScreen()));
+                  } else if (f.id == 'telegram') {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const TelegramScreen()));
                   } else {
                     _showFeature(f.title);
                   }
@@ -246,17 +250,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Expanded(child: _quickAction(Icons.arrow_upward, 'Send', () {
+                    Expanded(child: _quickAction(Icons.arrow_upward, l10n.t('send'), () {
                       Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const SendScreen()));
                     })),
                     const SizedBox(width: 10),
-                    Expanded(child: _quickAction(Icons.arrow_downward, 'Receive', () {
+                    Expanded(child: _quickAction(Icons.arrow_downward, l10n.t('receive'), () {
                       Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const ReceiveScreen()));
                     })),
                     const SizedBox(width: 10),
-                    Expanded(child: _quickAction(Icons.swap_horiz, 'Swap', () {
+                    Expanded(child: _quickAction(Icons.swap_horiz, l10n.t('swap'), () {
                       Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const SwapScreen()));
                     })),
@@ -281,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _totalBalanceCard(CoinService svc) {
+  Widget _totalBalanceCard(CoinService svc, L10nService l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
@@ -298,8 +302,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Total balance',
-                    style: TextStyle(color: Colors.white54, fontSize: 11)),
+                Text(l10n.t('total_balance'),
+                    style: const TextStyle(color: Colors.white54, fontSize: 11)),
                 const SizedBox(height: 2),
                 Text('\$' + svc.totalUsd.toStringAsFixed(2),
                     style: const TextStyle(
@@ -338,6 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _coinDetailSheet(Coin coin) {
+    final l10n = context.read<L10nService>();
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -359,17 +364,17 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _detailAction(Icons.arrow_upward, 'Send', () {
+                _detailAction(Icons.arrow_upward, l10n.t('send'), () {
                   Navigator.pop(context);
                   Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const SendScreen()));
                 }),
-                _detailAction(Icons.arrow_downward, 'Receive', () {
+                _detailAction(Icons.arrow_downward, l10n.t('receive'), () {
                   Navigator.pop(context);
                   Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const ReceiveScreen()));
                 }),
-                _detailAction(Icons.swap_horiz, 'Swap', () {
+                _detailAction(Icons.swap_horiz, l10n.t('swap'), () {
                   Navigator.pop(context);
                   Navigator.push(context,
                       MaterialPageRoute(builder: (_) => SwapScreen(
@@ -377,9 +382,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         initialTo: coin.symbol == 'AIC' ? 'ETH' : 'AIC',
                       )));
                 }),
-                _detailAction(Icons.show_chart, 'Trade', () {
+                _detailAction(Icons.show_chart, l10n.t('trade'), () {
                   Navigator.pop(context);
-                  _showFeature('Trade');
+                  _showFeature(l10n.t('trade'));
                 }),
               ],
             ),
@@ -410,7 +415,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
-
-

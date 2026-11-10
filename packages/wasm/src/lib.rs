@@ -278,5 +278,21 @@ pub fn sign_legacy_tx(
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
-
-
+#[wasm_bindgen]
+pub fn encode_timecapsule_create(recipient: &str, unlock_at: u64) -> Result<String, JsError> {
+    let sel = selector("create(address,uint64)");
+    let recip_clean = recipient.trim_start_matches("0x");
+    let recip_bytes = hex::decode(recip_clean).map_err(|e| JsError::new(&e.to_string()))?;
+    if recip_bytes.len() != 20 {
+        return Err(JsError::new("recipient must be 20-byte address"));
+    }
+    let mut out = Vec::with_capacity(4 + 32 + 32);
+    out.extend_from_slice(&sel);
+    let mut addr_pad = [0u8; 32];
+    addr_pad[12..].copy_from_slice(&recip_bytes);
+    out.extend_from_slice(&addr_pad);
+    let mut unlock_buf = [0u8; 32];
+    unlock_buf[24..32].copy_from_slice(&unlock_at.to_be_bytes());
+    out.extend_from_slice(&unlock_buf);
+    Ok(format!("0x{}", hex::encode(&out)))
+}

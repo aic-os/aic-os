@@ -60,6 +60,12 @@ pub fn deploy_genesis_contracts(state: &mut crate::state::State) -> Vec<(String,
         let size = code.len();
         state.set_code(capsule_addr, code);
         deployed.push(("TimeCapsule".to_string(), capsule_addr, size));
+
+        // Constructor не вызывается при genesis -> инициализируем storage вручную.
+        // TimeCapsule.sol: uint256 public nextId = 1; -> slot 0
+        let mut slot_next_id = [0u8; 32];
+        slot_next_id[31] = 1;
+        state.set_storage(capsule_addr, [0u8; 32], slot_next_id);
     }
 
     // QuantumBounty: 0x000000000000000000000000000000000000B0B0
@@ -121,6 +127,7 @@ pub fn deploy_genesis_contracts(state: &mut crate::state::State) -> Vec<(String,
 pub fn aicid_address() -> [u8; 20] {
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xA1, 0xC1, 0xD0]
 }
+
 
 
 

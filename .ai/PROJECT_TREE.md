@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 19:14:49
+> Generated: 2026-11-10 21:14:20
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -317,6 +317,8 @@ aic-os/
 |   |   |   |-- local.properties
 |   |   |   \-- settings.gradle.kts
 |   |   |-- lib
+|   |   |   |-- l10n
+|   |   |   |   \-- l10n_service.dart
 |   |   |   |-- models
 |   |   |   |   |-- account.dart
 |   |   |   |   |-- coin.dart
@@ -330,13 +332,15 @@ aic-os/
 |   |   |   |   |-- send_screen.dart
 |   |   |   |   |-- settings_screen.dart
 |   |   |   |   |-- swap_screen.dart
-|   |   |   |   \-- telegram_screen.dart
+|   |   |   |   |-- telegram_screen.dart
+|   |   |   |   \-- time_capsule_screen.dart
 |   |   |   |-- services
 |   |   |   |   |-- account_service.dart
 |   |   |   |   |-- aic_rpc.dart
 |   |   |   |   |-- coin_service.dart
 |   |   |   |   |-- settings_service.dart
 |   |   |   |   |-- swap_service.dart
+|   |   |   |   |-- time_capsule_service.dart
 |   |   |   |   |-- voice_service.dart
 |   |   |   |   |-- wallet_service.dart
 |   |   |   |   \-- wasm_bridge.dart
@@ -489,6 +493,7 @@ aic-os/
 |-- node-write.log
 |-- PRINCIPLES.md
 |-- README.md
-\-- ROADMAP.md
+|-- ROADMAP.md
+\-- start-node.ps1
 ```
 

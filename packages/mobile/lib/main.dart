@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'services/account_service.dart';
 import 'services/settings_service.dart';
 import 'services/wallet_service.dart';
+import 'l10n/l10n_service.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -33,21 +34,31 @@ class AicWalletApp extends StatelessWidget {
           w.startAutoRefresh();
           return w;
         }),
+        ChangeNotifierProvider(create: (_) {
+          final l = L10nService();
+          l.load();
+          return l;
+        }),
       ],
-      child: MaterialApp(
-        title: 'AIC Wallet',
-        debugShowCheckedModeBanner: false,
-        scrollBehavior: const AppScrollBehavior(),
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0A0A0F),
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF4A9EFF),
-            secondary: Color(0xFF9C6AFF),
-          ),
-          useMaterial3: true,
-        ),
-        home: const HomeScreen(),
+      child: Consumer<L10nService>(
+        builder: (context, l10n, _) {
+          return MaterialApp(
+            title: 'AIC Wallet',
+            debugShowCheckedModeBanner: false,
+            scrollBehavior: const AppScrollBehavior(),
+            theme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: const Color(0xFF0A0A0F),
+              colorScheme: const ColorScheme.dark(
+                primary: Color(0xFF4A9EFF),
+                secondary: Color(0xFF9C6AFF),
+              ),
+              useMaterial3: true,
+            ),
+            locale: Locale(l10n.lang),
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }

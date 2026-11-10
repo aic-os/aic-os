@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n_service.dart';
+import '../services/account_service.dart';
 import '../services/wallet_service.dart';
 import '../services/wasm_bridge.dart';
 import '../services/voice_service.dart';
@@ -22,9 +24,6 @@ class _SendScreenState extends State<SendScreen> {
   String? _error;
   String? _success;
 
-  static const _alicePrivkey =
-      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-
   @override
   void dispose() {
     _toController.dispose();
@@ -38,19 +37,12 @@ class _SendScreenState extends State<SendScreen> {
       setState(() => _listening = false);
       return;
     }
-
     final ok = await VoiceService.init();
     if (!ok) {
-      setState(() => _error = 'Микрофон недоступен (нет разрешения?)');
+      setState(() => _error = 'Микрофон недоступен');
       return;
     }
-
-    setState(() {
-      _listening = true;
-      _voicePartial = '';
-      _error = null;
-    });
-
+    setState(() { _listening = true; _voicePartial = ''; _error = null; });
     await VoiceService.start(onResult: (text, isFinal) {
       setState(() => _voicePartial = text);
       if (isFinal) {
@@ -63,102 +55,54 @@ class _SendScreenState extends State<SendScreen> {
   void _applyVoiceCommand(String text) {
     final cmd = VoiceService.parseCommand(text);
     if (cmd == null) return;
-
-    if (cmd.amount != null) {
-      _amountController.text = cmd.amount!.toString();
-    }
-    if (cmd.recipient != null) {
-      _toController.text = cmd.recipient!;
-    }
-
-    if (cmd.isComplete) {
-      _showConfirmDialog(cmd);
-    } else {
-      setState(() {
-        _error = 'Не удалось распознать получателя или сумму. Попробуй: "Send 100 AIC to alice"';
-      });
-    }
+    if (cmd.amount != null) _amountController.text = cmd.amount!.toString();
+    if (cmd.recipient != null) _toController.text = cmd.recipient!;
+    if (cmd.isComplete) _showConfirmDialog(cmd);
   }
 
   void _showConfirmDialog(VoiceCommand cmd) {
+    final l10n = context.read<L10nService>();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2D),
-        title: const Text('Confirm voice command',
-            style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Heard:',
-                style: TextStyle(color: Colors.white54, fontSize: 11)),
-            Text('"${cmd.rawText}"',
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 13, fontStyle: FontStyle.italic)),
-            const SizedBox(height: 12),
-            _row('Amount', '${cmd.amount} ${cmd.currency ?? "AIC"}'),
-            _row('To', cmd.recipient ?? '?'),
-          ],
-        ),
+        title: Text(l10n.t('confirm'), style: const TextStyle(color: Colors.white)),
+        content: Text('${cmd.amount} ${cmd.currency ?? "AIC"} → ${cmd.recipient}',
+            style: const TextStyle(color: Colors.white70)),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.t('cancel'))),
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            onPressed: () { Navigator.pop(ctx); _send(); },
+            child: Text(l10n.t('confirm'), style: const TextStyle(color: Colors.greenAccent)),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _send();
-            },
-            child: const Text('Confirm', style: TextStyle(color: Colors.greenAccent)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(width: 70, child: Text(label,
-              style: const TextStyle(color: Colors.white54, fontSize: 12))),
-          Expanded(child: Text(value,
-              style: const TextStyle(color: Colors.white, fontSize: 13))),
         ],
       ),
     );
   }
 
   Future<void> _send() async {
-    setState(() {
-      _sending = true;
-      _error = null;
-      _success = null;
-    });
-
+    final l10n = context.read<L10nService>();
+    setState(() { _sending = true; _error = null; _success = null; });
     try {
+      final acc = context.read<AccountService>().current;
       final wallet = context.read<WalletService>();
-      final rpc = wallet.rpc;
+      if (acc == null) throw Exception('No account');
 
       String to = _toController.text.trim();
       if (to.startsWith('@')) {
-        final resolved = await rpc.resolveName(to.substring(1));
-        if (resolved == null) throw Exception('Name $to not found');
+        final resolved = await wallet.rpc.resolveName(to.substring(1));
+        if (resolved == null) throw Exception('${l10n.t('name_not_found')}: $to');
         to = resolved;
       }
       if (!to.startsWith('0x') || to.length != 42) {
-        throw Exception('Invalid address: $to');
+        throw Exception('${l10n.t('invalid_address')}: $to');
       }
-
       final amountAic = double.parse(_amountController.text.trim());
       final amountWei = BigInt.from(amountAic * 1e18);
-      final nonce = await rpc.getNonce(wallet.address);
+      final nonce = await wallet.rpc.getNonce(acc.address);
 
       final signed = await WasmBridge.signLegacyTx(
-        privkeyHex: _alicePrivkey,
+        privkeyHex: acc.privateKey,
         toHex: to,
         valueHex: amountWei.toRadixString(16),
         nonce: nonce,
@@ -167,12 +111,8 @@ class _SendScreenState extends State<SendScreen> {
         dataHex: '',
         chainId: 2026,
       );
-
-      final txHash = await rpc.sendRawTransaction(signed['raw_hex'] as String);
-
-      setState(() {
-        _success = 'Sent! TX: $txHash';
-      });
+      final txHash = await wallet.rpc.sendRawTransaction(signed['raw_hex'] as String);
+      setState(() => _success = '${l10n.t('sent_ok')} $txHash');
       await wallet.refresh();
     } catch (e) {
       setState(() => _error = e.toString());
@@ -183,11 +123,12 @@ class _SendScreenState extends State<SendScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.watch<L10nService>();
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0F),
-        title: const Text('Send AIC'),
+        title: Text(l10n.t('send_aic')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -197,9 +138,9 @@ class _SendScreenState extends State<SendScreen> {
             TextField(
               controller: _toController,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Recipient (@name or 0x...)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.t('recipient'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -207,43 +148,33 @@ class _SendScreenState extends State<SendScreen> {
               controller: _amountController,
               style: const TextStyle(color: Colors.white),
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount (AIC)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.t('amount_aic'),
+                border: const OutlineInputBorder(),
               ),
             ),
+            const SizedBox(height: 16),
             if (!kIsWeb) ...[
-              const SizedBox(height: 20),
               GestureDetector(
                 onTap: _startVoice,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: _listening
-                        ? Colors.redAccent.withOpacity(0.2)
-                        : const Color(0xFF1A1A2D),
+                    color: _listening ? Colors.redAccent.withOpacity(0.2) : const Color(0xFF1A1A2D),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF),
-                      width: 1,
-                    ),
+                    border: Border.all(color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        _listening ? Icons.stop : Icons.mic,
-                        color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF),
-                      ),
+                      Icon(_listening ? Icons.stop : Icons.mic,
+                          color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF)),
                       const SizedBox(width: 8),
-                      Text(
-                        _listening ? 'Listening... tap to stop' : 'Voice command',
-                        style: TextStyle(
-                          color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text(_listening ? 'Listening...' : 'Voice command',
+                          style: TextStyle(
+                            color: _listening ? Colors.redAccent : const Color(0xFF9C6AFF),
+                            fontWeight: FontWeight.bold,
+                          )),
                     ],
                   ),
                 ),
@@ -251,11 +182,10 @@ class _SendScreenState extends State<SendScreen> {
               if (_voicePartial.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text('"$_voicePartial"',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 12, fontStyle: FontStyle.italic)),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
               ],
+              const SizedBox(height: 16),
             ],
-            const SizedBox(height: 16),
             GestureDetector(
               onTap: _sending ? null : _send,
               child: Container(
@@ -266,15 +196,10 @@ class _SendScreenState extends State<SendScreen> {
                 ),
                 child: Center(
                   child: _sending
-                      ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Send',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
+                      ? const SizedBox(width: 20, height: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(l10n.t('send'),
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -292,4 +217,3 @@ class _SendScreenState extends State<SendScreen> {
     );
   }
 }
-
