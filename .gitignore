@@ -50,3 +50,7 @@ packages/contracts/lib/
 # AIC Node runtime state
 data/
 packages/node/data/
+
+# Node stderr logs
+*.err
+
