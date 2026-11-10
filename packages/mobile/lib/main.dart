@@ -7,6 +7,8 @@ import 'services/settings_service.dart';
 import 'services/wallet_service.dart';
 import 'l10n/l10n_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'services/seed_service.dart';
 
 void main() {
   runApp(const AicWalletApp());
@@ -56,7 +58,7 @@ class AicWalletApp extends StatelessWidget {
               useMaterial3: true,
             ),
             locale: Locale(l10n.lang),
-            home: const HomeScreen(),
+            home: const _StartupRouter(),
           );
         },
       ),
@@ -74,4 +76,33 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.trackpad,
         PointerDeviceKind.stylus,
       };
+}
+class _StartupRouter extends StatefulWidget {
+  const _StartupRouter();
+
+  @override
+  State<_StartupRouter> createState() => _StartupRouterState();
+}
+
+class _StartupRouterState extends State<_StartupRouter> {
+  bool? _hasWallet;
+
+  @override
+  void initState() {
+    super.initState();
+    SeedService.hasWallet().then((v) {
+      if (mounted) setState(() => _hasWallet = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasWallet == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0A0A0F),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF4A9EFF))),
+      );
+    }
+    return _hasWallet! ? const HomeScreen() : const OnboardingScreen();
+  }
 }

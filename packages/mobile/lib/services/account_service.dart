@@ -3,9 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/account.dart';
+import 'seed_service.dart';
 
-/// Управление аккаунтами: список, текущий, добавление, переключение.
-/// Persist в SharedPreferences (JSON).
 class AccountService extends ChangeNotifier {
   static const _keyAccounts = 'aic_accounts_v1';
   static const _keyCurrentIndex = 'aic_current_account_index';
@@ -25,6 +24,28 @@ class AccountService extends ChangeNotifier {
     final idx = prefs.getInt(_keyCurrentIndex) ?? 0;
 
     _accounts.clear();
+
+    // 1) Если есть кошелёк из SeedService -- только он, никаких dev-аккаунтов
+    final hasSeedWallet = await SeedService.hasWallet();
+    if (hasSeedWallet) {
+      final address = await SeedService.getAddress();
+      final privkey = await SeedService.getPrivkey();
+      final mnemonic = await SeedService.getMnemonic();
+      if (address != null && privkey != null) {
+        _accounts.add(Account(
+          name: 'Мой кошелёк',
+          address: address,
+          privateKey: privkey,
+          mnemonic: mnemonic ?? '',
+        ));
+        _currentIndex = 0;
+        _loaded = true;
+        notifyListeners();
+        return;
+      }
+    }
+
+    // 2) Иначе -- загружаем из SharedPreferences (старое)
     if (raw != null && raw.isNotEmpty) {
       try {
         final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
@@ -34,18 +55,12 @@ class AccountService extends ChangeNotifier {
       } catch (_) {}
     }
 
-    // Если пусто -- добавляем дефолтный dev-аккаунт (Hardhat-0)
+    // 3) Если всё ещё пусто -- dev-аккаунты для теста
     if (_accounts.isEmpty) {
       _accounts.add(Account(
         name: 'Alice (dev)',
         address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
         privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-        mnemonic: 'test test test test test test test test test test test junk',
-      ));
-      _accounts.add(Account(
-        name: 'Bob (dev)',
-        address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-        privateKey: '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         mnemonic: 'test test test test test test test test test test test junk',
       ));
       await _save();

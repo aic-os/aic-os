@@ -143,7 +143,7 @@ class L10nService extends ChangeNotifier {
       'feat_capsule': 'Капсула времени',
       'feat_capsule_sub': 'Блокировка AIC',
       'feat_inherit': 'Наследство',
-      'feat_inherit_sub': 'Dead man switch',
+      'feat_inherit_sub': 'Наследование активов',
       // Register name
       'register_aicid': 'Регистрация AIC-ID',
       'your_name': 'Ваше имя (без @)',
@@ -258,13 +258,13 @@ class L10nService extends ChangeNotifier {
       'feat_aicid': 'AIC-ID',
       'feat_aicid_sub': 'Register @name',
       'feat_telegram': 'Telegram',
-      'feat_telegram_sub': 'Built-in messenger',
+      'feat_telegram_sub': 'Встроенный мессенджер',
       'feat_vpn': 'VPN',
-      'feat_vpn_sub': '1 AIC/month',
+      'feat_vpn_sub': '1 AIC/месяц',
       'feat_capsule': 'TimeCapsule',
-      'feat_capsule_sub': 'Lock AIC',
+      'feat_capsule_sub': 'Блокировка AIC',
       'feat_inherit': 'Inheritance',
-      'feat_inherit_sub': 'Dead man switch',
+      'feat_inherit_sub': 'Наследование активов',
       'register_aicid': 'Register AIC-ID',
       'your_name': 'Your name (without @)',
       'cost_10_aic': 'Cost: 10 AIC (goes to treasury)',
@@ -278,3 +278,4 @@ class L10nService extends ChangeNotifier {
     },
   };
 }
+

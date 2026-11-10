@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 21:23:10
+> Generated: 2026-11-10 22:28:49
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -326,6 +326,7 @@ aic-os/
 |   |   |   |-- screens
 |   |   |   |   |-- chat_detail_screen.dart
 |   |   |   |   |-- home_screen.dart
+|   |   |   |   |-- onboarding_screen.dart
 |   |   |   |   |-- quantum_bounty_screen.dart
 |   |   |   |   |-- receive_screen.dart
 |   |   |   |   |-- register_name_screen.dart
@@ -338,6 +339,7 @@ aic-os/
 |   |   |   |   |-- account_service.dart
 |   |   |   |   |-- aic_rpc.dart
 |   |   |   |   |-- coin_service.dart
+|   |   |   |   |-- seed_service.dart
 |   |   |   |   |-- settings_service.dart
 |   |   |   |   |-- swap_service.dart
 |   |   |   |   |-- time_capsule_service.dart

@@ -13,6 +13,7 @@ dependencies:
   http: ^1.2.0
   # Хранение настроек (RPC URL, тема)
   shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.2.0
   # QR-код для отправки/приёма
   qr_flutter: ^4.1.0
   # Форматирование чисел (1 000 000 AIC)
@@ -29,6 +30,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
 
 
 

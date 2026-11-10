@@ -18,7 +18,7 @@ rlp = "0.5"
 serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 bip39 = { version = "2", features = ["rand"] }
-bip32 = "0.5"
+bip32 = { version = "0.5", features = ["secp256k1"] }
 rand = { version = "0.8", features = ["getrandom"] }
 
 # КРИТИЧНО: явная зависимость для wasm32, чтобы фича js попала в транзитивный getrandom 0.2
@@ -29,3 +29,4 @@ getrandom = { version = "0.2", features = ["js"] }
 wasm-opt = false
 
 [workspace]
+

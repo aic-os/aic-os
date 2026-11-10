@@ -1336,3 +1336,77 @@ text
   - Settings: Сеть, Аккаунт, Предпочтения, Язык
 - Осталось: Telegram (мок-данные), внутренние ошибки Send/Swap на английском
 - Следующее: APK (web3dart) / VPN (нужен VPS) / TDLib
+
+---
+
+## 🔧 КАК МЫ РАБОТАЕМ (важно для нового чата)
+
+### Правила сессии
+1. **НЕ РАЗРЫВАТЬ код** — один блок = одна задача, целиком, без разбивки.
+2. **НЕ ИСПОЛЬЗОВАТЬ $home** — это системная переменная PowerShell. Только `@'...'@ | Set-Content` или `$src`, `$file`, `$content`.
+3. **Here-string `@'...'@`** — `@'` и `'@` должны быть **на отдельных строках**. Внутри — только одинарные кавычки для Dart (`'{...}'`), не интерполяция.
+4. **Длинные блоки > 100 строк** — риск обрезки. Разбивать на 2-3 блока по функциям/файлам.
+5. **После изменений**: F5 с Shift (сброс кэша), консоль F12 для ошибок.
+
+### Команды — шпаргалка
+- **Запуск ноды**: `.\start-node.ps1` (из корня) или длинная команда с `--validators`
+- **Запуск Flutter**: `cd packages\mobile; flutter run -d web-server --web-port=8080`
+- **Пересборка WASM**: `cd packages\wasm; $env:RUSTFLAGS = '--cfg getrandom_backend="wasm_js"'; wasm-pack build --target web --out-dir pkg --release`
+- **Копия WASM в mobile**: `Copy-Item "packages\wasm\pkg\*" -Destination "packages\mobile\web\wasm\" -Recurse -Force`
+- **Пересборка ноды**: `$env:RUSTFLAGS = ""; cargo build -p aic-node`
+- **Сброс genesis** (dev): `Remove-Item -Recurse -Force data`
+- **Сборка контрактов**: `cd packages\contracts; forge build; forge test`
+- **Тест капсулы через cast**: `cast send 0x...c4b5e0 "create(address,uint64)" 0x7099... 1796939541 --legacy --gas-price 1000000000`
+
+### Типичные ошибки и фиксы
+- `parse manifest failed` → `$env:RUSTFLAGS = ""` (остались от WASM)
+- `flutter analyze` падает с LSP → баг инструмента, запускать `flutter run` отдельно
+- `flutter run -d chrome` падает на Windows → `-d web-server --web-port=8080` + открыть вручную
+- `ERR_NAME_NOT_RESOLVED` на `www.gstatic.com/flutter-canvaskit` → **проблема с DNS/сетью у пользователя** (не наш код). Фикс: другой интернет/VPN, `flutter run --web-renderer html`, или `ipconfig /flushdns`
+- `const Text(... l10n ...)` → убрать `const` (l10n не константа)
+- `wOptions` в flutter_secure_storage → это Windows, для Web нужен `webOptions`
+- `invalid child number` в bip32 → `bip32 = { version = "0.5", features = ["secp256k1"] }` в packages/wasm/Cargo.toml
+
+### Где что лежит
+- **Нода**: `packages/node/src/` — rpc.rs, chain.rs, transaction.rs, p2p.rs, genesis_contracts.rs
+- **Ядро**: `packages/core/src/` — wallet/, providers/, crypto/
+- **Контракты**: `packages/contracts/src/` — AICID.sol, InheritanceVault.sol, TimeCapsule.sol, AcoinBridge.sol, QuantumBounty.sol
+- **Flutter UI**: `packages/mobile/lib/` — screens/, widgets/, services/, l10n/, models/
+- **WASM**: `packages/wasm/src/lib.rs` → сборка в `pkg/` → копия в `packages/mobile/web/wasm/`
+- **Память**: `.ai/MEMORY.md`, `.ai/PROJECT_TREE.md`
+
+### Контракты в genesis AIC Chain (важно!)
+- AICID: `0x0000000000000000000000000000000000a1c1d0` (owner=Alice)
+- InheritanceVault: `0x000000000000000000000000000000000000dead`
+- TimeCapsule: `0x0000000000000000000000000000000000c4b5e0`
+- QuantumBounty: `0x0000000000000000000000000000000000b0b000` (owner=Alice, treasury=0x0F, funded 300k AIC)
+- AcoinBridge: `0x0000000000000000000000000000000000aa11ce` (owner=Alice, threshold=1)
+
+### Dev-аккаунты (Hardhat)
+- **Alice**: `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, privkey `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+- **Bob**: `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`, privkey `0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d`
+- **Мнемоника**: `test test test test test test test test test test test junk`
+
+### Сессия #52 — где остановились (в новом чате начнём отсюда)
+- ✅ Онбординг с сид-фразой (WASM generate_mnemonic_12 + wallet_from_mnemonic + secure storage)
+- ✅ L10nService (RU/EN, переключатель в Settings)
+- ✅ Все основные экраны русифицированы
+- ✅ Swap работает (1inch mock + AIC)
+- ✅ TimeCapsule работает (реальное создание капсулы, 100 AIC)
+- ⚠️ **Не решено**: ошибка `ERR_NAME_NOT_RESOLVED` на `gstatic.com/flutter-canvaskit` при запуске приложения в браузере. Это **проблема DNS/сети**, не нашего кода.
+- 🎯 **Следующее**: APK (web3dart native signer) → TDLib Telegram → VPN (нужен VPS)
+
+### Бюджет (зафиксировано)
+- MVP (1000 юзеров): **0₽** (Oracle Cloud Free Tier для ноды, flutter build бесплатно)
+- Домен aicos.io: ~500₽/год (позже)
+- VPS при росте: ~500₽/мес
+- Аудит перед mainnet: отложен
+
+### Принципы
+- **№1**: зарабатываем МЫ (AIC Chain), не платим чужим сетям
+- **НЕ** деплоим контракты в Ethereum/Base/Sepolia — только в genesis AIC Chain
+- Монетизация: 10 AIC/регистрация → казна (0x...0F)
+- PQ: Schnorr + ML-DSA-65 для value >= 10M AIC (порог поднят для MVP, потом правильная интеграция с аккаунтом)
+- Скрипты деплоя в чужие сети УДАЛЕНЫ
+
+Спасибо за сессию. 🚀

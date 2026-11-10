@@ -138,7 +138,7 @@ class _TimeCapsuleScreenState extends State<TimeCapsuleScreen> {
             children: [
               Icon(Icons.lock_clock, color: statusColor, size: 22),
               const SizedBox(width: 8),
-              Text('Capsule #${c.id}',
+              Text('${l10n.t('capsule')} #${c.id}',
                   style: const TextStyle(
                       color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
               const Spacer(),
@@ -162,7 +162,7 @@ class _TimeCapsuleScreenState extends State<TimeCapsuleScreen> {
               style: const TextStyle(
                   color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('To: ${c.recipient.substring(0, 6)}...${c.recipient.substring(c.recipient.length - 4)}',
+          Text('${l10n.t('to')}: ${c.recipient.substring(0, 6)}...${c.recipient.substring(c.recipient.length - 4)}',
               style: const TextStyle(color: Colors.white54, fontSize: 12)),
           const SizedBox(height: 4),
           Text(
@@ -301,6 +301,7 @@ class _TimeCapsuleScreenState extends State<TimeCapsuleScreen> {
     }
   }
 }
+
 
 
 

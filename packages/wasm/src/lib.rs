@@ -79,7 +79,7 @@ pub fn wallet_from_mnemonic(mnemonic: &str, index: u32) -> Result<JsValue, JsErr
     let m = Mnemonic::parse_in_normalized(Language::English, mnemonic)
         .map_err(|e| JsError::new(&format!("mnemonic: {e}")))?;
     let seed = m.to_seed("");
-    let path_str = format!("m/44'\''/60'\''/0'\''/0/{index}");
+    let path_str = format!("m/44'/60'/0'/0/{index}");
     let path = DerivationPath::from_str(&path_str)
         .map_err(|e| JsError::new(&format!("path: {e}")))?;
     let xprv = XPrv::derive_from_path(seed.as_slice(), &path)
@@ -296,3 +296,4 @@ pub fn encode_timecapsule_create(recipient: &str, unlock_at: u64) -> Result<Stri
     out.extend_from_slice(&unlock_buf);
     Ok(format!("0x{}", hex::encode(&out)))
 }
+
