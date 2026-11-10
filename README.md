@@ -59,6 +59,16 @@
 
 ---
 
+## ✅ Мост aCOIN (MVP)
+
+- `AcoinBridge.sol` в AIC Chain genesis (скоро)
+- Мультисиг 2 из 3 (порог настраивается)
+- Mint: threshold signatures от валидаторов над (to, symbol, amount, extTxHash, chainId)
+- Replay protection: processedExternalTxs
+- Burn: пользователь сжигает aCOIN для вывода
+- 12/12 тестов Foundry
+- TODO: DKG (распределённый ключ) + bridge node (Rust)
+
 ## 🧩 В разработке: Quantum Puzzle
 
 **Публичная головоломка с наградой за взлом защиты:**
@@ -103,6 +113,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 

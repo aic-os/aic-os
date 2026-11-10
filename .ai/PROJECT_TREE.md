@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 12:22:19
+> Generated: 2026-11-10 12:35:45
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -41,7 +41,12 @@ aic-os/
 |   |   |   |-- DeployAll.s.sol
 |   |   |   |   \-- 1
 |   |   |   |       \-- dry-run
-|   |   |   \-- solidity-files-cache.json
+|   |   |   |-- solidity-files-cache.json.abi
+|   |   |   |   \-- default.3924122bd09ff5dd
+|   |   |   |       |-- generation-aBmbxZ
+|   |   |   |       \-- current
+|   |   |   |-- solidity-files-cache.json
+|   |   |   \-- solidity-files-cache.json.abi.lock
 |   |   |-- lib
 |   |   |   \-- forge-std
 |   |   |       |-- .github
@@ -104,6 +109,11 @@ aic-os/
 |   |   |       |-- README.md
 |   |   |       \-- RELEASE_CHECKLIST.md
 |   |   |-- out
+|   |   |   |-- AcoinBridge.sol
+|   |   |   |   \-- AcoinBridge.json
+|   |   |   |-- AcoinBridge.t.sol
+|   |   |   |   |-- AcoinBridgeTest.json
+|   |   |   |   \-- VmContractHelper696def6db6255902e296f98f0d09c882821b7cc90e5877988796d2074f088fb7.json
 |   |   |   |-- AICID.sol
 |   |   |   |   \-- AICID.json
 |   |   |   |-- AICID.t.sol
@@ -115,8 +125,10 @@ aic-os/
 |   |   |   |   \-- TestBase.json
 |   |   |   |-- build-info
 |   |   |   |   |-- 4e651b878b38dc6a.json
+|   |   |   |   |-- 84460aaf3b24f290.json
 |   |   |   |   |-- 8997d775ab47c05e.json
-|   |   |   |   \-- b046b1c023c18b4d.json
+|   |   |   |   |-- b046b1c023c18b4d.json
+|   |   |   |   \-- ed98684db13bf72a.json
 |   |   |   |-- console.sol
 |   |   |   |   \-- console.json
 |   |   |   |-- DeployAICID.s.sol
@@ -172,10 +184,12 @@ aic-os/
 |   |   |       \-- VmSafe.json
 |   |   |-- script
 |   |   |-- src
+|   |   |   |-- AcoinBridge.sol
 |   |   |   |-- AICID.sol
 |   |   |   |-- InheritanceVault.sol
 |   |   |   \-- TimeCapsule.sol
 |   |   |-- test
+|   |   |   |-- AcoinBridge.t.sol
 |   |   |   |-- AICID.t.sol
 |   |   |   |-- InheritanceVault.t.sol
 |   |   |   \-- TimeCapsule.t.sol

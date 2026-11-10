@@ -1076,3 +1076,25 @@ text
   - History транзакций
 - **Принцип №1 исполнен в UI:** пользователь платит 10 AIC нам, не кому-то.
 - **Следующее:** APK/PWA (мобильная доступность) или мост aCOIN / аудит / Quantum Puzzle
+
+### 2026-11-10 -- Сессия #44 (Мост aCOIN MVP)
+- **Готов базовый контракт моста AcoinBridge.sol.**
+- **12/12 тестов зелёные.**
+- **Что работает:**
+  - Мультисиг-валидаторы (порог задаётся в constructor).
+  - Mint: требует threshold подписей от валидаторов над digest(to, symbol, amount, externalTxHash, chainId).
+  - Replay protection: processedExternalTxs[externalTxHash].
+  - Burn: пользователь сжигает aCOIN для вывода.
+  - Admin: addValidator, removeValidator, setThreshold, addToken, setTokenEnabled, transferOwnership.
+  - Отклонение: insufficient signatures, replay, disabled token, non-validator sig, burn > supply.
+- **Тесты (test/AcoinBridge.t.sol):**
+  - constructor, admin (3 теста)
+  - mint (5 тестов: success, insufficient, replay, disabled, non-validator)
+  - burn (3 теста: success, insufficient supply, zero)
+  - threshold edge cases (2 теста)
+- **Что НЕ в контракте (следующие блоки):**
+  - DKG (распределённый ключ) -- для настоящего кросс-чейн моста.
+  - Bridge node (Rust) -- сервис, который слушает Ethereum и подписывает mint-транзакции.
+  - Верификация Ethereum-транзакции (Merkle proof, light client).
+- **Уроки:** ecrecover с префиксом "\x19Ethereum Signed Message:\n32" работает корректно; threshold считает уникальных подписантов (защита от дублирования).
+- **Следующее:** Quantum Puzzle (Фаза 4.5) -- головоломка с наградой за взлом.
