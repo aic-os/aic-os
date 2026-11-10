@@ -134,7 +134,7 @@ class _SwapScreenState extends State<SwapScreen> {
               label: 'To (estimated)',
               symbol: _toSymbol,
               amountCtrl: TextEditingController(
-                text: _quote?.amountOut.toStringAsFixed(6) ?? '',
+                text: _quote != null ? _formatOut(_quote!.amountOut) : '',
               ),
               readOnly: true,
               onPick: () => _pickCoin(isFrom: false),
@@ -236,6 +236,11 @@ class _SwapScreenState extends State<SwapScreen> {
     );
   }
 
+  String _formatOut(double v) {
+    if (v >= 1000) return v.toStringAsFixed(2);
+    if (v >= 1) return v.toStringAsFixed(4);
+    return v.toStringAsFixed(6);
+  }
   Widget _quoteInfo(SwapQuote q) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -395,3 +400,5 @@ class _CoinPickerSheetState extends State<_CoinPickerSheet> {
     );
   }
 }
+
+
