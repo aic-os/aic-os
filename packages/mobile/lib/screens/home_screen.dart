@@ -18,6 +18,7 @@ import 'register_name_screen.dart';
 import 'quantum_bounty_screen.dart';
 import 'telegram_screen.dart';
 import 'settings_screen.dart';
+import 'swap_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -255,7 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute(builder: (_) => const ReceiveScreen()));
                     })),
                     const SizedBox(width: 10),
-                    Expanded(child: _quickAction(Icons.swap_horiz, 'Swap', () => _showFeature('Swap'))),
+                    Expanded(child: _quickAction(Icons.swap_horiz, 'Swap', () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const SwapScreen()));
+                    })),
                   ],
                 ),
               ),
@@ -367,7 +371,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 }),
                 _detailAction(Icons.swap_horiz, 'Swap', () {
                   Navigator.pop(context);
-                  _showFeature('Swap');
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => SwapScreen(
+                        initialFrom: coin.symbol,
+                        initialTo: coin.symbol == 'AIC' ? 'ETH' : 'AIC',
+                      )));
                 }),
                 _detailAction(Icons.show_chart, 'Trade', () {
                   Navigator.pop(context);
@@ -402,6 +410,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 

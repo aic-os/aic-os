@@ -1279,3 +1279,19 @@ text
   1. TDLib (реальный Telegram): вход по номеру, чаты, сообщения -- 2-3 сессии
   2. VPN (WireGuard + VLESS): сервер + flutter_vpnengine + on-chain подписка -- 2-3 сессии
   3. APK вариант С (web3dart native signer) -- 2-3 сессии
+
+### 2026-11-10 -- Сессия #51 (Swap Screen работает)
+- **SwapScreen готов:**
+  - From / To с вводом суммы
+  - Каталог 23 монет в picker (поиск)
+  - Кнопка ↔ меняет направление
+  - Rate (1 AIC = X ETH, 1 ETH = Y AIC)
+  - Реальный 1inch API для ETH/BTC/USDT, mock-курс для AIC ($10 старт)
+  - Модалка подтверждения (реальный swap -- следующий блок)
+- **Интеграция:**
+  - Quick action "Swap" на Home
+  - Coin detail sheet -> Swap с уже выбранной монетой
+- **Уроки:**
+  - Большие числа (>1000) обрезаем до 2 знаков после точки, чтобы не вылезали на badge.
+- **Следующее:** APK (web3dart native signer + Android permissions + build) -- 2 сессии.
+- **Потом:** VPN, TDLib, реальный Swap через 1inch/DEX, History с фильтрами.
