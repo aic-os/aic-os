@@ -1244,3 +1244,20 @@ text
   4. flutter build apk --release
   5. Telegram (TDLib, 2-3 сессии)
   6. VPN (WireGuard + VLESS, 2-3 сессии)
+
+### 2026-11-10 -- Сессия #49 (Settings + RPC URL настройка)
+- **SettingsService** (SharedPreferences):
+  - rpcUrl (web: 127.0.0.1, mobile: локальный IP)
+  - theme (dark default)
+- **SettingsScreen:**
+  - RPC endpoint редактор (модалка с валидацией подсказки)
+  - Current account, seed phrase (coming soon)
+  - Theme, language, version
+- **WalletService.updateRpcUrl / updateAddress:** пересоздаёт AicRpc + refresh при смене
+- **HomeScreen.didChangeDependencies:**
+  - Синхронизирует RPC URL из настроек
+  - Пересоздаёт CoinService с новым RPC при смене аккаунта
+- **Уроки:**
+  - PowerShell $HOME -- системная переменная, НИКОГДА не использовать. Только @'...'@ | Set-Content.
+  - Here-string @" должен быть на отдельной строке (после него не должно быть символов).
+- **Следующее:** APK (web3dart native signer, Android permissions, build).

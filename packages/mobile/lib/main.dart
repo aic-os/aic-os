@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'services/account_service.dart';
+import 'services/settings_service.dart';
 import 'services/wallet_service.dart';
 import 'screens/home_screen.dart';
 
@@ -17,6 +18,11 @@ class AicWalletApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) {
+          final s = SettingsService();
+          s.load();
+          return s;
+        }),
         ChangeNotifierProvider(create: (_) {
           final a = AccountService();
           a.load();

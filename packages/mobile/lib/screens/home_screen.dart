@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../models/coin.dart';
 import '../services/account_service.dart';
+import '../services/settings_service.dart';
+import '../services/wallet_service.dart';
 import '../services/coin_service.dart';
+import '../services/aic_rpc.dart';
 import '../widgets/account_header.dart';
 import '../widgets/crypto_slider.dart';
 import '../widgets/features_slider.dart';
@@ -29,10 +32,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final settings = context.watch<SettingsService>();
+    final wallet = context.read<WalletService>();
+    if (wallet.rpc.rpcUrl != settings.rpcUrl) {
+      wallet.updateRpcUrl(settings.rpcUrl);
+    }
+
     final acc = context.watch<AccountService>().current;
     if (acc != null && acc.address != _lastAddress) {
       _lastAddress = acc.address;
-      _coinService = CoinService(address: acc.address);
+      wallet.updateAddress(acc.address);
+      _coinService = CoinService(
+        rpc: AicRpc(rpcUrl: settings.rpcUrl),
+        address: acc.address,
+      );
       _coinService!.loadSelected().then((_) => _coinService!.refresh());
     }
   }
@@ -54,9 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => CoinCatalogSheet(
         available: _coinService!.availableToAdd,
-        onAdd: (symbol) {
-          _coinService!.addCoin(symbol);
-        },
+        onAdd: (symbol) => _coinService!.addCoin(symbol),
       ),
     );
   }
@@ -76,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Remove ' + coin.symbol + '?',
             style: const TextStyle(color: Colors.white)),
         content: const Text(
-          'It will be removed from your slider (balance preserved on-chain).',
+          'Removed from slider (balance preserved on-chain).',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -131,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
               if (_coinService != null)
                 AnimatedBuilder(
                   animation: _coinService!,
@@ -145,17 +155,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               else
                 const SizedBox(height: 210),
-
               const SizedBox(height: 16),
-
               if (_coinService != null)
                 AnimatedBuilder(
                   animation: _coinService!,
                   builder: (_, __) => _totalBalanceCard(_coinService!),
                 ),
-
               const SizedBox(height: 24),
-
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text('Features',
@@ -221,9 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
               ),
-
               const SizedBox(height: 24),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -242,16 +246,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
               if (_coinService != null)
                 AnimatedBuilder(
                   animation: _coinService!,
                   builder: (_, __) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: HistoryList(
-                      transactions: _loadHistory(),
+                      transactions: const [],
                     ),
                   ),
                 ),
@@ -260,11 +262,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  List<Map<String, dynamic>> _loadHistory() {
-    // MVP: пустая история. В следующем блоке -- реальная загрузка через aic_getAccountTransactions.
-    return [];
   }
 
   Widget _totalBalanceCard(CoinService svc) {
@@ -392,4 +389,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
