@@ -1,6 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'services/account_service.dart';
 import 'services/wallet_service.dart';
 import 'screens/home_screen.dart';
 
@@ -16,6 +18,11 @@ class AicWalletApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) {
+          final a = AccountService();
+          a.load();
+          return a;
+        }),
+        ChangeNotifierProvider(create: (_) {
           final w = WalletService();
           w.startAutoRefresh();
           return w;
@@ -24,6 +31,7 @@ class AicWalletApp extends StatelessWidget {
       child: MaterialApp(
         title: 'AIC Wallet',
         debugShowCheckedModeBanner: false,
+        scrollBehavior: const AppScrollBehavior(),
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: const Color(0xFF0A0A0F),
@@ -39,3 +47,14 @@ class AicWalletApp extends StatelessWidget {
   }
 }
 
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+}

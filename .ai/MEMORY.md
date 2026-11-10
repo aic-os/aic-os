@@ -1206,3 +1206,41 @@ text
   - Rust-тестов: 74
   - Quantum Bounty: 300 000 AIC (100k classic + 200k PQ)
 - **Следующее:** APK вариант C (native Dart с web3dart/pointycastle), или funding скрипт для AcoinBridge.
+
+### 2026-11-10 -- Сессия #48 (UI редизайн + каталог монет + voice готов)
+- **Home Screen полностью переделан:**
+  - Account header (переключение аккаунтов + Add account + Settings)
+  - Crypto slider (PageView, свайп монетами, точки-индикаторы)
+  - Total balance (сумма USD + RUB)
+  - Features slider (Quantum, AIC-ID, Telegram, VPN, TimeCapsule, Inheritance)
+  - Quick actions (Send / Receive / Swap)
+  - History (заглушка, реальная -- следующий блок)
+- **Каталог 23 монет** (3 aCOIN + 20 нативных):
+  - aETH, aBTC, aUSDT (наши обёрнутые)
+  - AIC, ETH, BTC, USDT, BNB, SOL, TRX, TON, SUI, APT, XRP, DOGE, LTC, ATOM, AVAX, MATIC, ARB, OP, TIA, INJ, SEI
+  - Плюсик "+ Add coin" в конце слайдера -- модалка каталога с поиском
+  - Long press на монете -- "Remove X?" (кроме AIC)
+  - Persist выбранных монет в SharedPreferences
+- **Voice Service готов** (speech_to_text):
+  - Распознавание: "Send 100 AIC to alice", "Отправь 100 айкос Алисе"
+  - Понимает "Айкос", "AIC", "эйайси", "аик" как AIC
+  - Модалка подтверждения перед отправкой
+  - **Скрыт на web** (kIsWeb) -- только для APK (Web Speech API нестабилен в браузерах)
+- **AccountService** (SharedPreferences):
+  - Дефолтные Alice + Bob (dev)
+  - Add account (privkey paste -- MVP)
+  - Switch account
+  - Persist текущего
+- **AppScrollBehavior** -- mouse drag на web, finger swipe на mobile
+- **Уроки:**
+  - PowerShell: НИКОГДА не использовать $home (системная переменная). Использовать @'...'@ | Set-Content.
+  - flutter_native_speech_to_text -- только Android, не web. Вернулись на speech_to_text.
+  - Web Speech API в Яндекс.Браузере заблокирован. Только Chrome/Edge.
+  - PageView viewportFraction 0.82 -- крайние карточки видны.
+- **Следующее (БЛОКЕР для APK):**
+  1. Settings screen -- RPC URL настройка (shared_preferences)
+  2. web3dart -- нативная подпись (замена WASM на mobile)
+  3. Android permissions (микрофон)
+  4. flutter build apk --release
+  5. Telegram (TDLib, 2-3 сессии)
+  6. VPN (WireGuard + VLESS, 2-3 сессии)

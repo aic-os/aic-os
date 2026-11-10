@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 15:43:29
+> Generated: 2026-11-10 17:41:47
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -318,17 +318,28 @@ aic-os/
 |   |   |   \-- settings.gradle.kts
 |   |   |-- lib
 |   |   |   |-- models
+|   |   |   |   |-- account.dart
+|   |   |   |   |-- coin.dart
+|   |   |   |   \-- coin_catalog.dart
 |   |   |   |-- screens
 |   |   |   |   |-- home_screen.dart
 |   |   |   |   |-- quantum_bounty_screen.dart
 |   |   |   |   |-- receive_screen.dart
 |   |   |   |   |-- register_name_screen.dart
-|   |   |   |   \-- send_screen.dart
+|   |   |   |   |-- send_screen.dart
+|   |   |   |   \-- settings_screen.dart
 |   |   |   |-- services
+|   |   |   |   |-- account_service.dart
 |   |   |   |   |-- aic_rpc.dart
+|   |   |   |   |-- coin_service.dart
+|   |   |   |   |-- voice_service.dart
 |   |   |   |   |-- wallet_service.dart
 |   |   |   |   \-- wasm_bridge.dart
 |   |   |   |-- widgets
+|   |   |   |   |-- account_header.dart
+|   |   |   |   |-- coin_catalog_sheet.dart
+|   |   |   |   |-- crypto_slider.dart
+|   |   |   |   |-- features_slider.dart
 |   |   |   |   \-- history_list.dart
 |   |   |   \-- main.dart
 |   |   |-- test
