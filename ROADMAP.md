@@ -78,8 +78,8 @@
 - [x] **Режим B (PQ, multisig):** votePQSolved + claimPQ, 2M AIC
 - [x] fund(), setClassicChallenge, addValidator, setPQThreshold
 - [x] Replay protection, access control
-- [ ] Скрипт генерации challenge (Rust: создать ключ, уничтожить)
-- [ ] UI Quantum Bounty в кошельке (приз, дни, статус)
+- [x] **Funding скрипт работает:** fund 300k + setPQReward 200k + setClassicChallenge 100k
+- [x] UI Quantum Bounty -- показывает Total Prize Pool, Mode A/B, target address
 - [ ] Deploy в mainnet (когда AIC Chain стабилен)
 
 ## 📊 Метрики## 📊 Метрики
@@ -109,6 +109,7 @@
 - **P2P:** libp2p (Kademlia + Gossipsub + Request-Response)
 - **Мессенджер:** Matrix (sandbox)
 - **VPN:** WireGuard (sandbox)
+
 
 
 

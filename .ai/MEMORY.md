@@ -1179,3 +1179,30 @@ text
   - Quantum Puzzle в реальном mainnet (не локально)
 
 ### 🏆 СЕССИЯ ЗАВЕРШЕНА. ВСЁ В GIT. МОЖНО ОТДЫХАТЬ.
+
+### 2026-11-10 -- Сессия #47 (Quantum Bounty funded, eth_* RPC, PQ threshold fix)
+- **Quantum Bounty полностью работает: 300 000 AIC призовой фонд.**
+- **Funding через Rust-скрипт (fund_bounty.rs):**
+  - TX1: fund(300 000 AIC) -- totalPrizePool = 300k
+  - TX2: setPQReward(200 000 AIC) -- pqReward = 200k
+  - TX3: setClassicChallenge(Alice, 100 000 AIC) -- classicReward = 100k, classicTarget = Alice
+- **Что починили по пути:**
+  1. **Node парсинг value:** `be_bytes_to_u128` не обрезал leading zeros (32-байтный U256 возвращал 0). Добавил trim.
+  2. **Client RLP mismatch:** `rlp_signed` использовал U256 (32 байта), `signing_hash` -- trimmed (10 байт) -> разные хеши для value > u128. Заменил на `to_big_endian` + trim в обоих местах.
+  3. **eth_* методы в ноде:** eth_chainId, net_version, eth_blockNumber, eth_gasPrice, eth_getTransactionCount, eth_getBalance, eth_call, eth_sendRawTransaction, eth_getTransactionReceipt -- для совместимости с cast/MetaMask/Foundry.
+  4. **PQ threshold:** 1000 AIC -> 10 000 000 AIC (MVP). Правильная интеграция PQ с аккаунтом (проверка что pq_pubkey принадлежит from) -- отдельный блок.
+- **Owner контрактов в genesis:**
+  - QuantumBounty: owner = Alice (0xf39f...2266), treasury = 0x...0F
+  - AcoinBridge: owner = Alice, threshold = 1
+  - (Раньше было: genesis деплой без constructor call, owner = address(0) -- никто не мог fund)
+- **Уроки:**
+  - `cast` ожидает EIP-1559 по умолчанию -> `--legacy --gas-price` для legacy tx.
+  - `cast` использует eth_feeHistory, eth_getTransactionReceipt -- добавили для совместимости.
+  - Genезиз деплой через `state.set_code` НЕ вызывает constructor -- storage (owner, treasury) нужно писать вручную через `state.set_storage`.
+  - Storage layout: `forge inspect Contract storage-layout` -- owner slot 0, treasury slot 1, etc.
+- **Метрики:**
+  - 5 контрактов в genesis (AICID, Vault, Capsule, Bounty, Bridge)
+  - Solidity-тестов: 76 (51 + 12 bridge + 13 bounty)
+  - Rust-тестов: 74
+  - Quantum Bounty: 300 000 AIC (100k classic + 200k PQ)
+- **Следующее:** APK вариант C (native Dart с web3dart/pointycastle), или funding скрипт для AcoinBridge.

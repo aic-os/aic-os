@@ -75,10 +75,18 @@ impl LegacyTransaction {
     fn rlp_signed(&self, v: u64, r: U256, s: U256) -> Vec<u8> {
         let mut st = RlpStream::new_list(9);
         st.append(&self.nonce);
-        st.append(&self.gas_price);
+        // gas_price: trim leading zeros (same as signing_hash)
+        let mut gp = [0u8; 32];
+        self.gas_price.to_big_endian(&mut gp);
+        let gp_trim = gp.iter().position(|&b| b != 0).map(|i| &gp[i..]).unwrap_or(&[]);
+        st.append(&gp_trim);
         st.append(&self.gas_limit);
         st.append(&self.to);
-        st.append(&self.value);
+        // value: trim leading zeros (same as signing_hash)
+        let mut val = [0u8; 32];
+        self.value.to_big_endian(&mut val);
+        let val_trim = val.iter().position(|&b| b != 0).map(|i| &val[i..]).unwrap_or(&[]);
+        st.append(&val_trim);
         st.append(&self.data);
         st.append(&v);
         st.append(&r);
@@ -119,5 +127,7 @@ impl SignedTransaction {
         format!("0x{}", hex::encode(self.hash))
     }
 }
+
+
 
 

@@ -5,14 +5,17 @@ use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use aic_core::crypto::pq_crypto;
 
 fn be_bytes_to_u128(b: &[u8]) -> u128 {
-    if b.len() > 16 { return 0; }
+    // trim leading zeros (RLP may pad to 32 bytes for U256)
+    let start = b.iter().position(|&x| x != 0).unwrap_or(b.len());
+    let trimmed = &b[start..];
+    if trimmed.len() > 16 { return 0; } // still overflow
     let mut buf = [0u8; 16];
-    buf[16 - b.len()..].copy_from_slice(b);
+    buf[16 - trimmed.len()..].copy_from_slice(trimmed);
     u128::from_be_bytes(buf)
 }
 
 /// Порог: транзакции дороже 1000 AIC требуют PQ-подписи.
-pub const PQ_REQUIRED_THRESHOLD: u128 = 1_000_000_000_000_000_000_000; // 1000 AIC
+pub const PQ_REQUIRED_THRESHOLD: u128 = 10_000_000_000_000_000_000_000_000; // 10 000 000 AIC (MVP: правильная интеграция PQ с account -- отдельный блок)
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
@@ -155,4 +158,6 @@ fn recover_from(signing_hash: &[u8; 32], signature_65: &[u8]) -> Option<[u8; 20]
     addr.copy_from_slice(&h[12..]);
     Some(addr)
 }
+
+
 

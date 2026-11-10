@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 13:26:20
+> Generated: 2026-11-10 15:43:29
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -43,8 +43,11 @@ aic-os/
 |   |   |   |   \-- 1
 |   |   |   |       \-- dry-run
 |   |   |   |-- solidity-files-cache.json.abi
-|   |   |   |   \-- default.3924122bd09ff5dd
-|   |   |   |       |-- generation-kqwUa2
+|   |   |   |   |-- default.3924122bd09ff5dd
+|   |   |   |   |   |-- generation-kqwUa2
+|   |   |   |   |   \-- current
+|   |   |   |   \-- default.6da127cf044095be
+|   |   |   |       |-- generation-dzAzP2
 |   |   |   |       \-- current
 |   |   |   |-- solidity-files-cache.json
 |   |   |   \-- solidity-files-cache.json.abi.lock
@@ -214,6 +217,7 @@ aic-os/
 |   |   |   |-- broadcast_test.rs
 |   |   |   |-- erc20_balance.rs
 |   |   |   |-- erc20_metadata.rs
+|   |   |   |-- fund_bounty.rs
 |   |   |   |-- get_balance.rs
 |   |   |   |-- multichain_balance.rs
 |   |   |   |-- register_aicid.rs
@@ -279,6 +283,21 @@ aic-os/
 |   |   \-- Cargo.toml
 |   |-- mobile
 |   |   |-- android
+|   |   |   |-- .gradle
+|   |   |   |   |-- 9.3.1
+|   |   |   |   |   |-- checksums
+|   |   |   |   |   |-- expanded
+|   |   |   |   |   |-- fileChanges
+|   |   |   |   |   |-- fileHashes
+|   |   |   |   |   |-- vcsMetadata
+|   |   |   |   |   \-- gc.properties
+|   |   |   |   |-- buildOutputCleanup
+|   |   |   |   |   |-- buildOutputCleanup.lock
+|   |   |   |   |   \-- cache.properties
+|   |   |   |   |-- noVersion
+|   |   |   |   |   \-- buildLogic.lock
+|   |   |   |   \-- vcs-1
+|   |   |   |       \-- gc.properties
 |   |   |   |-- app
 |   |   |   |   |-- src
 |   |   |   |   |   |-- debug
@@ -444,6 +463,8 @@ aic-os/
 |-- node-trace.log
 |-- node-ui.err
 |-- node-ui.log
+|-- node-v.err
+|-- node-v.log
 |-- node-v03.err
 |-- node-v03.log
 |-- node-win.err

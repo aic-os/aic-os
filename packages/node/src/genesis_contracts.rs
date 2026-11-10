@@ -70,6 +70,49 @@ pub fn deploy_genesis_contracts(state: &mut crate::state::State) -> Vec<(String,
         let size = code.len();
         state.set_code(bounty_addr, code);
         deployed.push(("QuantumBounty".to_string(), bounty_addr, size));
+
+        // Owner = Alice (dev), treasury = 0x...0F
+        let alice: [u8; 20] = [
+            0xf3, 0x9F, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xF6,
+            0xF4, 0xce, 0x6a, 0xB8, 0x82, 0x72, 0x79, 0xcf,
+            0xff, 0xb9, 0x22, 0x66,
+        ];
+        let treasury: [u8; 20] = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x0F,
+        ];
+
+        // Slot 0 = owner
+        let mut slot0 = [0u8; 32];
+        slot0[12..].copy_from_slice(&alice);
+        state.set_storage(bounty_addr, [0u8; 32], slot0);
+
+        // Slot 1 = treasury
+        let mut slot1 = [0u8; 32];
+        slot1[12..].copy_from_slice(&treasury);
+        let mut key1 = [0u8; 32];
+        key1[31] = 1;
+        state.set_storage(bounty_addr, key1, slot1);
+    }
+
+    // AcoinBridge: 0x0000000000000000000000000000000000AA11CE
+    let bridge_addr: [u8; 20] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xAA, 0x11, 0xCE,
+    ];
+    if let Some(code) = load_runtime_bytecode("AcoinBridge") {
+        let size = code.len();
+        state.set_code(bridge_addr, code);
+        deployed.push(("AcoinBridge".to_string(), bridge_addr, size));
+
+        let alice_bridge: [u8; 20] = [
+            0xf3, 0x9F, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xF6,
+            0xF4, 0xce, 0x6a, 0xB8, 0x82, 0x72, 0x79, 0xcf,
+            0xff, 0xb9, 0x22, 0x66,
+        ];
+        // Slot 0: owner (20 bytes) + threshold=1 (1 byte at offset 20)
+        let mut slot0 = [0u8; 32];
+        slot0[12..].copy_from_slice(&alice_bridge);
+        slot0[11] = 1;
+        state.set_storage(bridge_addr, [0u8; 32], slot0);
     }
 
     deployed
@@ -78,4 +121,6 @@ pub fn deploy_genesis_contracts(state: &mut crate::state::State) -> Vec<(String,
 pub fn aicid_address() -> [u8; 20] {
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xA1, 0xC1, 0xD0]
 }
+
+
 

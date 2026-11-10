@@ -69,22 +69,15 @@
 - 12/12 тестов Foundry
 - TODO: DKG (распределённый ключ) + bridge node (Rust)
 
-## 🧩 В разработке: Quantum Puzzle
+## 🧩 Quantum Bounty (работает)
 
-**Публичная головоломка с наградой за взлом защиты:**
-- **Режим A:** 1 000 000 AIC за взлом классического ECDSA (как Bitcoin).
-- **Режим B:** 2 000 000 AIC за взлом нашей PQ-защиты (Schnorr + ML-DSA-65). Через 10 лет без взлома -- приз в казну.
-- Публичный счётчик "День N: 2M AIC в безопасности".
-- Смарт-контракт живёт в AIC Chain (никаких чужих сетей).
+- **Total Prize Pool: 300 000 AIC**
+- Mode A: Classic ECDSA -- 100 000 AIC (классический вызов)
+- Mode B: PQ (ML-DSA-65) -- 200 000 AIC (multisig валидаторов)
+- Owner в genesis: Alice (0xf39f...2266)
+- UI показывает все данные (Total, Mode A, Mode B, target address)
 
-## ✅ AIC Wallet (Flutter, UI)
-
-- Flutter 3.47.7, web + windows + android
-- **Работает:** главный экран (баланс AIC, block height, адрес) -- читает из AIC Chain
-- **WASM собран:** 7 функций
-- **Send AIC работает end-to-end:** UI -> WASM (подпись) -> aic_sendRawTransaction -> блок
-- **Первая UI-транзакция:** 100 AIC, tx hash `0x885ca78422bd20cee8b267bea0e59922158f13cc6e722777554327a7631edd5a`
-## 🛠️ Стек## 🛠️ Стек
+## 🛠️ Стек## 🛠️ Стек## 🛠️ Стек
 
 - **Ядро:** Rust (tokio, k256, bip39, bip32)
 - **Нода:** axum + revm 43 + libp2p 0.56 + ml-dsa + serde_json
@@ -113,6 +106,7 @@
 - **PQ:** Schnorr + ML-DSA-65 для value ≥ 1000 AIC (проверено)
 - **P2P:** 2+ ноды синхронизируются (проверено: B догнал A до #8)
 - **Тестов:** 125
+
 
 
 

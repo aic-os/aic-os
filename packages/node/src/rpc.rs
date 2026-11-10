@@ -152,7 +152,104 @@ async fn handle_rpc(
 ) -> Json<RpcResponse> {
     let method_owned = req.method.clone();
     let result: Option<Value> = match req.method.as_str() {
-        "aic_chainId" => Some(json!(st.chain_id)),
+        "aic_chainId" | "eth_chainId" => Some(json!(format!("0x{:x}", st.chain_id))),
+
+        "net_version" => Some(json!(st.chain_id.to_string())),
+        "eth_blockNumber" => {
+            let c = st.chain.read().unwrap();
+            Some(json!(format!("0x{:x}", c.block_number())))
+        },
+        "eth_gasPrice" => Some(json!("0x3b9aca00")),
+
+        "eth_getTransactionReceipt" => {
+            let tx_hash_str = req.params.get(0).and_then(|v| v.as_str());
+            match tx_hash_str.and_then(|s| {
+                let clean = s.trim_start_matches("0x");
+                hex::decode(clean).ok().and_then(|b| if b.len() == 32 {
+                    let mut arr = [0u8; 32]; arr.copy_from_slice(&b); Some(arr)
+                } else { None })
+            }) {
+                Some(tx_hash) => {
+                    let c = st.chain.read().unwrap();
+                    if let Some(receipt) = c.receipts.get(&tx_hash) {
+                        let block_hash = c.blocks.get(receipt.block_number as usize)
+                            .map(|b| format!("0x{}", hex::encode(b.hash())))
+                            .unwrap_or_else(|| "0x0".to_string());
+                        Some(json!({
+                            "transactionHash": format!("0x{}", hex::encode(tx_hash)),
+                            "transactionIndex": "0x0",
+                            "blockHash": block_hash,
+                            "blockNumber": format!("0x{:x}", receipt.block_number),
+                            "from": format!("0x{}", hex::encode(receipt.from)),
+                            "to": receipt.to.map(|t| format!("0x{}", hex::encode(t))).unwrap_or_else(|| "0x".to_string()),
+                            "cumulativeGasUsed": format!("0x{:x}", receipt.gas_used),
+                            "gasUsed": format!("0x{:x}", receipt.gas_used),
+                            "status": if receipt.success { "0x1" } else { "0x0" },
+                            "logs": [],
+                            "logsBloom": format!("0x{}", "0".repeat(512)),
+                            "type": "0x0",
+                            "effectiveGasPrice": "0x3b9aca00"
+                        }))
+                    } else {
+                        Some(serde_json::Value::Null)
+                    }
+                }
+                None => None,
+            }
+        },
+
+        "eth_getTransactionCount" => {
+            let addr = req.params.get(0).and_then(|v| v.as_str());
+            addr.and_then(parse_addr).map(|a| {
+                let c = st.chain.read().unwrap();
+                let acc = c.state.get_account(&a);
+                json!(format!("0x{:x}", acc.nonce))
+            })
+        },
+
+        "eth_getBalance" => {
+            let addr = req.params.get(0).and_then(|v| v.as_str());
+            addr.and_then(parse_addr).map(|a| {
+                let c = st.chain.read().unwrap();
+                let acc = c.state.get_account(&a);
+                json!(format!("0x{:x}", acc.balance))
+            })
+        },
+
+        "eth_call" => {
+            let to_str = req.params.get(0).and_then(|p| p.get("to")).and_then(|v| v.as_str());
+            let data_str = req.params.get(0).and_then(|p| p.get("data")).and_then(|v| v.as_str());
+            match (to_str.and_then(parse_addr), data_str) {
+                (Some(to_addr), Some(d)) => {
+                    let data_bytes = hex::decode(d.trim_start_matches("0x")).unwrap_or_default();
+                    let chain_guard = st.chain.read().unwrap();
+                    let db = chain_guard.state.to_inmemory();
+                    drop(chain_guard);
+                    let mut cfg: revm::context::CfgEnv<revm::primitives::hardfork::SpecId> = Default::default();
+                    cfg.chain_id = st.chain_id;
+                    let mut evm = Context::mainnet().with_db(db).with_cfg(cfg).build_mainnet();
+                    let mut tx = TxEnv::default();
+                    tx.caller = Address::from(TREASURY);
+                    tx.gas_limit = 10_000_000;
+                    tx.gas_price = 0;
+                    tx.kind = TxKind::Call(Address::from(to_addr));
+                    tx.value = U256::ZERO;
+                    tx.data = Bytes::from(data_bytes);
+                    tx.nonce = 0;
+                    tx.chain_id = Some(st.chain_id);
+                    match evm.transact(tx) {
+                        Ok(res) => match res.result {
+                            ExecutionResult::Success { output: Output::Call(b), .. } => {
+                                Some(json!(format!("0x{}", hex::encode(&b))))
+                            }
+                            _ => Some(json!("0x")),
+                        },
+                        Err(_) => Some(json!("0x")),
+                    }
+                }
+                _ => None,
+            }
+        }
 
         "aic_blockNumber" => {
             let c = st.chain.read().unwrap();
@@ -358,7 +455,7 @@ async fn handle_rpc(
                 "totalPrizePool": total_pool_hex,
             }))
         }
-        "aic_sendRawTransaction" => {
+        "aic_sendRawTransaction" | "eth_sendRawTransaction" => {
             let raw = req.params.get(0).and_then(|v| v.as_str());
             let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
             let pq_sig_hex = req.params.get(2).and_then(|v| v.as_str());
@@ -418,6 +515,9 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
+
+
 
 
 
