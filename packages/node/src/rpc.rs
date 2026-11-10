@@ -290,6 +290,74 @@ async fn handle_rpc(
                 None => None,
             }
         }
+        "aic_quantumBountyInfo" => {
+            use sha3::{Digest, Keccak256};
+
+            let bounty_addr: [u8; 20] = [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xB0, 0xB0, 0x00,
+            ];
+
+            let sel = |sig: &str| -> [u8; 4] {
+                let h = Keccak256::digest(sig.as_bytes());
+                [h[0], h[1], h[2], h[3]]
+            };
+
+            let read_u256 = |selector: [u8; 4], chain: &crate::chain::Chain| -> Option<[u8; 32]> {
+                let db = chain.state.to_inmemory();
+                let mut cfg: revm::context::CfgEnv<revm::primitives::hardfork::SpecId> = Default::default();
+                cfg.chain_id = 2026;
+                let mut evm = Context::mainnet().with_db(db).with_cfg(cfg).build_mainnet();
+                let mut tx = TxEnv::default();
+                tx.caller = Address::from(TREASURY);
+                tx.gas_limit = 5_000_000;
+                tx.gas_price = 0;
+                tx.kind = TxKind::Call(Address::from(bounty_addr));
+                tx.value = U256::ZERO;
+                tx.data = Bytes::from(selector.to_vec());
+                tx.nonce = 0;
+                tx.chain_id = Some(2026);
+                match evm.transact(tx) {
+                    Ok(res) => match res.result {
+                        ExecutionResult::Success { output: Output::Call(b), .. } => {
+                            if b.len() == 32 {
+                                let mut arr = [0u8; 32];
+                                arr.copy_from_slice(&b);
+                                Some(arr)
+                            } else { None }
+                        }
+                        _ => None,
+                    },
+                    Err(_) => None,
+                }
+            };
+
+            let chain_guard = st.chain.read().unwrap();
+
+            let classic_reward_hex = read_u256(sel("classicReward()"), &chain_guard)
+                .map(|a| format!("0x{}", hex::encode(a))).unwrap_or_else(|| "0x0".to_string());
+            let pq_reward_hex = read_u256(sel("pqReward()"), &chain_guard)
+                .map(|a| format!("0x{}", hex::encode(a))).unwrap_or_else(|| "0x0".to_string());
+            let classic_solved = read_u256(sel("classicSolved()"), &chain_guard)
+                .map(|a| a[31] != 0).unwrap_or(false);
+            let pq_solved = read_u256(sel("pqSolved()"), &chain_guard)
+                .map(|a| a[31] != 0).unwrap_or(false);
+            let classic_target_hex = read_u256(sel("classicTarget()"), &chain_guard)
+                .map(|a| format!("0x{}", hex::encode(&a[12..]))).unwrap_or_else(|| "0x0".to_string());
+            let total_pool_hex = read_u256(sel("totalPrizePool()"), &chain_guard)
+                .map(|a| format!("0x{}", hex::encode(a))).unwrap_or_else(|| "0x0".to_string());
+
+            drop(chain_guard);
+
+            Some(json!({
+                "contract": format!("0x{}", hex::encode(bounty_addr)),
+                "classicReward": classic_reward_hex,
+                "classicTarget": classic_target_hex,
+                "classicSolved": classic_solved,
+                "pqReward": pq_reward_hex,
+                "pqSolved": pq_solved,
+                "totalPrizePool": total_pool_hex,
+            }))
+        }
         "aic_sendRawTransaction" => {
             let raw = req.params.get(0).and_then(|v| v.as_str());
             let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
@@ -350,6 +418,8 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
+
 
 
 

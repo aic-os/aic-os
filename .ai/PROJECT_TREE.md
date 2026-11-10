@@ -1,6 +1,6 @@
 ﻿# PROJECT_TREE (auto-generated)
 
-> Generated: 2026-11-10 12:54:31
+> Generated: 2026-11-10 13:26:20
 > Regenerate: powershell -File tools/scripts/update-tree.ps1
 
 ```
@@ -301,6 +301,7 @@ aic-os/
 |   |   |   |-- models
 |   |   |   |-- screens
 |   |   |   |   |-- home_screen.dart
+|   |   |   |   |-- quantum_bounty_screen.dart
 |   |   |   |   |-- receive_screen.dart
 |   |   |   |   |-- register_name_screen.dart
 |   |   |   |   \-- send_screen.dart
@@ -433,6 +434,8 @@ aic-os/
 |-- node-persist2.log
 |-- node-pq.err
 |-- node-pq.log
+|-- node-qb.err
+|-- node-qb.log
 |-- node-reg.err
 |-- node-reg.log
 |-- node-test.err

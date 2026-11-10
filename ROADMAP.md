@@ -1,6 +1,6 @@
 # 🗺️ ROADMAP AIC-OS
 
-Актуально на: 2026-11-10 (Финальная сессия)
+Актуально на: 2026-11-10 (AIC-OS v0.2)
 
 ## 🟢 Фаза 0 — Фундамент (ЗАВЕРШЕНО)
 - [x] Репозиторий aic-os/aic-os (GitHub)
@@ -109,6 +109,7 @@
 - **P2P:** libp2p (Kademlia + Gossipsub + Request-Response)
 - **Мессенджер:** Matrix (sandbox)
 - **VPN:** WireGuard (sandbox)
+
 
 
 

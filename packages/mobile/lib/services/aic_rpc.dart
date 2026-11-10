@@ -109,6 +109,18 @@ class AicRpc {
     final result = await _call('aic_getAccountTransactions', [address, limit]) as List<dynamic>;
     return result.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
+  Future<Map<String, dynamic>> quantumBountyInfo() async {
+    final result = await _call('aic_quantumBountyInfo', []) as Map<String, dynamic>;
+    return result;
+  }
+
+  /// Конвертирует hex U256 строку в человекочитаемое число AIC.
+  static String hexToAic(String hex) {
+    final clean = hex.replaceFirst('0x', '');
+    if (clean.isEmpty) return '0';
+    final n = BigInt.parse(clean, radix: 16);
+    return weiToAic(n);
+  }
   static String weiToAic(BigInt wei, {int decimals = 18, int precision = 4}) {
     final divisor = BigInt.from(10).pow(decimals);
     final whole = wei ~/ divisor;
@@ -120,5 +132,6 @@ class AicRpc {
     return '$whole.$trimmed';
   }
 }
+
 
 

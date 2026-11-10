@@ -5,6 +5,7 @@ import '../services/wallet_service.dart';
 import '../widgets/history_list.dart';
 import 'send_screen.dart';
 import 'register_name_screen.dart';
+import 'quantum_bounty_screen.dart';
 import 'receive_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -65,6 +66,36 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const QuantumBountyScreen()),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A0A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber, width: 1),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.emoji_events, color: Colors.amber, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            'Quantum Bounty (3M AIC)',
+                            style: TextStyle(
+                              color: Colors.amber,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -235,6 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 

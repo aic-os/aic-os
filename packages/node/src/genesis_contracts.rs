@@ -62,9 +62,20 @@ pub fn deploy_genesis_contracts(state: &mut crate::state::State) -> Vec<(String,
         deployed.push(("TimeCapsule".to_string(), capsule_addr, size));
     }
 
+    // QuantumBounty: 0x000000000000000000000000000000000000B0B0
+    let bounty_addr: [u8; 20] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xB0, 0xB0, 0x00,
+    ];
+    if let Some(code) = load_runtime_bytecode("QuantumBounty") {
+        let size = code.len();
+        state.set_code(bounty_addr, code);
+        deployed.push(("QuantumBounty".to_string(), bounty_addr, size));
+    }
+
     deployed
 }
 
 pub fn aicid_address() -> [u8; 20] {
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xA1, 0xC1, 0xD0]
 }
+
