@@ -62,7 +62,7 @@
 - [ ] Экран Получить (QR-код)
 - [ ] AIC-ID регистрация через UI
 - [ ] Портфель 150 сетей
-- [ ] История транзакций
+- [x] **История транзакций** -- работает (aic_getAccountTransactions)
 - [ ] Мобильная сборка (APK + iOS)
 
 ## 🔵 Фаза 4## 🔵 Фаза 4## 🔵 Фаза 4 — Публичный запуск
@@ -112,6 +112,7 @@
 - **P2P:** libp2p (Kademlia + Gossipsub + Request-Response)
 - **Мессенджер:** Matrix (sandbox)
 - **VPN:** WireGuard (sandbox)
+
 
 
 

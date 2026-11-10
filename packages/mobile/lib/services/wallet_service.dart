@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'aic_rpc.dart';
 
@@ -10,6 +11,8 @@ class WalletService extends ChangeNotifier {
   int _blockNumber = 0;
   int _chainId = 0;
   bool _loading = false;
+  Timer? _pollTimer;
+  List<Map<String, dynamic>> _transactions = [];
   String? _error;
   double _priceUsd = 10.0; // стартовая цена AIC = $10
   double _priceRub = 950.0; // ~950₽ за AIC
@@ -26,8 +29,22 @@ class WalletService extends ChangeNotifier {
   double get priceRub => _priceRub;
 
   String get balanceAic => AicRpc.weiToAic(_balance);
+  List<Map<String, dynamic>> get transactions => _transactions;
   double get balanceUsd => (double.parse(balanceAic) * _priceUsd);
   double get balanceRub => (double.parse(balanceAic) * _priceRub);
+
+  void startAutoRefresh({Duration interval = const Duration(seconds: 3)}) {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(interval, (_) {
+      refresh();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> refresh() async {
     _loading = true;
@@ -38,6 +55,7 @@ class WalletService extends ChangeNotifier {
       _chainId = await rpc.chainId();
       _blockNumber = await rpc.blockNumber();
       _balance = await rpc.getBalance(address);
+      _transactions = await rpc.getAccountTransactions(address, limit: 20);
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -46,3 +64,5 @@ class WalletService extends ChangeNotifier {
     }
   }
 }
+
+

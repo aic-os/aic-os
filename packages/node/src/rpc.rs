@@ -256,6 +256,40 @@ async fn handle_rpc(
             }
         }
 
+        "aic_getAccountTransactions" => {
+            // params: [address, limit=50]
+            let addr = req.params.get(0).and_then(|v| v.as_str());
+            let limit = req.params.get(1).and_then(|v| v.as_u64()).unwrap_or(50) as usize;
+            match addr.and_then(parse_addr) {
+                Some(target) => {
+                    let c = st.chain.read().unwrap();
+                    let mut result: Vec<serde_json::Value> = Vec::new();
+                    // Идём с конца (новые блоки первыми)
+                    for block in c.blocks.iter().rev() {
+                        for tx in &block.transactions {
+                            let from_match = tx.from == target;
+                            let to_match = tx.to.map(|t| t == target).unwrap_or(false);
+                            if from_match || to_match {
+                                result.push(json!({
+                                    "blockNumber": block.header.number,
+                                    "txHash": format!("0x{}", hex::encode(tx.hash())),
+                                    "from": format!("0x{}", hex::encode(tx.from)),
+                                    "to": tx.to.map(|t| format!("0x{}", hex::encode(t))),
+                                    "value": format!("0x{:x}", tx.value),
+                                    "valueAic": (tx.value / 1_000_000_000_000_000_000u128).to_string(),
+                                    "nonce": tx.nonce,
+                                    "direction": if from_match { "out" } else { "in" },
+                                }));
+                                if result.len() >= limit { break; }
+                            }
+                        }
+                        if result.len() >= limit { break; }
+                    }
+                    Some(json!(result))
+                }
+                None => None,
+            }
+        }
         "aic_sendRawTransaction" => {
             let raw = req.params.get(0).and_then(|v| v.as_str());
             let pq_pk_hex = req.params.get(1).and_then(|v| v.as_str());
@@ -316,6 +350,7 @@ fn parse_addr(s: &str) -> Option<[u8; 20]> {
     if b.len() != 20 { return None; }
     let mut a = [0u8; 20]; a.copy_from_slice(&b); Some(a)
 }
+
 
 
 

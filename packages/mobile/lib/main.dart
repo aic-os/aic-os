@@ -15,7 +15,11 @@ class AicWalletApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => WalletService()),
+        ChangeNotifierProvider(create: (_) {
+          final w = WalletService();
+          w.startAutoRefresh();
+          return w;
+        }),
       ],
       child: MaterialApp(
         title: 'AIC Wallet',
@@ -34,3 +38,4 @@ class AicWalletApp extends StatelessWidget {
     );
   }
 }
+

@@ -105,6 +105,10 @@ class AicRpc {
     return await _call('aic_sendRawTransaction', params) as String;
   }
 
+  Future<List<Map<String, dynamic>>> getAccountTransactions(String address, {int limit = 20}) async {
+    final result = await _call('aic_getAccountTransactions', [address, limit]) as List<dynamic>;
+    return result.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
   static String weiToAic(BigInt wei, {int decimals = 18, int precision = 4}) {
     final divisor = BigInt.from(10).pow(decimals);
     final whole = wei ~/ divisor;
@@ -116,4 +120,5 @@ class AicRpc {
     return '$whole.$trimmed';
   }
 }
+
 

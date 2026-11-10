@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/wallet_service.dart';
+import '../widgets/history_list.dart';
 import 'send_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,10 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Consumer<WalletService>(
           builder: (context, wallet, _) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            return RefreshIndicator(
+              onRefresh: () => wallet.refresh(),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
                 children: [
                   _header(),
                   const SizedBox(height: 30),
@@ -38,30 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   _networkInfo(wallet),
                   const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SendScreen()),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4A9EFF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Send AIC',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _sendButton(),
+                  const SizedBox(height: 20),
+                  HistoryList(transactions: wallet.transactions),
                 ],
               ),
             );
@@ -152,7 +132,31 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _sendButton() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SendScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4A9EFF),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Text(
+            'Send AIC',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
-
-
-

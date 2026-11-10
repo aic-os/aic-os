@@ -1033,3 +1033,29 @@ text
 - Восстановить контекст из .ai/MEMORY.md
 - Продолжить с UI (красивый экран, QR, AIC-ID) или с моста aCOIN
 - Или Quantum Puzzle / аудит / мобильная сборка
+
+### 2026-11-10 -- Сессия #42 (UI: история транзакций + авто-poll)
+- **ВЕХА: AIC Wallet стал полноценным UI кошельком.**
+- **Что работает:**
+  - История транзакций (aic_getAccountTransactions в ноде)
+  - Авто-poll каждые 3 сек (block height, баланс обновляются сами)
+  - Send AIC + History в одном экране
+- **Архитектура:**
+  - packages/node/src/rpc.rs -- aic_getAccountTransactions(address, limit) -- проходит по блокам, ищет tx где from/to = target
+  - packages/mobile/lib/services/aic_rpc.dart -- getAccountTransactions
+  - packages/mobile/lib/services/wallet_service.dart -- transactions + Timer.periodic(3s)
+  - packages/mobile/lib/widgets/history_list.dart -- UI истории
+  - packages/mobile/lib/screens/home_screen.dart -- переписан (без $home переменной!)
+- **Проверено на скриншоте:**
+  - Balance: 1 018 394.9999 AIC (1M + 18394 наград за 3678 блоков)
+  - Block height: 3703 (растёт сам)
+  - History: Sent #1158, 0x70997970..., -100 AIC
+- **Уроки:**
+  - PowerShell: НЕ использовать $home (системная переменная). Использовать @'...'@ | Set-Content.
+  - RUSTFLAGS после WASM-сборки нужно сбрасывать ($env:RUSTFLAGS = "") для Windows-сборки.
+- **Следующее (nice-to-have):**
+  1. Курсы USD/RUB под балансом (30 мин)
+  2. QR-код для приёма (30 мин)
+  3. AIC-ID регистрация через UI
+  4. APK (мобильная сборка)
+  5. Мост aCOIN
